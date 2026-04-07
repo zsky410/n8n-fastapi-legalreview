@@ -29,6 +29,14 @@ class ChatCitation(ApiBaseModel):
     rationale: str | None = None
 
 
+class LegalChatLLMOutput(ApiBaseModel):
+    answer: str = Field(..., min_length=1)
+    citations: list[ChatCitation] = Field(default_factory=list)
+    caution: str | None = None
+    confidence: float = Field(..., ge=0, le=1)
+    needsAttention: bool
+
+
 class LegalChatResponse(ApiBaseModel):
     caseId: str
     answer: str

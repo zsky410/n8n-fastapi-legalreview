@@ -88,7 +88,7 @@ Response shape:
 
 ## `POST /v1/legal/chat`
 
-This endpoint is not implemented yet, but the request and response contracts are now frozen for the next milestone.
+This endpoint is available in Milestone 3 with Gemini live mode plus bootstrap fallback.
 
 Request shape:
 

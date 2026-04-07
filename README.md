@@ -5,8 +5,8 @@ FastAPI scaffold for the LegalDesk capstone AI microservice.
 ## Included in this bootstrap
 
 - FastAPI app with `/health` and `/docs`
-- First schema and stub endpoint for `POST /v1/legal/review`
-- First schema set for `POST /v1/legal/chat`
+- Live-ready endpoint for `POST /v1/legal/review`
+- Live-ready endpoint for `POST /v1/legal/chat`
 - Docker Compose stack with:
   - `api`
   - `nginx`
@@ -35,9 +35,9 @@ docker compose up -d --build
 ## Current bootstrap behavior
 
 - `ENABLE_LLM_CALLS=false` by default.
-- The `POST /v1/legal/review` endpoint currently returns a deterministic heuristic analysis so the stack is usable before Milestone 3.
-- A Gemini client wrapper is already prepared for the AI Core milestone.
-- `POST /v1/legal/chat` is documented at schema/contract level but not implemented yet.
+- When `ENABLE_LLM_CALLS=true` and `GEMINI_API_KEY` is present, `POST /v1/legal/review` and `POST /v1/legal/chat` will use Gemini.
+- If Gemini is disabled or returns an invalid payload, the app falls back to deterministic bootstrap logic.
+- Parser and retry services are included for Milestone 3.
 
 ## Project Structure
 
@@ -57,11 +57,25 @@ docs/
 
 - Foundation decisions: `docs/milestone-1-foundation.md`
 - API contracts: `docs/api-contracts.md`
+- N8N orchestration handoff: `docs/n8n-orchestration.md`
+- n8n smoke evidence: `docs/n8n-smoke-evidence.md`
+
+## n8n sample workflows
+
+- Review orchestrator: `n8n/legaldesk-review-fastapi.json`
+- Chat orchestrator: `n8n/legaldesk-chat-fastapi.json`
 
 ## Run Tests
 
 ```bash
 docker compose exec -T api python -m pytest -q
+```
+
+## Enable live Gemini
+
+```bash
+ENABLE_LLM_CALLS=true
+GEMINI_API_KEY=your_key_here
 ```
 
 ## First request schema

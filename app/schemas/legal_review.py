@@ -42,6 +42,19 @@ class ReviewMeta(ApiBaseModel):
     processingMs: int
 
 
+class LegalReviewLLMOutput(ApiBaseModel):
+    docType: str
+    confidence: float = Field(..., ge=0, le=1)
+    riskScore: int = Field(..., ge=0, le=100)
+    riskLevel: RiskLevelEnum
+    riskFlags: list[RiskFlag]
+    extractedFields: dict[str, Any]
+    recommendedAction: str
+    summary: str
+    needsAttention: bool
+    qualityWarning: bool
+
+
 class LegalReviewResponse(ApiBaseModel):
     caseId: str
     docType: str
@@ -56,4 +69,3 @@ class LegalReviewResponse(ApiBaseModel):
     qualityWarning: bool
     disclaimer: str
     meta: ReviewMeta
-

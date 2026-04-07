@@ -7,36 +7,92 @@ from app.core.config import Settings, get_settings
 from app.prompts.legal_review import build_legal_review_prompt
 from app.schemas.common import RiskLevelEnum, RiskSeverityEnum
 from app.schemas.legal_review import (
+    LegalReviewLLMOutput,
     LegalReviewRequest,
     LegalReviewResponse,
     ReviewMeta,
     RiskFlag,
 )
 from app.services.gemini_client import GeminiClient
+from app.services.parser_service import ParserService
+from app.services.retry_service import RetryService
 
 
 class LegalReviewService:
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(
+        self,
+        settings: Settings | None = None,
+        parser_service: ParserService | None = None,
+        retry_service: RetryService | None = None,
+    ) -> None:
         self.settings = settings or get_settings()
         self.gemini_client = GeminiClient(self.settings)
+        self.parser_service = parser_service or ParserService()
+        self.retry_service = retry_service or RetryService()
         self.logger = logging.getLogger(__name__)
 
     def analyze(self, payload: LegalReviewRequest) -> LegalReviewResponse:
         started_at = time.perf_counter()
         request_id = str(uuid.uuid4())
-        prompt = build_legal_review_prompt(payload)
 
         self.logger.info(
-            "Running legal review bootstrap analysis for caseId=%s with model=%s",
+            "Running legal review analysis for caseId=%s with model=%s",
             payload.caseId,
             self.settings.gemini_model,
         )
 
         if self.gemini_client.is_enabled():
-            self.logger.info(
-                "Gemini live calls are enabled, but bootstrap path is still using deterministic heuristics."
-            )
+            try:
+                llm_output = self._run_live_review(payload)
+            except Exception as exc:
+                self.logger.warning(
+                    "Gemini live review failed for caseId=%s, falling back to bootstrap mode: %s",
+                    payload.caseId,
+                    exc,
+                )
+                llm_output = self._build_bootstrap_output(payload)
+        else:
+            llm_output = self._build_bootstrap_output(payload)
 
+        processing_ms = int((time.perf_counter() - started_at) * 1000)
+
+        return LegalReviewResponse(
+            caseId=payload.caseId,
+            docType=llm_output.docType,
+            confidence=llm_output.confidence,
+            riskScore=llm_output.riskScore,
+            riskLevel=llm_output.riskLevel,
+            riskFlags=llm_output.riskFlags,
+            extractedFields=llm_output.extractedFields,
+            recommendedAction=llm_output.recommendedAction,
+            summary=llm_output.summary,
+            needsAttention=llm_output.needsAttention,
+            qualityWarning=llm_output.qualityWarning,
+            disclaimer=self.settings.disclaimer,
+            meta=ReviewMeta(
+                requestId=request_id,
+                provider="gemini",
+                model=self.settings.gemini_model,
+                processingMs=processing_ms,
+            ),
+        )
+
+    def _run_live_review(self, payload: LegalReviewRequest) -> LegalReviewLLMOutput:
+        prompt = build_legal_review_prompt(payload)
+
+        def generate_parse_normalize() -> LegalReviewLLMOutput:
+            raw_response = self.gemini_client.generate_text(prompt)
+            self.logger.debug("Gemini legal review raw response: %s", raw_response[:1000])
+            parsed = self.parser_service.parse_model(raw_response, LegalReviewLLMOutput)
+
+            return self._normalize_llm_output(parsed)
+
+        return self.retry_service.run(
+            generate_parse_normalize,
+            context="legal_review_gemini",
+        )
+
+    def _build_bootstrap_output(self, payload: LegalReviewRequest) -> LegalReviewLLMOutput:
         doc_type = self._detect_doc_type(payload)
         extracted_fields = self._extract_fields(payload.extractedText)
         risk_flags = self._build_risk_flags(payload.extractedText, extracted_fields)
@@ -48,12 +104,7 @@ class LegalReviewService:
         recommended_action = self._recommended_action(risk_level, needs_attention)
         summary = self._build_summary(doc_type, risk_level, risk_flags, quality_warning)
 
-        processing_ms = int((time.perf_counter() - started_at) * 1000)
-
-        self.logger.debug("Prompt prepared for future Gemini use: %s", prompt[:500])
-
-        return LegalReviewResponse(
-            caseId=payload.caseId,
+        return LegalReviewLLMOutput(
             docType=doc_type,
             confidence=confidence,
             riskScore=risk_score,
@@ -64,13 +115,54 @@ class LegalReviewService:
             summary=summary,
             needsAttention=needs_attention,
             qualityWarning=quality_warning,
-            disclaimer=self.settings.disclaimer,
-            meta=ReviewMeta(
-                requestId=request_id,
-                provider="gemini",
-                model=self.settings.gemini_model,
-                processingMs=processing_ms,
-            ),
+        )
+
+    def _normalize_llm_output(self, payload: LegalReviewLLMOutput) -> LegalReviewLLMOutput:
+        risk_level = RiskLevelEnum(payload.riskLevel)
+        risk_flags: list[RiskFlag] = []
+        seen_codes: set[str] = set()
+
+        for flag in payload.riskFlags:
+            code = flag.code.strip().lower().replace(" ", "_")
+            if not code or code in seen_codes:
+                continue
+
+            seen_codes.add(code)
+            risk_flags.append(
+                RiskFlag(
+                    code=code,
+                    label=" ".join(flag.label.split()) or code.replace("_", " ").title(),
+                    severity=flag.severity,
+                    excerpt=" ".join(flag.excerpt.split()) if flag.excerpt else None,
+                    rationale=" ".join(flag.rationale.split()) if flag.rationale else None,
+                )
+            )
+
+        recommended_action = (payload.recommendedAction or "").strip().lower()
+        if not recommended_action:
+            recommended_action = self._recommended_action(risk_level, payload.needsAttention)
+
+        summary = " ".join(payload.summary.split())
+        if not summary:
+            summary = self._build_summary(payload.docType, risk_level, risk_flags, payload.qualityWarning)
+
+        normalized_fields = {
+            str(key): value
+            for key, value in payload.extractedFields.items()
+            if key and value not in ("", [], {}, None)
+        }
+
+        return LegalReviewLLMOutput(
+            docType=(payload.docType or "legal_document").strip().lower(),
+            confidence=round(max(0.0, min(float(payload.confidence), 1.0)), 2),
+            riskScore=max(0, min(int(payload.riskScore), 100)),
+            riskLevel=risk_level,
+            riskFlags=risk_flags,
+            extractedFields=normalized_fields,
+            recommendedAction=recommended_action,
+            summary=summary,
+            needsAttention=bool(payload.needsAttention),
+            qualityWarning=bool(payload.qualityWarning),
         )
 
     def _detect_doc_type(self, payload: LegalReviewRequest) -> str:

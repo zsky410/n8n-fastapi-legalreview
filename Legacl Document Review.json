@@ -1,0 +1,624 @@
+{
+  "name": "Legacl Document Review2",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "legal-doc-v2",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -800,
+        3328
+      ],
+      "id": "f0ae587f-4e93-4ec6-8ced-0c54efd36e1f",
+      "name": "Webhook",
+      "webhookId": "c344a651-7c79-4e66-b95e-5c109b197881"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$binary.file.fileExtension}}",
+                    "rightValue": "pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "04dc3aa3-e53d-4a1a-9a01-efab26dd7489"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{$binary.file.fileExtension}}",
+                    "rightValue": "docx",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "056ae484-26ad-41d5-a4f4-f84af1d7edb5"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        -512,
+        3312
+      ],
+      "id": "eb690327-91b1-4cdf-9edf-5d63a0199261",
+      "name": "Switch File Type"
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "file",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        -80,
+        3120
+      ],
+      "id": "3b27ec69-69e0-488d-a4e4-9df2fdc77cd4",
+      "name": "Extract PDF Text"
+    },
+    {
+      "parameters": {
+        "authentication": "apiKey",
+        "outputFormat": "pdf",
+        "inputBinaryPropertyName": "file"
+      },
+      "type": "@cloudconvert/n8n-nodes-cloudconvert.cloudConvert",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        3328
+      ],
+      "id": "bcaa72a4-f080-4941-a4cc-11efbd7d5fbb",
+      "name": "DOCX → PDF",
+      "credentials": {
+        "cloudConvertApi": {
+          "id": "BVC5AVHlqmp8JGez",
+          "name": "CloudConvert account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        32,
+        3328
+      ],
+      "id": "bc435190-1b79-4e84-b9f3-3fb76944ddda",
+      "name": "Extract Converted PDF"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst text = String(item.json.text ?? \"\").trim();\nconst fileName = item.binary?.file?.fileName ?? item.json.fileName ?? \"unknown\";\n\n// Pre-check: văn bản quá ngắn có thể là PDF scan (ảnh)\nif (text.length < 80) {\n  return [{\n    json: {\n      _error: \"LOW_TEXT_CONTENT\",\n      _errorMessage: `Văn bản trích xuất quá ngắn (${text.length} ký tự). File có thể là PDF scan (ảnh). Vui lòng dùng file có text layer hoặc chạy OCR trước.`,\n      textLength: text.length,\n      fileName,\n    }\n  }];\n}\n\nreturn [{\n  json: {\n    extractedText: text,\n    textLength: text.length,\n    fileName,\n    _startTime: Date.now(),\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        336,
+        3328
+      ],
+      "id": "8122e6fc-5546-48bb-8ff1-6cb4f825df4e",
+      "name": "Normalize & Validate Text"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json._error }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "id": "99e76929-ba9f-4b08-9cd8-4c3054700b28"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        3328
+      ],
+      "id": "7a039662-238f-459a-b4e9-97d9e72608a7",
+      "name": "Has Error?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst text = String(item.json.extractedText ?? \"\");\nconst s = text.toLowerCase();\n\nconst score = { NDA: 0, Employment: 0, Lease: 0, Service: 0, Sales: 0, Other: 0 };\nconst hit = (label, n = 1) => { score[label] = (score[label] ?? 0) + n; };\n\n// NDA\nif (s.includes(\"non-disclosure\") || s.includes(\"non disclosure\") || s.includes(\"confidentiality agreement\")) hit(\"NDA\", 4);\nif (s.includes(\"confidential\") || s.includes(\"proprietary information\")) hit(\"NDA\", 2);\nif (s.includes(\"nda\")) hit(\"NDA\", 3);\nif (s.includes(\"bảo mật\") || s.includes(\"không tiết lộ\") || s.includes(\"thông tin mật\") || s.includes(\"thỏa thuận bảo mật\")) hit(\"NDA\", 4);\n\n// Employment\nif (s.includes(\"employment agreement\") || s.includes(\"employment contract\")) hit(\"Employment\", 5);\nif (s.includes(\"employee\") || s.includes(\"employer\") || s.includes(\"offer letter\")) hit(\"Employment\", 3);\nif (s.includes(\"probation\") || s.includes(\"salary\") || s.includes(\"compensation\") || s.includes(\"annual leave\")) hit(\"Employment\", 2);\nif (s.includes(\"hợp đồng lao động\") || s.includes(\"người lao động\") || s.includes(\"người sử dụng lao động\")) hit(\"Employment\", 5);\nif (s.includes(\"thử việc\") || s.includes(\"lương\") || s.includes(\"phụ cấp\") || s.includes(\"nghỉ phép\")) hit(\"Employment\", 2);\n\n// Lease\nif (s.includes(\"lease agreement\") || s.includes(\"tenancy agreement\") || s.includes(\"rental agreement\")) hit(\"Lease\", 5);\nif (s.includes(\"landlord\") || s.includes(\"tenant\") || s.includes(\"premises\") || s.includes(\"deposit\")) hit(\"Lease\", 3);\nif (s.includes(\"hợp đồng thuê\") || s.includes(\"bên cho thuê\") || s.includes(\"bên thuê\") || s.includes(\"tiền đặt cọc\")) hit(\"Lease\", 5);\nif (s.includes(\"tiền thuê\") || s.includes(\"mặt bằng\") || s.includes(\"căn hộ\") || s.includes(\"văn phòng\")) hit(\"Lease\", 2);\n\n// Service\nif (s.includes(\"service agreement\") || s.includes(\"services agreement\") || s.includes(\"statement of work\")) hit(\"Service\", 5);\nif (s.includes(\"sow\") || s.includes(\"maintenance\") || s.includes(\"support services\") || s.includes(\"deliverable\")) hit(\"Service\", 3);\nif (s.includes(\"hợp đồng dịch vụ\") || s.includes(\"cung cấp dịch vụ\")) hit(\"Service\", 5);\nif (s.includes(\"dịch vụ\") || s.includes(\"bảo trì\") || s.includes(\"tư vấn\") || s.includes(\"triển khai\") || s.includes(\"phát triển phần mềm\")) hit(\"Service\", 3);\n\n// Sales\nif (s.includes(\"purchase agreement\") || s.includes(\"sale agreement\") || s.includes(\"purchase order\")) hit(\"Sales\", 5);\nif (s.includes(\"buyer\") || s.includes(\"seller\") || s.includes(\"goods\") || s.includes(\"delivery\") || s.includes(\"warranty\")) hit(\"Sales\", 3);\nif (s.includes(\"hợp đồng mua bán\") || s.includes(\"mua bán hàng hóa\")) hit(\"Sales\", 5);\nif (s.includes(\"đơn đặt hàng\") || s.includes(\"bên mua\") || s.includes(\"bên bán\") || s.includes(\"hàng hóa\") || s.includes(\"giao hàng\")) hit(\"Sales\", 3);\n\n// Other\nif (s.includes(\"policy\") || s.includes(\"handbook\") || s.includes(\"quy chế\") || s.includes(\"nội quy\")) hit(\"Other\", 1);\n\nlet best = \"Other\", bestScore = -1, second = -1;\nfor (const [k, v] of Object.entries(score)) {\n  if (v > bestScore) { second = bestScore; bestScore = v; best = k; }\n  else if (v > second) { second = v; }\n}\n\nconst total = Object.values(score).reduce((a, b) => a + b, 0);\nconst margin = bestScore - second;\nlet hintConfidence = 0;\nif (best !== \"Other\" && bestScore >= 3) {\n  hintConfidence = Math.max(0.35, Math.min(0.92, (bestScore / Math.max(1, total)) + (margin * 0.08)));\n}\n\nconst topSignals = Object.entries(score)\n  .filter(([, v]) => v > 0)\n  .sort((a, b) => b[1] - a[1])\n  .slice(0, 3)\n  .map(([k, v]) => `${k}:${v}`);\n\nreturn [{\n  json: {\n    ...item.json,\n    docTypeHint: best,\n    docTypeHintConfidence: Number(hintConfidence.toFixed(2)),\n    docTypeHintSignals: topSignals,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        752,
+        3520
+      ],
+      "id": "576f1a8c-ca10-4ff4-9407-5fa4e1019949",
+      "name": "Heuristic DocType"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "prompt-field",
+              "name": "prompt",
+              "value": "=Bạn là luật sư nội bộ cao cấp của một công ty, chuyên review và phân tích hợp đồng, tài liệu pháp lý.\n\nBối cảnh (gợi ý phân loại từ rule-based, có thể sai):\n- docTypeHint: {{ $json.docTypeHint }}\n- docTypeHintConfidence: {{ $json.docTypeHintConfidence }}\n- docTypeHintSignals: {{ $json.docTypeHintSignals }}\n\n=== NHIỆM VỤ ===\nĐọc toàn bộ nội dung tài liệu pháp lý và trả về JSON phân tích đầy đủ theo schema bên dưới.\n\n=== PHÂN LOẠI (docType) ===\nChọn một trong các nhóm:\n- NDA: thỏa thuận bảo mật, không tiết lộ thông tin\n- Employment: hợp đồng lao động, offer letter, phụ lục lao động\n- Lease: hợp đồng thuê nhà, mặt bằng, tài sản\n- Service: hợp đồng dịch vụ (IT, marketing, bảo trì, tư vấn, phát triển phần mềm...)\n- Sales: hợp đồng mua bán hàng hóa/sản phẩm\n- Other: tài liệu không phải hợp đồng hoặc không thuộc nhóm trên\n\nLưu ý: Hạn chế chọn Other nếu tài liệu có dấu hiệu là hợp đồng. Nếu docTypeHintConfidence >= 0.70 và nội dung không mâu thuẫn rõ ràng, ưu tiên theo docTypeHint.\n\n=== ĐÁNH GIÁ RỦI RO ===\n- confidence (0–1): độ tin cậy của phân loại docType\n- riskScore (0–100): 0–30 = ít rủi ro, 31–70 = cần xem kỹ, 71–100 = nhiều rủi ro/bất lợi\n- riskLevel: \"Low\" | \"Medium\" | \"High\" (tương ứng với riskScore)\n- riskFlags: mảng object mô tả rủi ro cụ thể, mỗi item gồm:\n  - severity: \"low\" | \"medium\" | \"high\" (GIỮ nguyên tiếng Anh)\n  - category: loại rủi ro (liability, termination, payment, ip, governing_law, indemnification, auto_renewal, other) (GIỮ nguyên tiếng Anh)\n  - description: mô tả ngắn gọn **100% bằng tiếng Việt**, không dùng tiếng Anh trừ tên riêng/thuật ngữ bắt buộc.\n\nVí dụ riskFlags phổ biến (viết bằng tiếng Việt):\n- { severity: \"high\", category: \"liability\", description: \"Không có điều khoản giới hạn trách nhiệm rõ ràng\" }\n- { severity: \"high\", category: \"governing_law\", description: \"Thiếu điều khoản luật điều chỉnh / thẩm quyền giải quyết tranh chấp\" }\n- { severity: \"medium\", category: \"termination\", description: \"Thời hạn hoặc thời gian báo trước khi chấm dứt hợp đồng không rõ ràng\" }\n- { severity: \"medium\", category: \"auto_renewal\", description: \"Có điều khoản tự động gia hạn nhưng không yêu cầu thông báo trước\" }\n- { severity: \"medium\", category: \"payment\", description: \"Không quy định rõ chế tài khi chậm thanh toán\" }\n- { severity: \"low\", category: \"ip\", description: \"Điều khoản về quyền sở hữu trí tuệ còn chung chung, nên chi tiết hơn\" }\n\n=== TRÍCH XUẤT THÔNG TIN ===\n- keyParties: mảng tên các bên tham gia (tối đa 4 bên, ưu tiên tên tiếng Việt nếu có), bỏ qua nếu không rõ\n- contractValue: giá trị hợp đồng dạng string (ví dụ: \"500.000.000 VND/tháng\", \"$10,000\"), null nếu không có\n- effectiveDate: ngày hiệu lực dạng \"YYYY-MM-DD\" hoặc mô tả text, null nếu không rõ\n- expiryDate: ngày hết hạn hoặc thời hạn (ví dụ: \"2025-12-31\", \"12 tháng kể từ ngày ký\"), null nếu không rõ\n- governingLaw: luật điều chỉnh và nơi giải quyết tranh chấp, null nếu không đề cập\n- autoRenewal: true nếu có điều khoản tự gia hạn, false nếu không, null nếu không rõ\n- recommendedAction: \"approve\" (tài liệu ổn, có thể ký) | \"review\" (cần xem thêm trước khi ký) | \"reject\" (không nên ký, rủi ro cao)\n- reviewNotes: ghi chú thêm cho legal team về các điểm cần chú ý đặc biệt (1–3 câu, tiếng Việt), null nếu không cần\n- summary: tóm tắt nội dung tài liệu bằng tiếng Việt (5–8 câu), bao gồm: mục đích, các bên, nghĩa vụ chính, điều khoản quan trọng/bất thường, điểm cần lưu ý.\n\n=== YÊU CẦU VỀ NGÔN NGỮ ===\n- Tất cả các trường dạng text (description trong riskFlags, keyParties, contractValue, governingLaw, reviewNotes, summary, v.v.) phải được viết **hoàn toàn bằng tiếng Việt**, tự nhiên, dễ hiểu.\n- Không dùng tiếng Anh ngoại trừ tên riêng (tên công ty, điều luật, điều khoản tiếng Anh cố định).\n- Các giá trị enum như \"docType\", \"riskLevel\", \"severity\", \"category\", \"recommendedAction\" BẮT BUỘC giữ nguyên tiếng Anh đúng theo schema.\n\n=== RÀNG BUỘC CỰC KỲ QUAN TRỌNG ===\n- CHỈ trả về DUY NHẤT một JSON hợp lệ theo schema sau:\n{\n  \"docType\": \"NDA|Employment|Lease|Service|Sales|Other\",\n  \"confidence\": 0.0–1.0,\n  \"riskScore\": 0–100,\n  \"riskLevel\": \"Low|Medium|High\",\n  \"riskFlags\": [{\"severity\": \"...\", \"category\": \"...\", \"description\": \"...\"}],\n  \"keyParties\": [\"...\"],\n  \"contractValue\": \"...\" | null,\n  \"effectiveDate\": \"...\" | null,\n  \"expiryDate\": \"...\" | null,\n  \"governingLaw\": \"...\" | null,\n  \"autoRenewal\": true | false | null,\n  \"recommendedAction\": \"approve|review|reject\",\n  \"reviewNotes\": \"...\" | null,\n  \"summary\": \"...\"\n}\n- KHÔNG thêm bất kỳ text, comment, markdown, hay ``` nào ngoài JSON.\n\nNội dung tài liệu cần phân tích:\n{{ $json.extractedText }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        960,
+        3328
+      ],
+      "id": "40f278f8-69ce-4e53-8014-4a5778065895",
+      "name": "Build Prompt"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "needsFallback": true,
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        1152,
+        3328
+      ],
+      "id": "6f0dc672-68d9-4c95-8349-5a01ece907a9",
+      "name": "AI Legal Review"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-flash-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1104,
+        3536
+      ],
+      "id": "9463b57a-1996-406c-99d0-66c2b5315ffa",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4XQpPgijHDrXH8ah",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst raw = item.json.text;\nconst startTime = item.json._startTime ?? Date.now();\nconst fileName = item.json.fileName ?? \"unknown\";\nconst textLength = item.json.textLength ?? 0;\nconst docTypeHint = item.json.docTypeHint ?? \"Other\";\nconst docTypeHintConfidence = item.json.docTypeHintConfidence ?? 0;\nconst docTypeHintSignals = item.json.docTypeHintSignals ?? [];\n\nconst allowed = new Set([\"NDA\", \"Employment\", \"Lease\", \"Service\", \"Sales\", \"Other\"]);\nconst validSeverities = new Set([\"low\", \"medium\", \"high\"]);\nconst validCategories = new Set([\"liability\", \"termination\", \"payment\", \"ip\", \"governing_law\", \"indemnification\", \"auto_renewal\", \"other\"]);\nconst validActions = new Set([\"approve\", \"review\", \"reject\"]);\n\nconst fallback = (extra = {}) => ({\n  success: false,\n  docType: \"Other\",\n  confidence: 0,\n  riskScore: 0,\n  riskLevel: \"Low\",\n  riskFlags: [],\n  keyParties: [],\n  contractValue: null,\n  effectiveDate: null,\n  expiryDate: null,\n  governingLaw: null,\n  autoRenewal: null,\n  recommendedAction: \"review\",\n  reviewNotes: null,\n  summary: \"\",\n  meta: {\n    fileName,\n    textLength,\n    processingTimeMs: Date.now() - startTime,\n    docTypeHint,\n    docTypeHintConfidence,\n    docTypeHintSignals,\n  },\n  ...extra,\n});\n\nif (!raw) return [{ json: fallback({ error: \"NO_MODEL_OUTPUT\", errorMessage: \"Không nhận được kết quả từ mô hình AI.\" }) }];\n\nlet s = String(raw).trim()\n  .replace(/^```json\\s*/i, \"\")\n  .replace(/^```\\s*/i, \"\")\n  .replace(/```$/i, \"\")\n  .trim();\n\nlet parsed;\ntry {\n  parsed = JSON.parse(s);\n} catch {\n  return [{ json: fallback({ error: \"AI_OUTPUT_PARSE_ERROR\", errorMessage: \"AI trả về dữ liệu không phải JSON hợp lệ.\", rawOutput: s.slice(0, 500) }) }];\n}\n\n// Normalize docType\nconst docRaw = String(parsed.docType ?? \"Other\").trim();\nconst docNorm = docRaw.toLowerCase();\nlet docType = \"Other\";\nif (allowed.has(docRaw)) docType = docRaw;\nelse if (docNorm.includes(\"nda\") || docNorm.includes(\"non-disclosure\") || docNorm.includes(\"non disclosure\")) docType = \"NDA\";\nelse if (docNorm.includes(\"employment\") || docNorm.includes(\"lao động\") || docNorm.includes(\"labor\")) docType = \"Employment\";\nelse if (docNorm.includes(\"lease\") || docNorm.includes(\"rent\") || docNorm.includes(\"thuê\")) docType = \"Lease\";\nelse if (docNorm.includes(\"service\") || docNorm.includes(\"dịch vụ\") || docNorm.includes(\"consult\")) docType = \"Service\";\nelse if (docNorm.includes(\"sales\") || docNorm.includes(\"purchase\") || docNorm.includes(\"mua bán\")) docType = \"Sales\";\n\n// Normalize numbers\nlet confidence = Math.max(0, Math.min(1, Number(parsed.confidence ?? 0)));\nif (!Number.isFinite(confidence)) confidence = 0;\n\nlet riskScore = Math.max(0, Math.min(100, Number(parsed.riskScore ?? 0)));\nif (!Number.isFinite(riskScore)) riskScore = 0;\n\nconst riskLevel = riskScore >= 67 ? \"High\" : riskScore >= 34 ? \"Medium\" : \"Low\";\n\n// Normalize riskFlags (new structured format)\nlet riskFlags = [];\nif (Array.isArray(parsed.riskFlags)) {\n  riskFlags = parsed.riskFlags\n    .filter(f => f && typeof f === \"object\" && typeof f.description === \"string\" && f.description.trim())\n    .map(f => ({\n      severity: validSeverities.has(String(f.severity ?? \"\").toLowerCase()) ? String(f.severity).toLowerCase() : \"medium\",\n      category: validCategories.has(String(f.category ?? \"\").toLowerCase()) ? String(f.category).toLowerCase() : \"other\",\n      description: String(f.description).trim(),\n    }))\n    .slice(0, 20);\n}\n\n// Normalize other fields\nconst keyParties = Array.isArray(parsed.keyParties)\n  ? parsed.keyParties.filter(p => typeof p === \"string\" && p.trim()).slice(0, 4)\n  : [];\n\nconst contractValue = parsed.contractValue ? String(parsed.contractValue).trim() : null;\nconst effectiveDate = parsed.effectiveDate ? String(parsed.effectiveDate).trim() : null;\nconst expiryDate = parsed.expiryDate ? String(parsed.expiryDate).trim() : null;\nconst governingLaw = parsed.governingLaw ? String(parsed.governingLaw).trim() : null;\nconst autoRenewal = typeof parsed.autoRenewal === \"boolean\" ? parsed.autoRenewal : null;\nconst recommendedAction = validActions.has(String(parsed.recommendedAction ?? \"\").toLowerCase())\n  ? String(parsed.recommendedAction).toLowerCase()\n  : \"review\";\nconst reviewNotes = parsed.reviewNotes ? String(parsed.reviewNotes).trim() : null;\nconst summary = String(parsed.summary ?? \"\").trim();\n\nreturn [{\n  json: {\n    success: true,\n    docType,\n    confidence,\n    riskScore,\n    riskLevel,\n    riskFlags,\n    keyParties,\n    contractValue,\n    effectiveDate,\n    expiryDate,\n    governingLaw,\n    autoRenewal,\n    recommendedAction,\n    reviewNotes,\n    summary,\n    meta: {\n      fileName,\n      textLength,\n      processingTimeMs: Date.now() - startTime,\n      docTypeHint,\n      docTypeHintConfidence,\n      docTypeHintSignals,\n    },\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1488,
+        3328
+      ],
+      "id": "a1ce4025-643d-4b1d-959c-21c5fc881900",
+      "name": "Format & Normalize Output"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "u1",
+              "name": "success",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "u2",
+              "name": "error",
+              "value": "UNSUPPORTED_FILE_TYPE",
+              "type": "string"
+            },
+            {
+              "id": "u3",
+              "name": "errorMessage",
+              "value": "Chỉ hỗ trợ PDF, DOCX, TXT. Kiểm tra lại file.",
+              "type": "string"
+            },
+            {
+              "id": "u4",
+              "name": "docType",
+              "value": "Other",
+              "type": "string"
+            },
+            {
+              "id": "u5",
+              "name": "riskScore",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "u6",
+              "name": "riskLevel",
+              "value": "Low",
+              "type": "string"
+            },
+            {
+              "id": "u7",
+              "name": "riskFlags",
+              "value": "=[]",
+              "type": "array"
+            },
+            {
+              "id": "u8",
+              "name": "summary",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        2944
+      ],
+      "id": "041f4b2e-1b52-49c6-8c7d-78cf451dd5e0",
+      "name": "Set Error: Unsupported File"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "l1",
+              "name": "success",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "l2",
+              "name": "error",
+              "value": "LOW_TEXT_CONTENT",
+              "type": "string"
+            },
+            {
+              "id": "l3",
+              "name": "errorMessage",
+              "value": "=Văn bản quá ngắn ({{ $json.textLength }} ký tự). File có thể là PDF scan (ảnh).",
+              "type": "string"
+            },
+            {
+              "id": "l4",
+              "name": "docType",
+              "value": "Other",
+              "type": "string"
+            },
+            {
+              "id": "l5",
+              "name": "riskScore",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "l6",
+              "name": "riskLevel",
+              "value": "Low",
+              "type": "string"
+            },
+            {
+              "id": "l7",
+              "name": "riskFlags",
+              "value": "=[]",
+              "type": "array"
+            },
+            {
+              "id": "l8",
+              "name": "summary",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        3136
+      ],
+      "id": "7f805113-a4fe-4930-8308-df1239a60291",
+      "name": "Set Error: Low Text"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1728,
+        3136
+      ],
+      "id": "5bca2221-5be8-4acc-9db4-286388664fd4",
+      "name": "Return Response"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        3536
+      ],
+      "id": "806a0a22-50a8-4327-a32e-a8f658564060",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "4XQpPgijHDrXH8ah",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch File Type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch File Type": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "DOCX → PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Text": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Validate Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DOCX → PDF": {
+      "main": [
+        [
+          {
+            "node": "Extract Converted PDF",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Converted PDF": {
+      "main": [
+        [
+          {
+            "node": "Normalize & Validate Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize & Validate Text": {
+      "main": [
+        [
+          {
+            "node": "Has Error?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Error?": {
+      "main": [
+        [
+          {
+            "node": "Set Error: Low Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Heuristic DocType",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Heuristic DocType": {
+      "main": [
+        [
+          {
+            "node": "Build Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Prompt": {
+      "main": [
+        [
+          {
+            "node": "AI Legal Review",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Legal Review": {
+      "main": [
+        [
+          {
+            "node": "Format & Normalize Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Legal Review",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format & Normalize Output": {
+      "main": [
+        [
+          {
+            "node": "Return Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Error: Unsupported File": {
+      "main": [
+        [
+          {
+            "node": "Return Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Error: Low Text": {
+      "main": [
+        [
+          {
+            "node": "Return Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Legal Review",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "207d6a06-ac1e-4815-b39f-3db2099442bf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "538b6e501627136d95ed458326f8fdadf755f51a94d0253978ee2cbe4bda134c"
+  },
+  "id": "ginNQghDB6Rx22Q3SSejG",
+  "tags": []
+}

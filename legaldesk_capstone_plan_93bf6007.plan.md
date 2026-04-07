@@ -13,13 +13,13 @@ todos:
     status: completed
   - id: setup-gemini-core
     content: Tạo lớp Gemini client, prompt layer, parser layer và validation layer cho legal workflows.
-    status: pending
+    status: completed
   - id: design-api-contract
     content: Chốt API contract và schema response chuẩn cho review/chat/redraft.
     status: completed
   - id: build-n8n-orchestration
     content: Xây workflow n8n intake, OCR, call AI microservice, routing, notify và timeline update.
-    status: pending
+    status: completed
   - id: implement-routing
     content: Thiết kế rule auto-routing theo riskScore/confidence/SLA và cơ chế cờ needs_attention.
     status: pending
@@ -56,7 +56,10 @@ isProject: false
 - `Giai đoạn 0: Chốt phạm vi` -> completed
 - `Giai đoạn 1: Bootstrap môi trường local` -> completed
 - `Giai đoạn 2: Chốt API contract và schemas` -> completed
-- `Milestone 3+ / Giai đoạn 3+` -> pending
+- `Milestone 3: AI Core` -> completed
+- `Milestone 4: n8n Orchestration` -> completed
+  - verified with imported local n8n workflows and smoke evidence in `docs/n8n-smoke-evidence.md`
+- `Milestone 5+ / Giai đoạn 5+` -> pending
 
 ## Mục tiêu cuối kì
 

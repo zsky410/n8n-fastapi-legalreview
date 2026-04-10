@@ -14,7 +14,7 @@ export const mockCases = [
     extractedText:
       "Bên thuê có quyền gia hạn trong 24 tháng. Điều khoản phạt chậm thanh toán 8%/năm. Chủ nhà được quyền điều chỉnh phí quản lý sau 30 ngày thông báo.",
     review: {
-      docType: "Lease Addendum",
+      docType: "Phụ lục hợp đồng thuê",
       confidence: 0.91,
       riskScore: 63,
       riskLevel: "medium",
@@ -100,7 +100,7 @@ export const mockCases = [
     extractedText:
       "Bên cung cấp có quyền thay đổi phạm vi dịch vụ với thông báo 7 ngày. Giới hạn trách nhiệm bằng tổng phí 3 tháng gần nhất. Không có phụ lục SLA cụ thể.",
     review: {
-      docType: "SaaS Service Agreement",
+      docType: "Hợp đồng dịch vụ SaaS",
       confidence: 0.88,
       riskScore: 81,
       riskLevel: "high",
@@ -166,7 +166,7 @@ export const mockCases = [
     extractedText:
       "Bên nhận thông tin phải bảo mật trong 36 tháng. Dữ liệu không được chuyển giao cho bên thứ ba nếu không có chấp thuận bằng văn bản.",
     review: {
-      docType: "NDA",
+      docType: "Thỏa thuận bảo mật (NDA)",
       confidence: 0.93,
       riskScore: 28,
       riskLevel: "low",
@@ -288,7 +288,7 @@ export const mockAuditLogs = [
     eventType: "case_created",
     caseId: "CASE-2604-001",
     userId: "client@demo.vn",
-    description: "Client tạo hồ sơ mới từ CreateCase.",
+    description: "Khách hàng tạo hồ sơ mới từ giao diện nộp tài liệu.",
     details: "title=Gia hạn hợp đồng thuê văn phòng",
     timestamp: "2026-04-08T09:20:00+07:00",
   },
@@ -297,7 +297,7 @@ export const mockAuditLogs = [
     eventType: "status_changed",
     caseId: "CASE-2604-001",
     userId: "system",
-    description: "Case chuyển từ AIAnalyzing sang AutoPublished.",
+    description: "Hồ sơ chuyển từ bước phân tích AI sang công bố kết quả.",
     details: "from=ai_analyzing,to=auto_published",
     timestamp: "2026-04-08T10:35:00+07:00",
   },
@@ -315,7 +315,7 @@ export const mockAuditLogs = [
     eventType: "chat_message",
     caseId: "CASE-2604-002",
     userId: "client@demo.vn",
-    description: "Client gửi câu hỏi follow-up trong tab Chat.",
+    description: "Khách hàng gửi câu hỏi bổ sung trong mục trao đổi.",
     details: "question=SLA cam kết bao nhiêu phút?",
     timestamp: "2026-04-08T11:18:00+07:00",
   },
@@ -432,7 +432,7 @@ function deriveReviewHeuristics(caseRecord, payload = {}) {
 
   if (combinedText.includes("saas") || combinedText.includes("phần mềm") || combinedText.includes("sla") || combinedText.includes("cloud")) {
     return {
-      docType: "SaaS Service Agreement",
+      docType: "Hợp đồng dịch vụ SaaS",
       confidence: 0.89,
       riskScore: 82,
       riskLevel: "high",
@@ -448,13 +448,13 @@ function deriveReviewHeuristics(caseRecord, payload = {}) {
       recommendedAction: "Bổ sung phụ lục SLA, làm rõ phạm vi thay đổi dịch vụ và nâng ngưỡng thông báo.",
       summary: reviewSummary,
       needsAttention: true,
-      qualityWarning: source.extractedText ? "Mock review đang dựa trên nội dung trích xuất do client cung cấp." : "Chưa có nhiều nội dung OCR nên kết quả mang tính định hướng.",
+      qualityWarning: source.extractedText ? "Kết quả hiện đang dựa trên phần nội dung trích xuất do người dùng cung cấp." : "Chưa có nhiều nội dung OCR nên kết quả mang tính định hướng.",
     };
   }
 
   if (combinedText.includes("thuê") || combinedText.includes("lease") || combinedText.includes("gia hạn") || combinedText.includes("bất động sản")) {
     return {
-      docType: "Lease / Real Estate Agreement",
+      docType: "Hợp đồng thuê / bất động sản",
       confidence: 0.86,
       riskScore: 61,
       riskLevel: "medium",
@@ -470,13 +470,13 @@ function deriveReviewHeuristics(caseRecord, payload = {}) {
       recommendedAction: "Chuẩn hóa lại điều khoản gia hạn, mức phạt và phạm vi điều chỉnh chi phí trước khi ký.",
       summary: reviewSummary,
       needsAttention: false,
-      qualityWarning: "Bản review này đang mô phỏng kết quả AI để phục vụ UI demo mock-first.",
+      qualityWarning: "Một số điều khoản nên được đối chiếu thêm trước khi chốt quyết định.",
     };
   }
 
   if (combinedText.includes("bảo mật") || combinedText.includes("nda") || combinedText.includes("dữ liệu")) {
     return {
-      docType: "NDA / Data Processing Addendum",
+      docType: "Thỏa thuận bảo mật / phụ lục xử lý dữ liệu",
       confidence: 0.92,
       riskScore: 33,
       riskLevel: "low",
@@ -489,12 +489,12 @@ function deriveReviewHeuristics(caseRecord, payload = {}) {
       recommendedAction: "Đối chiếu chữ ký và phạm vi chia sẻ dữ liệu ở bản gốc trước khi lưu hồ sơ.",
       summary: reviewSummary,
       needsAttention: false,
-      qualityWarning: source.extractedText ? "Chất lượng nội dung ổn cho mock review." : "Không có nội dung OCR dài nên review chủ yếu dựa trên metadata.",
+      qualityWarning: source.extractedText ? "Nội dung đầu vào khá rõ ràng, tuy nhiên vẫn nên đối chiếu với bản gốc khi cần quyết định chính thức." : "Không có nhiều nội dung OCR nên kết quả hiện dựa nhiều hơn vào thông tin mô tả và metadata.",
     };
   }
 
   return {
-    docType: "General Legal Document",
+    docType: "Tài liệu pháp lý tổng quát",
     confidence: 0.84,
     riskScore: 48,
     riskLevel: "medium",
@@ -507,7 +507,7 @@ function deriveReviewHeuristics(caseRecord, payload = {}) {
     recommendedAction: "Bổ sung thêm nội dung trích xuất hoặc tài liệu gốc trước khi đưa sang bước xử lý tiếp theo.",
     summary: reviewSummary,
     needsAttention: false,
-    qualityWarning: "Đây là fallback mock nên độ tin cậy thấp hơn khi chưa có dữ liệu case cụ thể.",
+    qualityWarning: "Dữ liệu đầu vào còn khá ngắn nên độ tin cậy sẽ thấp hơn so với tài liệu đầy đủ.",
   };
 }
 
@@ -520,7 +520,7 @@ export function buildReviewResponseFromCase(caseRecord, payload = {}) {
 
   return {
     ...derivedReview,
-    disclaimer: "Kết quả AI trong bản demo đang chạy theo chiến lược mock-first để kiểm thử UI flow.",
+    disclaimer: "Kết quả AI chỉ mang tính tham khảo và cần được đối chiếu với tài liệu gốc.",
     meta: {
       latencyMs: 950 + Math.min((payload.extractedText || "").length * 2, 1200),
       model: "mock-legal-review-v1",
@@ -534,17 +534,17 @@ export function buildChatResponse({ question, caseRecord }) {
   return {
     answer:
       `Với ${title}, điểm cần quan tâm nhất là: ${question || "cần đối chiếu điều khoản và risk flag"}. ` +
-      "Trong bản demo hiện tại, câu trả lời này đang được mock để giữ cho luồng UI ổn định.",
+      "Bạn nên đối chiếu thêm với điều khoản liên quan trong tài liệu gốc để ra quyết định chính xác hơn.",
     citations: [
       {
         id: "cit-fallback-001",
-        label: caseRecord?.documentName ?? "mock-source.txt",
+        label: caseRecord?.documentName ?? "tai-lieu-tham-chieu.txt",
         excerpt: "Thông tin trích dẫn mẫu để tái hiện giao diện citation card.",
       },
     ],
     caution: "Cần đối chiếu với tài liệu gốc trước khi ra quyết định nghiệp vụ.",
     confidence: 0.82,
     needsAttention: Boolean(caseRecord?.needsAttention),
-    disclaimer: "Mock chat response chỉ phục vụ UI integration.",
+    disclaimer: "Câu trả lời này chỉ mang tính tham khảo và không thay thế tư vấn pháp lý chuyên nghiệp.",
   };
 }

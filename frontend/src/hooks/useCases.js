@@ -36,27 +36,27 @@ function buildTimelineAfterReview(caseRecord, review) {
         id: `timeline-${caseRecord.id}-ocr`,
         title: "OCR và trích xuất hoàn tất",
         detail: "Hệ thống đã chuẩn hóa nội dung để chuẩn bị cho phân tích AI.",
-        stage: "TextExtractOrOCR",
+        stage: "OCR",
         at: ocrAt,
       });
     }
 
-    if (!existingStages.has("AIAnalyzing")) {
+    if (!existingStages.has("AIAnalyzing") && !existingStages.has("Phân tích AI")) {
       nextTimeline.push({
         id: `timeline-${caseRecord.id}-review`,
         title: "AI đã hoàn tất đánh giá",
         detail: `${review.riskFlags?.length || 0} cảnh báo đã được ghi nhận vào báo cáo tự động.`,
-        stage: "AIAnalyzing",
+        stage: "Phân tích AI",
         at: reviewAt,
       });
     }
 
-    if (!existingStages.has("AutoPublished")) {
+    if (!existingStages.has("AutoPublished") && !existingStages.has("Đã công bố")) {
       nextTimeline.push({
         id: `timeline-${caseRecord.id}-published`,
         title: "Báo cáo đã sẵn sàng",
-        detail: "Client có thể xem kết quả review và tiếp tục trao đổi theo case.",
-        stage: "AutoPublished",
+        detail: "Khách hàng có thể xem kết quả phân tích và tiếp tục trao đổi ngay trên hồ sơ.",
+        stage: "Đã công bố",
         at: publishedAt,
       });
     }
@@ -68,29 +68,29 @@ function buildTimelineAfterReview(caseRecord, review) {
     {
       id: `timeline-${caseRecord.id}-uploaded`,
       title: "Hồ sơ đã tiếp nhận",
-      detail: "Client đã tạo hồ sơ mới từ CreateCase và chờ xử lý tự động.",
-      stage: "Uploaded",
+      detail: "Khách hàng đã tạo hồ sơ mới và đang chờ hệ thống xử lý tự động.",
+      stage: "Đã tải lên",
       at: caseRecord.createdAt,
     },
     {
       id: `timeline-${caseRecord.id}-ocr`,
       title: "OCR và trích xuất hoàn tất",
-      detail: "Hệ thống đã chuẩn hóa nội dung từ tài liệu để chuẩn bị cho AI review.",
-      stage: "TextExtractOrOCR",
+      detail: "Hệ thống đã chuẩn hóa nội dung từ tài liệu để chuẩn bị cho phân tích AI.",
+      stage: "OCR",
       at: ocrAt,
     },
     {
       id: `timeline-${caseRecord.id}-review`,
       title: "AI đã hoàn tất đánh giá",
       detail: `${review.riskFlags?.length || 0} cảnh báo đã được ghi nhận vào báo cáo tự động.`,
-      stage: "AIAnalyzing",
+      stage: "Phân tích AI",
       at: reviewAt,
     },
     {
       id: `timeline-${caseRecord.id}-published`,
       title: "Báo cáo được công bố",
-      detail: "Kết quả review đã sẵn sàng trong client portal cùng disclaimer và khuyến nghị.",
-      stage: "AutoPublished",
+      detail: "Kết quả phân tích đã sẵn sàng cùng lưu ý sử dụng và khuyến nghị xử lý.",
+      stage: "Đã công bố",
       at: publishedAt,
     },
   ];
@@ -129,9 +129,10 @@ export function CasesProvider({ children }) {
     const nextCase = {
       id: generatedId,
       title: payload.title || "Hồ sơ mới",
-      documentName: payload.documentName || "draft-upload.pdf",
-      description: payload.description || "Hồ sơ được tạo từ luồng demo Milestone 5.",
+      documentName: payload.documentName || "tai_lieu_nhap_tay.pdf",
+      description: payload.description || "Hồ sơ đang chờ hệ thống phân tích và tổng hợp kết quả.",
       domain: payload.domain || "",
+      priority: payload.priority || "medium",
       status: "uploaded",
       riskLevel: "medium",
       needsAttention: false,

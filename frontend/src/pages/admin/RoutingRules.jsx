@@ -40,6 +40,14 @@ function readStoredRules() {
   }
 }
 
+function hasStoredRules() {
+  try {
+    return Boolean(window.localStorage.getItem(STORAGE_KEY));
+  } catch {
+    return false;
+  }
+}
+
 export default function RoutingRules() {
   const [rules, setRules] = useState(() => readStoredRules());
   const [isLoading, setIsLoading] = useState(true);
@@ -48,6 +56,11 @@ export default function RoutingRules() {
   useEffect(() => {
     let isMounted = true;
     async function loadRules() {
+      if (hasStoredRules()) {
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       setLoadError("");
       try {
@@ -79,16 +92,16 @@ export default function RoutingRules() {
   }, [rules]);
 
   const columns = [
-    { key: "metric", label: "Metric", sortable: true },
-    { key: "operator", label: "Operator", sortable: true },
-    { key: "value", label: "Value", sortable: true },
+    { key: "metric", label: "Chỉ số", sortable: true },
+    { key: "operator", label: "Điều kiện", sortable: true },
+    { key: "value", label: "Ngưỡng", sortable: true },
     { key: "action", label: "Hành động" },
     {
       key: "active",
       label: "Trạng thái",
       render: (row) => (
         <Badge className={row.active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-100 text-slate-700"}>
-          {row.active ? "active" : "inactive"}
+          {row.active ? "Đang bật" : "Tạm tắt"}
         </Badge>
       ),
     },
@@ -143,7 +156,7 @@ export default function RoutingRules() {
     event.preventDefault();
 
     if (!formState.metric || !formState.operator || !String(formState.value).trim() || !formState.action) {
-      setError("Điền đủ metric/operator/value/action trước khi lưu.");
+      setError("Điền đủ chỉ số, điều kiện, ngưỡng và hành động trước khi lưu.");
       return;
     }
 
@@ -170,11 +183,10 @@ export default function RoutingRules() {
     <div className="space-y-5">
       <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_52%,#f8fafc_100%)]">
         <CardContent className="space-y-4 p-6">
-          <Badge className="border-brand-100 bg-white/80 text-brand-700">Admin routing workspace</Badge>
           <div>
             <h2 className="text-3xl font-semibold text-slate-900">Quản lý luật định tuyến cho workflow full-auto.</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
-              Scope của Milestone 5 là mock-first editor đủ để admin thêm hoặc sửa routing rule mà không cần backend CRUD ở giai đoạn này.
+              Thêm, sửa hoặc tạm tắt các luật tự động để phân luồng hồ sơ theo mức độ rủi ro và chất lượng dữ liệu.
             </p>
           </div>
         </CardContent>
@@ -184,8 +196,8 @@ export default function RoutingRules() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Routing rules</h3>
-              <p className="text-sm text-slate-500">Rule changes được lưu local để giữ demo ổn định khi admin di chuyển trong shell.</p>
+              <h3 className="text-xl font-semibold text-slate-900">Luật định tuyến</h3>
+              <p className="text-sm text-slate-500">Các thay đổi được giữ lại trên trình duyệt hiện tại để bạn kiểm tra nhanh nhiều kịch bản xử lý.</p>
             </div>
             <Button
               onClick={() => {
@@ -211,7 +223,7 @@ export default function RoutingRules() {
               rows={rules}
               searchKeys={["metric", "operator", "action"]}
               emptyTitle="Chưa có luật định tuyến"
-              emptyDescription="Thêm rule đầu tiên để mô phỏng workflow admin của Milestone 5."
+              emptyDescription="Thêm luật đầu tiên để bắt đầu cấu hình luồng xử lý hồ sơ."
             />
           )}
         </CardContent>
@@ -221,12 +233,12 @@ export default function RoutingRules() {
         open={isModalOpen}
         onClose={closeModal}
         title={formState.id ? "Chỉnh sửa routing rule" : "Tạo routing rule mới"}
-        description="Editor này phục vụ thao tác mock-first cho admin trong Milestone 5."
+        description="Điều chỉnh ngưỡng và hành động tự động áp dụng cho từng nhóm hồ sơ."
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
             <Select
-              label="Metric"
+              label="Chỉ số"
               value={formState.metric}
               onChange={(event) => setFormState((currentState) => ({ ...currentState, metric: event.target.value }))}
               options={[
@@ -236,7 +248,7 @@ export default function RoutingRules() {
               ]}
             />
             <Select
-              label="Operator"
+              label="Toán tử"
               value={formState.operator}
               onChange={(event) => setFormState((currentState) => ({ ...currentState, operator: event.target.value }))}
               options={[
@@ -249,7 +261,7 @@ export default function RoutingRules() {
             />
           </div>
           <Input
-            label="Value"
+            label="Ngưỡng"
             type="number"
             value={formState.value}
             onChange={(event) => setFormState((currentState) => ({ ...currentState, value: event.target.value }))}
@@ -269,8 +281,8 @@ export default function RoutingRules() {
             value={formState.active ? "active" : "inactive"}
             onChange={(event) => setFormState((currentState) => ({ ...currentState, active: event.target.value === "active" }))}
             options={[
-              { label: "active", value: "active" },
-              { label: "inactive", value: "inactive" },
+              { label: "Đang bật", value: "active" },
+              { label: "Tạm tắt", value: "inactive" },
             ]}
           />
           {error ? <p className="text-sm text-rose-600">{error}</p> : null}

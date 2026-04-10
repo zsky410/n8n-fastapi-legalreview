@@ -10,7 +10,7 @@ import Modal from "../../components/ui/Modal.jsx";
 import Select from "../../components/ui/Select.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import { getUsers } from "../../lib/api.js";
-import { formatDateTime } from "../../lib/formatters.js";
+import { formatDateTime, formatRoleLabel } from "../../lib/formatters.js";
 import { mockUsers } from "../../lib/mockData.js";
 
 const STORAGE_KEY = "legaldesk-ui-users";
@@ -33,6 +33,14 @@ function readStoredUsers() {
   }
 }
 
+function hasStoredUsers() {
+  try {
+    return Boolean(window.localStorage.getItem(STORAGE_KEY));
+  } catch {
+    return false;
+  }
+}
+
 export default function UserManagement() {
   const [users, setUsers] = useState(() => readStoredUsers());
   const [isLoading, setIsLoading] = useState(true);
@@ -41,6 +49,11 @@ export default function UserManagement() {
   useEffect(() => {
     let isMounted = true;
     async function loadUsers() {
+      if (hasStoredUsers()) {
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       setLoadError("");
       try {
@@ -80,7 +93,7 @@ export default function UserManagement() {
       sortable: true,
       render: (row) => (
         <Badge className={row.role === "admin" ? "border-brand-100 bg-brand-50 text-brand-700" : "border-slate-200 bg-slate-100 text-slate-700"}>
-          {row.role === "admin" ? "Admin" : "Client"}
+          {formatRoleLabel(row.role)}
         </Badge>
       ),
     },
@@ -135,7 +148,7 @@ export default function UserManagement() {
               )
             }
           >
-            {row.status === "Đang hoạt động" ? "Disable" : "Enable"}
+            {row.status === "Đang hoạt động" ? "Tạm dừng" : "Kích hoạt"}
           </Button>
         </div>
       ),
@@ -178,11 +191,10 @@ export default function UserManagement() {
     <div className="space-y-5">
       <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_52%,#f8fafc_100%)]">
         <CardContent className="space-y-4 p-6">
-          <Badge className="border-brand-100 bg-white/80 text-brand-700">Admin user workspace</Badge>
           <div>
-            <h2 className="text-3xl font-semibold text-slate-900">Quản lý người dùng của client và admin trong cùng một surface.</h2>
+            <h2 className="text-3xl font-semibold text-slate-900">Quản lý người dùng của khách hàng và quản trị viên.</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
-              Bản này bám đúng plan Milestone 5: chỉ có 2 role là client và admin, đủ add/edit để demo quyền truy cập và vận hành cơ bản.
+              Thêm hoặc cập nhật tài khoản vận hành, kiểm soát trạng thái truy cập và theo dõi lần hoạt động gần nhất của từng người dùng.
             </p>
           </div>
         </CardContent>
@@ -193,7 +205,7 @@ export default function UserManagement() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h3 className="text-xl font-semibold text-slate-900">Danh sách người dùng</h3>
-              <p className="text-sm text-slate-500">Các thay đổi được lưu local để admin có thể quay lại kiểm tra trong cùng buổi demo.</p>
+              <p className="text-sm text-slate-500">Các thay đổi được giữ lại trên trình duyệt hiện tại để thuận tiện kiểm tra nhanh trong cùng phiên làm việc.</p>
             </div>
             <Button
               onClick={() => {
@@ -229,7 +241,7 @@ export default function UserManagement() {
         open={isModalOpen}
         onClose={closeModal}
         title={formState.id ? "Cập nhật người dùng" : "Thêm người dùng mới"}
-        description="Giới hạn role ở Client/Admin để bám đúng capstone plan."
+        description="Chọn vai trò phù hợp để quản lý quyền truy cập và phạm vi thao tác của từng tài khoản."
       >
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
@@ -249,8 +261,8 @@ export default function UserManagement() {
               value={formState.role}
               onChange={(event) => setFormState((currentState) => ({ ...currentState, role: event.target.value }))}
               options={[
-                { label: "Client", value: "client" },
-                { label: "Admin", value: "admin" },
+                { label: "Khách hàng", value: "client" },
+                { label: "Quản trị", value: "admin" },
               ]}
             />
             <Select
@@ -287,8 +299,8 @@ export default function UserManagement() {
             <UserRound className="h-5 w-5" />
           </span>
           <div>
-            <p className="text-lg font-semibold">Role scope được giữ gọn đúng plan</p>
-            <p className="mt-1 text-sm text-slate-300">Không mở rộng sang Lawyer ở phase này để tránh trượt khỏi Milestone 5.</p>
+            <p className="text-lg font-semibold">Chỉ quản lý 2 vai trò chính</p>
+            <p className="mt-1 text-sm text-slate-300">Gồm khách hàng và quản trị viên để giữ giao diện gọn và dễ vận hành.</p>
           </div>
         </CardContent>
       </Card>

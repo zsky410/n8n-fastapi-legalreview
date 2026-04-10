@@ -92,24 +92,42 @@ async function runWithMode({ mockHandler, realHandler, allowFallback = false }) 
   }
 }
 
-function ensureExtractedTextLength(text = "") {
-  const trimmed = String(text || "").trim();
-  if (trimmed.length >= REVIEW_MIN_TEXT_LENGTH) {
-    return trimmed;
+function buildReviewInputText(payload = {}) {
+  const extractedText = String(payload.extractedText || "").trim();
+
+  if (extractedText.length >= REVIEW_MIN_TEXT_LENGTH) {
+    return extractedText;
   }
-  return (
-    `${trimmed} ` +
-    "Noi dung duoc bo sung de dap ung nguong toi thieu cho review schema va giu on dinh luong hybrid."
-  ).trim();
+
+  const synthesizedText = [
+    extractedText,
+    payload.description ? `Mô tả hồ sơ: ${payload.description}` : "",
+    payload.title ? `Tiêu đề hồ sơ: ${payload.title}` : "",
+    payload.metadata?.documentName ? `Tên tài liệu: ${payload.metadata.documentName}` : "",
+    payload.metadata?.documentTypeHint || payload.metadata?.domain || payload.domain
+      ? `Lĩnh vực: ${payload.metadata?.documentTypeHint || payload.metadata?.domain || payload.domain}`
+      : "",
+    payload.metadata?.priority || payload.priority
+      ? `Mức ưu tiên: ${payload.metadata?.priority || payload.priority}`
+      : "",
+  ]
+    .filter(Boolean)
+    .join(". ");
+
+  if (synthesizedText.length >= REVIEW_MIN_TEXT_LENGTH) {
+    return synthesizedText;
+  }
+
+  return `${synthesizedText}. Người dùng cần đánh giá sơ bộ tài liệu dựa trên thông tin hiện có.`.trim();
 }
 
 function normalizeReviewPayload(payload = {}) {
   return {
     caseId: payload.caseId,
-    extractedText: ensureExtractedTextLength(payload.extractedText),
+    extractedText: buildReviewInputText(payload),
     language: payload.language || "vi",
     metadata: {
-      documentName: payload.metadata?.documentName || payload.documentName || "tai_lieu_demo.pdf",
+      documentName: payload.metadata?.documentName || payload.documentName || "tai_lieu_moi.pdf",
       documentTypeHint: payload.metadata?.documentTypeHint || payload.metadata?.domain || payload.domain || "general legal document",
       priority: payload.metadata?.priority || payload.priority || "medium",
       submittedBy: payload.metadata?.submittedBy || "client_portal",
@@ -135,7 +153,7 @@ function normalizeReviewRiskFlags(flags = []) {
     }
     return {
       code: flag.code || `risk_${index + 1}`,
-      label: flag.label || flag.excerpt || "Risk flag",
+      label: flag.label || flag.excerpt || "Cảnh báo rủi ro",
       severity: flag.severity || "medium",
       excerpt: flag.excerpt || "",
       rationale: flag.rationale || "",
@@ -148,19 +166,19 @@ function normalizeReviewResponse(raw = {}, fallbackPayload = {}) {
     typeof raw.qualityWarning === "string"
       ? raw.qualityWarning
       : raw.qualityWarning
-        ? "Chat luong du lieu dau vao can duoc kiem tra them."
+        ? "Chất lượng dữ liệu đầu vào cần được kiểm tra thêm."
         : "";
 
   return {
     caseId: raw.caseId || fallbackPayload.caseId || "",
-    docType: raw.docType || "General Legal Document",
+    docType: raw.docType || "Tài liệu pháp lý tổng quát",
     confidence: Number(raw.confidence ?? 0),
     riskScore: Number(raw.riskScore ?? 0),
     riskLevel: raw.riskLevel || "low",
     riskFlags: normalizeReviewRiskFlags(raw.riskFlags),
     extractedFields: raw.extractedFields || {},
-    recommendedAction: raw.recommendedAction || "doi chieu tai lieu goc",
-    summary: raw.summary || "Chua co tom tat chi tiet tu he thong.",
+    recommendedAction: raw.recommendedAction || "review",
+    summary: raw.summary || "Chưa có tóm tắt chi tiết từ hệ thống.",
     needsAttention: Boolean(raw.needsAttention),
     qualityWarning: qualityWarningText,
     disclaimer: raw.disclaimer || DEFAULT_DISCLAIMER,
@@ -177,7 +195,7 @@ function normalizeChatResponse(raw = {}, fallbackPayload = {}) {
   const normalizedCitations = Array.isArray(raw.citations)
     ? raw.citations.map((citation, index) => ({
         id: `cit-${Date.now()}-${index}`,
-        label: citation.label || citation.source || `citation-${index + 1}`,
+        label: citation.label || citation.source || `Trích dẫn ${index + 1}`,
         excerpt: citation.excerpt || "",
         source: citation.source || citation.label || "",
         rationale: citation.rationale || "",
@@ -186,7 +204,7 @@ function normalizeChatResponse(raw = {}, fallbackPayload = {}) {
 
   return {
     caseId: raw.caseId || fallbackPayload.caseId || "",
-    answer: raw.answer || "He thong chua tra ve cau tra loi.",
+    answer: raw.answer || "Hệ thống chưa trả về câu trả lời.",
     citations: normalizedCitations,
     caution: raw.caution || "",
     confidence: Number(raw.confidence ?? 0),

@@ -31,7 +31,7 @@ export default function ChatPanel({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-4 rounded-[28px] border border-slate-200 bg-slate-50/60 p-4">
+      <div className="space-y-4 rounded-[28px] border border-slate-200 bg-slate-50/70 p-4">
         {messages.length ? (
           messages.map((message) => <ChatBubble key={message.id} message={message} />)
         ) : (
@@ -42,7 +42,7 @@ export default function ChatPanel({
         {isSending ? (
           <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">
             <Spinner />
-            Đang gửi câu hỏi đến engine review...
+            Đang chuẩn bị câu trả lời...
           </div>
         ) : null}
       </div>

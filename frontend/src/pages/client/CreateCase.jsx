@@ -2,7 +2,6 @@ import { CheckCircle2, FileStack } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import Badge from "../../components/ui/Badge.jsx";
 import Button from "../../components/ui/Button.jsx";
 import Card, { CardContent } from "../../components/ui/Card.jsx";
 import FileUpload from "../../components/ui/FileUpload.jsx";
@@ -10,6 +9,7 @@ import Input from "../../components/ui/Input.jsx";
 import Select from "../../components/ui/Select.jsx";
 import { useCases } from "../../hooks/useCases.js";
 import { LEGAL_DOMAINS } from "../../lib/constants.js";
+import { formatPriorityLabel } from "../../lib/formatters.js";
 
 export default function CreateCase() {
   const navigate = useNavigate();
@@ -37,10 +37,10 @@ export default function CreateCase() {
     const primaryFile = files[0];
     const nextCase = createCase({
       title: title.trim(),
-      description: summary.trim() || "Hồ sơ được tạo từ form client và chờ AI review mock-first.",
+      description: summary.trim() || "Hồ sơ đang chờ hệ thống tiếp nhận và phân tích.",
       domain,
       priority,
-      documentName: primaryFile?.name || "tai_lieu_demo.pdf",
+      documentName: primaryFile?.name || "tai_lieu_moi.pdf",
       extractedText: extractedText.trim() || summary.trim(),
       files,
     });
@@ -52,11 +52,10 @@ export default function CreateCase() {
     <div className="space-y-5">
       <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_52%,#f8fafc_100%)]">
         <CardContent className="space-y-4 p-6">
-          <Badge className="border-brand-100 bg-white/80 text-brand-700">CreateCase mock-first</Badge>
           <div>
             <h2 className="text-3xl font-semibold text-slate-900">Tạo hồ sơ mới</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-              Gồm 2 bước trên cùng một trang: nhập thông tin cơ bản và upload tài liệu, sau đó chuyển sang `CaseDetail`.
+              Nhập thông tin cơ bản, thêm tài liệu và chuyển thẳng sang trang chi tiết để tiếp tục theo dõi kết quả.
             </p>
           </div>
         </CardContent>
@@ -99,7 +98,7 @@ export default function CreateCase() {
                 value={summary}
                 onChange={(event) => setSummary(event.target.value)}
                 placeholder="Nêu rõ điều khoản cần rà soát, deadline hoặc mức ưu tiên của hồ sơ..."
-                hint="Phần này sẽ được dùng để hiển thị card summary tại dashboard và case detail."
+                hint="Phần này sẽ được dùng để hiển thị phần tóm tắt tại trang tổng quan và chi tiết hồ sơ."
               />
 
               <Input
@@ -107,8 +106,8 @@ export default function CreateCase() {
                 multiline
                 value={extractedText}
                 onChange={(event) => setExtractedText(event.target.value)}
-                placeholder="Dán một đoạn nội dung OCR để mock review tạo được risk score, flags và extracted fields sát hơn."
-                hint="Có thể để trống nếu bạn chỉ muốn test flow UI; hệ thống sẽ fallback sang mô tả ngắn."
+                placeholder="Dán một đoạn nội dung OCR hoặc nội dung chính của tài liệu để hệ thống phân tích chính xác hơn."
+                hint="Nội dung càng đầy đủ thì phần tóm tắt, cảnh báo và trường thông tin trích xuất sẽ càng sát tài liệu hơn."
               />
 
               <h3 className="text-lg font-semibold text-slate-900">Bước 2: Upload tài liệu</h3>
@@ -154,7 +153,7 @@ export default function CreateCase() {
               </div>
               <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
                 <p className="text-sm text-white/70">Ưu tiên</p>
-                <p className="mt-2 text-lg font-semibold text-white">{priority.toUpperCase()}</p>
+                <p className="mt-2 text-lg font-semibold text-white">{formatPriorityLabel(priority)}</p>
               </div>
               <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
                 <p className="text-sm text-white/70">Tệp đính kèm</p>
@@ -170,14 +169,14 @@ export default function CreateCase() {
                   <FileStack className="h-5 w-5" />
                 </span>
                 <div>
-                  <p className="font-semibold text-slate-900">Flow sau khi submit</p>
-                  <p className="text-sm text-slate-500">Từ CreateCase sang CaseDetail, rồi chạy AI mock, chat theo case và theo dõi timeline.</p>
+                  <p className="font-semibold text-slate-900">Sau khi gửi hồ sơ</p>
+                  <p className="text-sm text-slate-500">Bạn sẽ được chuyển sang trang chi tiết để xem phân tích, trao đổi và theo dõi tiến trình xử lý.</p>
                 </div>
               </div>
               <ul className="space-y-3 text-sm leading-6 text-slate-500">
-                <li>Case được lưu ở local state và giữ lại khi reload trình duyệt.</li>
-                <li>Document name lấy từ file đầu tiên hoặc dùng fallback demo nếu chưa upload.</li>
-                <li>Overview sẽ cho phép chạy review mock-first ngay trên case vừa tạo.</li>
+                <li>Hồ sơ được lưu trên trình duyệt hiện tại và vẫn còn sau khi bạn tải lại trang.</li>
+                <li>Tên tài liệu được lấy từ tệp đầu tiên; nếu chưa tải lên, hệ thống sẽ dùng tên mặc định.</li>
+                <li>Bạn có thể chạy phân tích ngay trên hồ sơ vừa tạo để xem điểm rủi ro và khuyến nghị.</li>
               </ul>
             </CardContent>
           </Card>

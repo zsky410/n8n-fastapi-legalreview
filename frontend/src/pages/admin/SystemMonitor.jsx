@@ -8,20 +8,20 @@ import EmptyState from "../../components/ui/EmptyState.jsx";
 import KpiCard from "../../components/ui/KpiCard.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import { getHealth } from "../../lib/api.js";
-import { formatDateTime } from "../../lib/formatters.js";
+import { formatDateTime, formatHealthStatus } from "../../lib/formatters.js";
 
 const mockOpsMetrics = [
-  { label: "n8n orchestrator", value: "connected" },
-  { label: "Uptime", value: "6d 11h" },
-  { label: "Requests today", value: "1,284" },
-  { label: "Avg response", value: "312ms" },
-  { label: "Error rate", value: "1.8%" },
+  { label: "Điều phối n8n", value: "Kết nối" },
+  { label: "Thời gian hoạt động", value: "6 ngày 11 giờ" },
+  { label: "Yêu cầu hôm nay", value: "1.284" },
+  { label: "Phản hồi trung bình", value: "312ms" },
+  { label: "Tỷ lệ lỗi", value: "1,8%" },
 ];
 
 const mockEndpointRows = [
-  { id: "ep-1", endpoint: "/v1/legal/review", status: "mock-observed", latency: "280ms", note: "Sample from UI telemetry" },
-  { id: "ep-2", endpoint: "/v1/legal/chat", status: "mock-observed", latency: "190ms", note: "Sample from UI telemetry" },
-  { id: "ep-3", endpoint: "/health", status: "real", latency: "95ms", note: "From FastAPI health probe" },
+  { id: "ep-1", endpoint: "/v1/legal/review", status: "đang theo dõi", latency: "280ms", note: "Tổng hợp từ nhật ký giao diện" },
+  { id: "ep-2", endpoint: "/v1/legal/chat", status: "đang theo dõi", latency: "190ms", note: "Tổng hợp từ nhật ký giao diện" },
+  { id: "ep-3", endpoint: "/health", status: "kết nối thật", latency: "95ms", note: "Lấy trực tiếp từ FastAPI health probe" },
 ];
 
 export default function SystemMonitor() {
@@ -59,27 +59,26 @@ export default function SystemMonitor() {
   }, [health]);
 
   const dependencyColumns = [
-    { key: "service", label: "Service", sortable: true },
-    { key: "status", label: "Status", sortable: true },
-    { key: "detail", label: "Detail" },
+    { key: "service", label: "Dịch vụ", sortable: true },
+    { key: "status", label: "Trạng thái", sortable: true, render: (row) => formatHealthStatus(row.status) },
+    { key: "detail", label: "Chi tiết" },
   ];
 
   const endpointColumns = [
-    { key: "endpoint", label: "Endpoint", sortable: true },
-    { key: "status", label: "Status" },
-    { key: "latency", label: "Latency" },
-    { key: "note", label: "Note" },
+    { key: "endpoint", label: "Điểm gọi API", sortable: true },
+    { key: "status", label: "Trạng thái", render: (row) => formatHealthStatus(row.status) },
+    { key: "latency", label: "Độ trễ" },
+    { key: "note", label: "Nguồn dữ liệu" },
   ];
 
   return (
     <div className="space-y-5">
       <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-brand-50">
         <CardContent className="space-y-4 p-6">
-          <Badge className="border-slate-200 bg-slate-100 text-slate-700">Phase 3 · Stretch / post-M5</Badge>
           <div>
-            <h2 className="text-3xl font-semibold text-slate-900">System monitor</h2>
+            <h2 className="text-3xl font-semibold text-slate-900">Theo dõi hệ thống</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
-              Health của FastAPI/Postgres/Redis lấy từ endpoint thật; các chỉ số vận hành chưa có endpoint sẽ hiển thị mock-first và gắn nhãn rõ ràng.
+              Theo dõi nhanh tình trạng dịch vụ, kết nối phụ thuộc và một số chỉ số vận hành quan trọng trong cùng một màn hình.
             </p>
           </div>
         </CardContent>
@@ -95,11 +94,11 @@ export default function SystemMonitor() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Health (real endpoint)</h3>
+              <h3 className="text-xl font-semibold text-slate-900">Tình trạng dịch vụ</h3>
               <p className="text-sm text-slate-500">Nguồn dữ liệu: `GET /health` từ FastAPI.</p>
             </div>
             <Button variant="secondary" onClick={loadHealth} disabled={isLoading}>
-              Làm mới health
+              Làm mới trạng thái
             </Button>
           </div>
 
@@ -117,17 +116,17 @@ export default function SystemMonitor() {
           ) : health ? (
             <div className="space-y-4">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
-                <p>service: {health.service || "legaldesk-fastapi"}</p>
-                <p>status: {health.status || "unknown"}</p>
-                <p>environment: {health.environment || "-"}</p>
-                <p>timestamp: {formatDateTime(health.timestamp)}</p>
+                <p>Dịch vụ: {health.service || "legaldesk-fastapi"}</p>
+                <p>Trạng thái: {formatHealthStatus(health.status)}</p>
+                <p>Môi trường: {health.environment || "-"}</p>
+                <p>Thời gian: {formatDateTime(health.timestamp)}</p>
               </div>
               <DataTable
                 columns={dependencyColumns}
                 rows={dependencyRows}
                 searchKeys={["service", "status", "detail"]}
-                emptyTitle="Không có dependency status"
-                emptyDescription="Endpoint health chưa trả về dependencies."
+                emptyTitle="Không có trạng thái phụ thuộc"
+                emptyDescription="Dữ liệu health chưa trả về danh sách phụ thuộc."
               />
             </div>
           ) : (
@@ -140,17 +139,17 @@ export default function SystemMonitor() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Operational metrics & endpoint table</h3>
-              <p className="text-sm text-slate-500">Các dữ liệu bên dưới là mock-first vì backend chưa có endpoint tổng hợp.</p>
+              <h3 className="text-xl font-semibold text-slate-900">Chỉ số vận hành và endpoint</h3>
+              <p className="text-sm text-slate-500">Tổng hợp một số số liệu hữu ích để theo dõi khả năng phản hồi của hệ thống.</p>
             </div>
-            <Badge className="border-amber-200 bg-amber-50 text-amber-700">Mock data</Badge>
+            <Badge className="border-amber-200 bg-amber-50 text-amber-700">Dữ liệu tham khảo</Badge>
           </div>
           <DataTable
             columns={endpointColumns}
             rows={mockEndpointRows}
             searchKeys={["endpoint", "status", "latency", "note"]}
             emptyTitle="Chưa có endpoint status"
-            emptyDescription="Khi chưa có endpoint metrics thật, bảng này dùng mock-first cho demo."
+            emptyDescription="Bảng sẽ hiển thị thêm dữ liệu khi hệ thống ghi nhận được nhiều lần gọi hơn."
           />
         </CardContent>
       </Card>

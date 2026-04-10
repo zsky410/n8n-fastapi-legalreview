@@ -24,7 +24,7 @@ export default function ChatBubble({ message }) {
           </p>
         ) : null}
         {typeof message.confidence === "number" ? (
-          <p className="mt-2 text-xs text-slate-500">Confidence: {Math.round(message.confidence * 100)}%</p>
+          <p className="mt-2 text-xs text-slate-500">Độ tin cậy: {Math.round(message.confidence * 100)}%</p>
         ) : null}
         {message.citations?.length ? (
           <div className="mt-4 space-y-3">

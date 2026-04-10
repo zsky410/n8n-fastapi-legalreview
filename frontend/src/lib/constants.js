@@ -1,5 +1,9 @@
 export const APP_NAME = "LegalDesk AI";
 
+/** Ảnh hero trang chủ — URL bên ngoài (Unsplash). Đổi link tại đây nếu cần ảnh khác. */
+export const HOME_HERO_IMAGE_URL =
+  "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=1600&q=85";
+
 export const API_MODE_OPTIONS = ["mock", "hybrid", "real"];
 
 export const ROLE_LABELS = {
@@ -18,31 +22,29 @@ export const DEMO_ACCOUNTS = [
     role: "client",
     name: "Kim Thao Ops",
     company: "Kim Thao Garment",
-    subtitle: "Khách hàng demo",
+    subtitle: "Tài khoản khách hàng dùng thử",
   },
   {
     email: "admin@demo.vn",
     role: "admin",
     name: "LegalDesk Admin",
     company: "LegalDesk AI",
-    subtitle: "Vận hành workflow",
+    subtitle: "Tài khoản quản trị vận hành",
   },
 ];
 
 export const CLIENT_NAV_ITEMS = [
   {
-    label: "Dashboard",
+    label: "Tổng quan",
     href: "/client/dashboard",
     icon: "LayoutDashboard",
     showInNav: true,
-    phase: "M5 core",
   },
   {
     label: "Tạo hồ sơ",
     href: "/client/cases/new",
     icon: "FilePlus2",
     showInNav: true,
-    phase: "M5 core",
   },
 ];
 
@@ -52,57 +54,52 @@ export const ADMIN_NAV_ITEMS = [
     href: "/admin/routing",
     icon: "Settings2",
     showInNav: true,
-    phase: "M5 core",
   },
   {
     label: "Nhật ký vận hành",
     href: "/admin/logs",
     icon: "Logs",
     showInNav: true,
-    phase: "M5 core",
   },
   {
     label: "Người dùng",
     href: "/admin/users",
     icon: "Users2",
     showInNav: true,
-    phase: "M5 core",
   },
   {
     label: "Bảng điều khiển",
     href: "/admin/dashboard",
     icon: "GaugeCircle",
     showInNav: true,
-    phase: "Stretch",
   },
   {
     label: "Hệ thống",
     href: "/admin/system",
     icon: "Activity",
     showInNav: true,
-    phase: "Stretch",
   },
 ];
 
 export const STATUS_META = {
   uploaded: {
-    label: "Uploaded",
+    label: "Đã tải lên",
     className: "border-slate-200 bg-slate-100 text-slate-700",
   },
   extracting: {
-    label: "TextExtractOrOCR",
+    label: "Đang OCR",
     className: "border-amber-200 bg-amber-50 text-amber-700",
   },
   ai_analyzing: {
-    label: "AIAnalyzing",
+    label: "AI đang phân tích",
     className: "border-blue-200 bg-blue-50 text-blue-700",
   },
   auto_published: {
-    label: "AutoPublished",
+    label: "Đã công bố",
     className: "border-emerald-200 bg-emerald-50 text-emerald-700",
   },
   finalized: {
-    label: "Finalized",
+    label: "Hoàn tất",
     className: "border-brand-100 bg-brand-50 text-brand-700",
   },
 };
@@ -123,11 +120,11 @@ export const RISK_META = {
 };
 
 export const PIPELINE_STAGES = [
-  "Uploaded",
-  "TextExtractOrOCR",
-  "AIAnalyzing",
-  "AutoPublished",
-  "Finalized",
+  "Đã tải lên",
+  "OCR",
+  "Phân tích AI",
+  "Đã công bố",
+  "Hoàn tất",
 ];
 
 export const LEGAL_DOMAINS = [
@@ -162,12 +159,3 @@ export const NOTIFICATION_DEFAULTS = {
   inApp: true,
   sms: false,
 };
-
-export const PHASE_ONE_FOUNDATION_MODULES = [
-  "AppShell có sidebar theo role và topbar dùng chung",
-  "Routing cho Home / Auth / Onboarding / Client / Admin",
-  "Auth context với 2 tài khoản demo và redirect theo role",
-  "API layer hỗ trợ mock | hybrid | real",
-  "UI primitives cho card, tab, bảng, upload và empty state",
-  "Placeholder routes sẵn sàng để mở rộng sang Phase 2",
-];

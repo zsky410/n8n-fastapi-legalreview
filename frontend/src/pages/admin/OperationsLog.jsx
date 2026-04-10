@@ -1,25 +1,16 @@
-import { ChevronRight, Filter, ScrollText, Workflow } from "lucide-react";
-import { useMemo, useState } from "react";
+import { ChevronRight, ScrollText, Workflow } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 
 import Badge from "../../components/ui/Badge.jsx";
 import Button from "../../components/ui/Button.jsx";
 import Card, { CardContent } from "../../components/ui/Card.jsx";
 import DataTable from "../../components/ui/DataTable.jsx";
+import Input from "../../components/ui/Input.jsx";
+import Select from "../../components/ui/Select.jsx";
+import Spinner from "../../components/ui/Spinner.jsx";
 import Tabs, { TabPanel } from "../../components/ui/Tabs.jsx";
+import { getAuditLogs, getWorkflowExecutions } from "../../lib/api.js";
 import { formatDateTime } from "../../lib/formatters.js";
-import { mockAuditLogs, mockWorkflowExecutions } from "../../lib/mockData.js";
-
-const auditColumns = [
-  { key: "actor", label: "Tác nhân", sortable: true },
-  { key: "action", label: "Hành động" },
-  { key: "scope", label: "Phạm vi", sortable: true },
-  {
-    key: "timestamp",
-    label: "Thời gian",
-    sortable: true,
-    render: (row) => formatDateTime(row.timestamp),
-  },
-];
 
 const tabs = [
   { label: "Nhật ký kiểm toán", value: "audit" },
@@ -27,39 +18,139 @@ const tabs = [
 ];
 
 function getExecutionBadgeClass(status) {
-  if (status === "Hoàn tất") {
+  if (status === "success") {
     return "border-emerald-200 bg-emerald-50 text-emerald-700";
   }
 
-  if (status === "Đang chạy") {
+  if (status === "retry") {
+    return "border-amber-200 bg-amber-50 text-amber-700";
+  }
+
+  if (status === "failed") {
+    return "border-rose-200 bg-rose-50 text-rose-700";
+  }
+
+  if (status === "running") {
     return "border-brand-100 bg-brand-50 text-brand-700";
   }
 
-  return "border-amber-200 bg-amber-50 text-amber-700";
+  return "border-slate-200 bg-slate-100 text-slate-700";
 }
 
 export default function OperationsLog() {
   const [activeTab, setActiveTab] = useState("audit");
-  const [scopeFilter, setScopeFilter] = useState("Tất cả");
-  const [selectedWorkflowId, setSelectedWorkflowId] = useState(mockWorkflowExecutions[0]?.id || "");
+  const [auditLogs, setAuditLogs] = useState([]);
+  const [workflowRows, setWorkflowRows] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
+  const [selectedWorkflowId, setSelectedWorkflowId] = useState("");
+  const [eventTypeFilter, setEventTypeFilter] = useState("all");
+  const [caseIdFilter, setCaseIdFilter] = useState("");
+  const [userIdFilter, setUserIdFilter] = useState("");
+  const [workflowStatusFilter, setWorkflowStatusFilter] = useState("all");
+  const [workflowNameFilter, setWorkflowNameFilter] = useState("all");
+  const [auditFrom, setAuditFrom] = useState("");
+  const [auditTo, setAuditTo] = useState("");
+  const [workflowFrom, setWorkflowFrom] = useState("");
+  const [workflowTo, setWorkflowTo] = useState("");
+  const [selectedAuditId, setSelectedAuditId] = useState("");
 
-  const scopes = ["Tất cả", ...new Set(mockAuditLogs.map((entry) => entry.scope))];
-  const filteredAuditLogs =
-    scopeFilter === "Tất cả"
-      ? mockAuditLogs
-      : mockAuditLogs.filter((entry) => entry.scope === scopeFilter);
+  useEffect(() => {
+    let isMounted = true;
+    async function loadData() {
+      setIsLoading(true);
+      setLoadError("");
+      try {
+        const [auditData, workflowData] = await Promise.all([getAuditLogs(), getWorkflowExecutions()]);
+        if (isMounted) {
+          setAuditLogs(auditData);
+          setWorkflowRows(workflowData);
+          setSelectedWorkflowId(workflowData[0]?.id || "");
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(error.message || "Không thể tải logs vận hành.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+    loadData();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const auditColumns = [
+    { key: "timestamp", label: "Timestamp", sortable: true, render: (row) => formatDateTime(row.timestamp) },
+    { key: "eventType", label: "Event type", sortable: true },
+    { key: "caseId", label: "caseId", sortable: true },
+    { key: "userId", label: "userId", sortable: true },
+    { key: "description", label: "Mô tả" },
+    {
+      key: "details",
+      label: "Chi tiết",
+      render: (row) => (
+        <Button variant="secondary" size="sm" onClick={() => setSelectedAuditId(row.id)}>
+          <ChevronRight className="h-4 w-4" />
+          Xem
+        </Button>
+      ),
+    },
+  ];
+
+  const eventTypes = ["all", ...new Set(auditLogs.map((entry) => entry.eventType))];
+  const workflowNames = ["all", ...new Set(workflowRows.map((entry) => entry.workflowName))];
+  const filteredAuditLogs = auditLogs.filter((entry) => {
+    if (eventTypeFilter !== "all" && entry.eventType !== eventTypeFilter) {
+      return false;
+    }
+    if (caseIdFilter.trim() && !String(entry.caseId || "").toLowerCase().includes(caseIdFilter.trim().toLowerCase())) {
+      return false;
+    }
+    if (userIdFilter.trim() && !String(entry.userId || "").toLowerCase().includes(userIdFilter.trim().toLowerCase())) {
+      return false;
+    }
+    if (auditFrom && new Date(entry.timestamp).getTime() < new Date(auditFrom).getTime()) {
+      return false;
+    }
+    if (auditTo && new Date(entry.timestamp).getTime() > new Date(auditTo).getTime()) {
+      return false;
+    }
+    return true;
+  });
+
+  const filteredWorkflows = workflowRows.filter((entry) => {
+    if (workflowStatusFilter !== "all" && entry.status !== workflowStatusFilter) {
+      return false;
+    }
+    if (workflowNameFilter !== "all" && entry.workflowName !== workflowNameFilter) {
+      return false;
+    }
+    if (workflowFrom && new Date(entry.startedAt).getTime() < new Date(workflowFrom).getTime()) {
+      return false;
+    }
+    if (workflowTo && new Date(entry.startedAt).getTime() > new Date(workflowTo).getTime()) {
+      return false;
+    }
+    return true;
+  });
 
   const workflowColumns = [
-    { key: "workflow", label: "Workflow", sortable: true },
+    { key: "executionId", label: "Execution ID", sortable: true },
     { key: "caseId", label: "Case ID", sortable: true },
+    { key: "workflowName", label: "Workflow", sortable: true },
+    { key: "startedAt", label: "Started at", sortable: true, render: (row) => formatDateTime(row.startedAt) },
+    { key: "durationMs", label: "Duration", sortable: true, render: (row) => `${Math.round((row.durationMs || 0) / 1000)}s` },
     {
       key: "status",
       label: "Trạng thái",
       sortable: true,
       render: (row) => <Badge className={getExecutionBadgeClass(row.status)}>{row.status}</Badge>,
     },
-    { key: "lastStep", label: "Bước cuối" },
-    { key: "duration", label: "Thời lượng" },
+    { key: "stepsCompleted", label: "Steps" },
     {
       key: "detail",
       label: "Chi tiết",
@@ -73,8 +164,12 @@ export default function OperationsLog() {
   ];
 
   const selectedWorkflow = useMemo(
-    () => mockWorkflowExecutions.find((entry) => entry.id === selectedWorkflowId) || mockWorkflowExecutions[0],
-    [selectedWorkflowId],
+    () => filteredWorkflows.find((entry) => entry.id === selectedWorkflowId) || filteredWorkflows[0],
+    [filteredWorkflows, selectedWorkflowId],
+  );
+  const selectedAudit = useMemo(
+    () => filteredAuditLogs.find((entry) => entry.id === selectedAuditId) || filteredAuditLogs[0],
+    [filteredAuditLogs, selectedAuditId],
   );
 
   return (
@@ -99,43 +194,48 @@ export default function OperationsLog() {
       <TabPanel activeValue={activeTab} value="audit">
         <Card>
           <CardContent className="space-y-4 p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h3 className="text-xl font-semibold text-slate-900">Audit logs</h3>
-                <p className="text-sm text-slate-500">Lọc nhanh theo scope để kiểm tra luồng client, admin và review engine.</p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {scopes.map((scope) => (
-                  <button
-                    key={scope}
-                    type="button"
-                    onClick={() => setScopeFilter(scope)}
-                    className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                      scopeFilter === scope
-                        ? "bg-brand-500 text-white shadow-sm shadow-brand-200"
-                        : "border border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:text-brand-700"
-                    }`}
-                  >
-                    {scope}
-                  </button>
-                ))}
-              </div>
+            <div>
+              <h3 className="text-xl font-semibold text-slate-900">Audit logs</h3>
+              <p className="text-sm text-slate-500">Filter theo loại sự kiện, caseId, userId để xem audit trail.</p>
             </div>
-
-            <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-              <div className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-                <Filter className="h-4 w-4 text-brand-700" />
-                Bộ lọc hiện tại: {scopeFilter}
-              </div>
+            <div className="grid gap-3 md:grid-cols-5">
+              <Select
+                label="Event type"
+                value={eventTypeFilter}
+                onChange={(event) => setEventTypeFilter(event.target.value)}
+                options={eventTypes.map((entry) => ({ label: entry, value: entry }))}
+              />
+              <Input label="caseId" value={caseIdFilter} onChange={(event) => setCaseIdFilter(event.target.value)} placeholder="CASE-2604-001" />
+              <Input label="userId" value={userIdFilter} onChange={(event) => setUserIdFilter(event.target.value)} placeholder="client@demo.vn" />
+              <Input label="Từ thời gian" type="datetime-local" value={auditFrom} onChange={(event) => setAuditFrom(event.target.value)} />
+              <Input label="Đến thời gian" type="datetime-local" value={auditTo} onChange={(event) => setAuditTo(event.target.value)} />
             </div>
-
-            <DataTable
-              columns={auditColumns}
-              rows={filteredAuditLogs}
-              searchKeys={["actor", "action", "scope", "timestamp"]}
-              emptyTitle="Không có audit log khớp bộ lọc"
-              emptyDescription="Thử chuyển sang scope khác hoặc xóa bộ lọc để xem đầy đủ lịch sử."
-            />
+            {isLoading ? (
+              <div className="flex items-center justify-center py-14">
+                <Spinner className="h-7 w-7 text-brand-700" />
+              </div>
+            ) : loadError ? (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
+            ) : (
+              <DataTable
+                columns={auditColumns}
+                rows={filteredAuditLogs}
+                searchKeys={["eventType", "caseId", "userId", "description", "details"]}
+                emptyTitle="Không có audit log khớp bộ lọc"
+                emptyDescription="Thử đổi event type hoặc xóa điều kiện lọc."
+              />
+            )}
+            {selectedAudit ? (
+              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
+                <p className="font-semibold text-slate-900">Audit detail</p>
+                <p className="mt-2">timestamp: {formatDateTime(selectedAudit.timestamp)}</p>
+                <p>eventType: {selectedAudit.eventType}</p>
+                <p>caseId: {selectedAudit.caseId}</p>
+                <p>userId: {selectedAudit.userId}</p>
+                <p className="mt-2">{selectedAudit.description}</p>
+                <p className="mt-1 text-slate-500">{selectedAudit.details}</p>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       </TabPanel>
@@ -148,13 +248,42 @@ export default function OperationsLog() {
                 <h3 className="text-xl font-semibold text-slate-900">Workflow executions</h3>
                 <p className="text-sm text-slate-500">Chọn một execution để mở panel chi tiết và mô phỏng insight vận hành.</p>
               </div>
-              <DataTable
-                columns={workflowColumns}
-                rows={mockWorkflowExecutions}
-                searchKeys={["workflow", "caseId", "status", "lastStep"]}
-                emptyTitle="Chưa có workflow execution"
-                emptyDescription="Surface này sẽ hiển thị execution khi có dữ liệu mock phù hợp."
-              />
+              <div className="grid gap-3 md:grid-cols-4">
+                <Select
+                  label="Workflow"
+                  value={workflowNameFilter}
+                  onChange={(event) => setWorkflowNameFilter(event.target.value)}
+                  options={workflowNames.map((entry) => ({ label: entry, value: entry }))}
+                />
+                <Select
+                  label="Status"
+                  value={workflowStatusFilter}
+                  onChange={(event) => setWorkflowStatusFilter(event.target.value)}
+                  options={[
+                    { label: "all", value: "all" },
+                    { label: "success", value: "success" },
+                    { label: "failed", value: "failed" },
+                    { label: "retry", value: "retry" },
+                  ]}
+                />
+                <Input label="Từ thời gian" type="datetime-local" value={workflowFrom} onChange={(event) => setWorkflowFrom(event.target.value)} />
+                <Input label="Đến thời gian" type="datetime-local" value={workflowTo} onChange={(event) => setWorkflowTo(event.target.value)} />
+              </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-14">
+                  <Spinner className="h-7 w-7 text-brand-700" />
+                </div>
+              ) : loadError ? (
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
+              ) : (
+                <DataTable
+                  columns={workflowColumns}
+                  rows={filteredWorkflows}
+                  searchKeys={["executionId", "workflowName", "caseId", "status"]}
+                  emptyTitle="Chưa có workflow execution"
+                  emptyDescription="Surface này sẽ hiển thị execution khi có dữ liệu mock phù hợp."
+                />
+              )}
             </CardContent>
           </Card>
 
@@ -166,7 +295,7 @@ export default function OperationsLog() {
                 </span>
                 <div>
                   <p className="text-sm text-white/60">Execution detail</p>
-                  <p className="mt-1 text-lg font-semibold text-white">{selectedWorkflow?.workflow || "Chưa chọn execution"}</p>
+                  <p className="mt-1 text-lg font-semibold text-white">{selectedWorkflow?.workflowName || "Chưa chọn execution"}</p>
                 </div>
               </div>
 
@@ -175,11 +304,11 @@ export default function OperationsLog() {
                   <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Snapshot</p>
                     <div className="mt-3 grid gap-3 text-sm text-slate-200">
+                      <p>Execution: {selectedWorkflow.executionId}</p>
                       <p>Case: {selectedWorkflow.caseId}</p>
                       <p>Trạng thái: {selectedWorkflow.status}</p>
-                      <p>Bước cuối: {selectedWorkflow.lastStep}</p>
-                      <p>Thời gian: {formatDateTime(selectedWorkflow.timestamp)}</p>
-                      <p>Kích hoạt bởi: {selectedWorkflow.triggeredBy}</p>
+                      <p>Bắt đầu: {formatDateTime(selectedWorkflow.startedAt)}</p>
+                      <p>Steps: {selectedWorkflow.stepsCompleted}</p>
                     </div>
                   </div>
 
@@ -192,16 +321,12 @@ export default function OperationsLog() {
                       {selectedWorkflow.steps.map((step) => (
                         <div key={`${selectedWorkflow.id}-${step.label}`} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-sm">
                           <span>{step.label}</span>
-                          <Badge className={getExecutionBadgeClass(step.status === "done" ? "Hoàn tất" : step.status === "running" ? "Đang chạy" : "Đã xếp hàng")}>
-                            {step.status === "done" ? "done" : step.status === "running" ? "running" : "queued"}
+                          <Badge className={getExecutionBadgeClass(step.status)}>
+                            {step.status}
                           </Badge>
                         </div>
                       ))}
                     </div>
-                  </div>
-
-                  <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4 text-sm leading-6 text-slate-300">
-                    {selectedWorkflow.notes}
                   </div>
                 </div>
               ) : null}

@@ -1,4 +1,4 @@
-import { CheckCircle2, FileStack, Wand2 } from "lucide-react";
+import { CheckCircle2, FileStack } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -11,15 +11,13 @@ import Select from "../../components/ui/Select.jsx";
 import { useCases } from "../../hooks/useCases.js";
 import { LEGAL_DOMAINS } from "../../lib/constants.js";
 
-const sampleExtractedText =
-  "Bên cung cấp có quyền thay đổi phạm vi dịch vụ với thông báo 7 ngày. Giới hạn trách nhiệm bằng tổng phí 3 tháng gần nhất. Tài liệu chưa mô tả rõ SLA cho thời gian khôi phục dịch vụ.";
-
 export default function CreateCase() {
   const navigate = useNavigate();
   const { createCase } = useCases();
   const [title, setTitle] = useState("");
   const [summary, setSummary] = useState("");
   const [domain, setDomain] = useState(LEGAL_DOMAINS[0]);
+  const [priority, setPriority] = useState("medium");
   const [extractedText, setExtractedText] = useState("");
   const [files, setFiles] = useState([]);
   const [error, setError] = useState("");
@@ -41,6 +39,7 @@ export default function CreateCase() {
       title: title.trim(),
       description: summary.trim() || "Hồ sơ được tạo từ form client và chờ AI review mock-first.",
       domain,
+      priority,
       documentName: primaryFile?.name || "tai_lieu_demo.pdf",
       extractedText: extractedText.trim() || summary.trim(),
       files,
@@ -55,9 +54,9 @@ export default function CreateCase() {
         <CardContent className="space-y-4 p-6">
           <Badge className="border-brand-100 bg-white/80 text-brand-700">CreateCase mock-first</Badge>
           <div>
-            <h2 className="text-3xl font-semibold text-slate-900">Tạo hồ sơ mới và chuyển thẳng sang route chi tiết.</h2>
+            <h2 className="text-3xl font-semibold text-slate-900">Tạo hồ sơ mới</h2>
             <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">
-              Form này bám đúng thin vertical slice của Milestone 5: nhập metadata, thêm file, lưu vào local state rồi mở CaseDetail để xem overview, chat và timeline.
+              Gồm 2 bước trên cùng một trang: nhập thông tin cơ bản và upload tài liệu, sau đó chuyển sang `CaseDetail`.
             </p>
           </div>
         </CardContent>
@@ -67,6 +66,7 @@ export default function CreateCase() {
         <form onSubmit={handleSubmit}>
           <Card>
             <CardContent className="space-y-5 p-6">
+              <h3 className="text-lg font-semibold text-slate-900">Bước 1: Thông tin cơ bản</h3>
               <div className="grid gap-4 lg:grid-cols-2">
                 <Input
                   label="Tên vụ việc"
@@ -82,6 +82,16 @@ export default function CreateCase() {
                   options={LEGAL_DOMAINS.map((item) => ({ label: item, value: item }))}
                 />
               </div>
+              <Select
+                label="Mức độ ưu tiên"
+                value={priority}
+                onChange={(event) => setPriority(event.target.value)}
+                options={[
+                  { label: "Thấp", value: "low" },
+                  { label: "Trung bình", value: "medium" },
+                  { label: "Cao", value: "high" },
+                ]}
+              />
 
               <Input
                 label="Mô tả ngắn"
@@ -101,27 +111,8 @@ export default function CreateCase() {
                 hint="Có thể để trống nếu bạn chỉ muốn test flow UI; hệ thống sẽ fallback sang mô tả ngắn."
               />
 
+              <h3 className="text-lg font-semibold text-slate-900">Bước 2: Upload tài liệu</h3>
               <FileUpload files={files} onFilesChange={setFiles} label="Tài liệu đính kèm" />
-
-              <div className="flex flex-wrap justify-between gap-3 rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-                <div className="space-y-2 text-sm text-slate-500">
-                  <p className="font-semibold text-slate-900">Mẹo demo nhanh</p>
-                  <p>Nếu muốn nhìn rõ risk cao ở Overview, dùng nút nạp dữ liệu mẫu SaaS trước khi tạo case.</p>
-                </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  onClick={() => {
-                    setTitle((currentTitle) => currentTitle || "Đánh giá hợp đồng SaaS cho hệ thống ERP");
-                    setSummary((currentSummary) => currentSummary || "Kiểm tra SLA, giới hạn trách nhiệm và bảo mật dữ liệu cho hệ thống ERP nội bộ.");
-                    setDomain("Hợp đồng thương mại");
-                    setExtractedText(sampleExtractedText);
-                  }}
-                >
-                  <Wand2 className="h-4 w-4" />
-                  Nạp dữ liệu mẫu
-                </Button>
-              </div>
 
               {error && title.trim() ? <p className="text-sm text-rose-600">{error}</p> : null}
 
@@ -132,6 +123,7 @@ export default function CreateCase() {
                   onClick={() => {
                     setTitle("");
                     setSummary("");
+                    setPriority("medium");
                     setExtractedText("");
                     setFiles([]);
                     setError("");
@@ -141,7 +133,7 @@ export default function CreateCase() {
                 </Button>
                 <Button type="submit" isLoading={isSubmitting}>
                   <CheckCircle2 className="h-4 w-4" />
-                  Tạo hồ sơ
+                  Gửi hồ sơ
                 </Button>
               </div>
             </CardContent>
@@ -159,6 +151,10 @@ export default function CreateCase() {
               <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
                 <p className="text-sm text-white/70">Lĩnh vực</p>
                 <p className="mt-2 text-lg font-semibold text-white">{domain}</p>
+              </div>
+              <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
+                <p className="text-sm text-white/70">Ưu tiên</p>
+                <p className="mt-2 text-lg font-semibold text-white">{priority.toUpperCase()}</p>
               </div>
               <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
                 <p className="text-sm text-white/70">Tệp đính kèm</p>

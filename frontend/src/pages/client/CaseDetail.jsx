@@ -18,7 +18,7 @@ import { formatConfidence, formatDateTime, formatSlaLabel } from "../../lib/form
 import { reviewLegal } from "../../lib/api.js";
 
 const tabItems = [
-  { label: "Tổng quan", value: "overview" },
+  { label: "Overview", value: "overview" },
   { label: "Chat", value: "chat" },
   { label: "Timeline", value: "timeline" },
 ];
@@ -36,7 +36,12 @@ function renderFieldValue(value) {
 }
 
 function getCurrentStage(caseRecord) {
-  return caseRecord.timeline?.at(-1)?.stage || "Chờ review";
+  const stage = caseRecord.timeline?.at(-1)?.stage;
+  if (stage === "Đã tải lên") return "Uploaded";
+  if (stage === "OCR") return "TextExtractOrOCR";
+  if (stage === "Phân tích AI") return "AIAnalyzing";
+  if (stage === "Đã công bố") return "AutoPublished";
+  return stage || "Uploaded";
 }
 
 export default function CaseDetail() {
@@ -50,6 +55,8 @@ export default function CaseDetail() {
   const currentStage = currentCase ? getCurrentStage(currentCase) : "Chưa xác định";
   const review = currentCase?.review;
   const completedStageIndex = PIPELINE_STAGES.findIndex((stage) => stage === currentStage);
+  const slaMs = currentCase?.slaDueAt ? new Date(currentCase.slaDueAt).getTime() - Date.now() : null;
+  const slaStatus = slaMs === null ? "on_time" : slaMs < 0 ? "overdue" : slaMs < 60 * 60 * 1000 ? "at_risk" : "on_time";
 
   async function handleRequestReview() {
     if (!currentCase) {
@@ -113,6 +120,8 @@ export default function CaseDetail() {
               <StatusBadge status={currentCase.status} />
               <RiskBadge level={currentCase.riskLevel} />
               <Badge className="border-slate-200 bg-white/80 text-slate-700">{currentCase.documentName}</Badge>
+              {review?.needsAttention ? <Badge className="border-rose-200 bg-rose-50 text-rose-700">Needs attention</Badge> : null}
+              {review?.qualityWarning ? <Badge className="border-amber-200 bg-amber-50 text-amber-700">Quality warning</Badge> : null}
             </div>
           </div>
 
@@ -122,6 +131,10 @@ export default function CaseDetail() {
               <div>
                 <p className="text-sm text-white/60">Case ID</p>
                 <p className="mt-1 text-lg font-semibold">{currentCase.id}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white/60">Created</p>
+                <p className="mt-1 text-sm font-medium text-slate-200">{formatDateTime(currentCase.createdAt)}</p>
               </div>
               <div>
                 <p className="text-sm text-white/60">Updated</p>
@@ -135,6 +148,10 @@ export default function CaseDetail() {
           </div>
         </CardContent>
       </Card>
+
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+        Kết quả AI chỉ có giá trị tham khảo, không thay thế tư vấn pháp lý chuyên nghiệp.
+      </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs tabs={tabItems} value={activeTab} onChange={setActiveTab} />
@@ -224,9 +241,9 @@ export default function CaseDetail() {
                       </div>
                       <div className="mt-4 space-y-3">
                         {review.riskFlags?.length ? (
-                          review.riskFlags.map((flag) => (
-                            <div key={flag} className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
-                              {flag}
+                          review.riskFlags.map((flag, index) => (
+                            <div key={`risk-flag-${index}`} className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
+                              {typeof flag === "string" ? flag : `${flag.severity || "warning"} - ${flag.label || flag.excerpt || "Risk flag"}`}
                             </div>
                           ))
                         ) : (
@@ -348,6 +365,17 @@ export default function CaseDetail() {
               <CardContent className="space-y-2 p-6">
                 <p className="text-sm text-slate-500">SLA</p>
                 <p className="text-2xl font-semibold text-slate-900">{formatSlaLabel(currentCase.slaDueAt)}</p>
+                <Badge
+                  className={
+                    slaStatus === "overdue"
+                      ? "border-rose-200 bg-rose-50 text-rose-700"
+                      : slaStatus === "at_risk"
+                        ? "border-amber-200 bg-amber-50 text-amber-700"
+                        : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                  }
+                >
+                  {slaStatus === "overdue" ? "overdue" : slaStatus === "at_risk" ? "at risk" : "on time"}
+                </Badge>
               </CardContent>
             </Card>
             <Card>

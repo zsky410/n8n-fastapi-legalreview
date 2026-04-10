@@ -33,15 +33,36 @@ function normalizeTransport(transport) {
   return REVIEW_TRANSPORT_OPTIONS.includes(transport) ? transport : "api";
 }
 
+function createApiError({ response, payload, fallbackMessage }) {
+  const error = new Error(payload?.detail || payload?.message || fallbackMessage);
+  error.name = "ApiError";
+  error.status = response?.status || 0;
+  error.code = payload?.error || "api_error";
+  error.details = Array.isArray(payload?.details) ? payload.details : [];
+  error.requestId = payload?.requestId || "";
+  return error;
+}
+
 async function requestJson(baseUrl, path, options = {}) {
-  const response = await fetch(`${baseUrl}${path}`, {
-    method: options.method || "GET",
-    headers: {
-      "Content-Type": "application/json",
-      ...(options.headers || {}),
-    },
-    body: options.body ? JSON.stringify(options.body) : undefined,
-  });
+  let response;
+
+  try {
+    response = await fetch(`${baseUrl}${path}`, {
+      method: options.method || "GET",
+      headers: {
+        "Content-Type": "application/json",
+        ...(options.headers || {}),
+      },
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    });
+  } catch {
+    const error = new Error("Không thể kết nối tới máy chủ lúc này.");
+    error.name = "NetworkError";
+    error.code = "network_error";
+    error.details = [];
+    error.requestId = "";
+    throw error;
+  }
 
   if (!response.ok) {
     const fallbackMessage = `${response.status} ${response.statusText}`;
@@ -53,7 +74,7 @@ async function requestJson(baseUrl, path, options = {}) {
       payload = null;
     }
 
-    throw new Error(payload?.detail || payload?.message || fallbackMessage);
+    throw createApiError({ response, payload, fallbackMessage });
   }
 
   if (response.status === 204) {
@@ -64,13 +85,24 @@ async function requestJson(baseUrl, path, options = {}) {
 }
 
 async function requestFormData(baseUrl, path, options = {}) {
-  const response = await fetch(`${baseUrl}${path}`, {
-    method: options.method || "POST",
-    headers: {
-      ...(options.headers || {}),
-    },
-    body: options.body,
-  });
+  let response;
+
+  try {
+    response = await fetch(`${baseUrl}${path}`, {
+      method: options.method || "POST",
+      headers: {
+        ...(options.headers || {}),
+      },
+      body: options.body,
+    });
+  } catch {
+    const error = new Error("Không thể kết nối tới máy chủ lúc này.");
+    error.name = "NetworkError";
+    error.code = "network_error";
+    error.details = [];
+    error.requestId = "";
+    throw error;
+  }
 
   if (!response.ok) {
     const fallbackMessage = `${response.status} ${response.statusText}`;
@@ -82,7 +114,7 @@ async function requestFormData(baseUrl, path, options = {}) {
       payload = null;
     }
 
-    throw new Error(payload?.detail || payload?.message || fallbackMessage);
+    throw createApiError({ response, payload, fallbackMessage });
   }
 
   if (response.status === 204) {
@@ -331,6 +363,28 @@ export async function getHealth() {
     allowFallback: true,
     mockHandler: () => mockHealthResponse,
     realHandler: () => fetchJson("/health"),
+  });
+}
+
+export async function registerClientAccount(payload) {
+  return fetchJson("/v1/auth/register", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+export async function loginClientAccount(payload) {
+  return fetchJson("/v1/auth/login", {
+    method: "POST",
+    body: payload,
+  });
+}
+
+export async function getCurrentClientAccount(accessToken) {
+  return fetchJson("/v1/auth/me", {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
   });
 }
 

@@ -170,7 +170,7 @@ export default function AppShell({ children, role }) {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <Badge className="border-brand-100 bg-brand-50 text-brand-700">Phase 1 foundation</Badge>
+                <Badge className="border-brand-100 bg-brand-50 text-brand-700">M5 core + Phase 3 stretch</Badge>
                 <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500">
                   <Bell className="h-4 w-4" />
                 </span>

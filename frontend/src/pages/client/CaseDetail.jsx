@@ -15,7 +15,7 @@ import { useCases } from "../../hooks/useCases.js";
 import { useChat } from "../../hooks/useChat.js";
 import { PIPELINE_STAGES } from "../../lib/constants.js";
 import { formatConfidence, formatDateTime, formatSlaLabel } from "../../lib/formatters.js";
-import { reviewLegal } from "../../lib/api.js";
+import { getApiMode, reviewLegal } from "../../lib/api.js";
 
 const tabItems = [
   { label: "Overview", value: "overview" },
@@ -57,6 +57,7 @@ export default function CaseDetail() {
   const completedStageIndex = PIPELINE_STAGES.findIndex((stage) => stage === currentStage);
   const slaMs = currentCase?.slaDueAt ? new Date(currentCase.slaDueAt).getTime() - Date.now() : null;
   const slaStatus = slaMs === null ? "on_time" : slaMs < 0 ? "overdue" : slaMs < 60 * 60 * 1000 ? "at_risk" : "on_time";
+  const apiMode = getApiMode();
 
   async function handleRequestReview() {
     if (!currentCase) {
@@ -206,7 +207,7 @@ export default function CaseDetail() {
                     </div>
                     <Button variant="secondary" onClick={handleRequestReview}>
                       <RefreshCcw className="h-4 w-4" />
-                      Chạy lại mock review
+                      {apiMode === "hybrid" ? "Chạy lại AI review (hybrid)" : apiMode === "real" ? "Chạy lại AI review" : "Chạy lại mock review"}
                     </Button>
                   </div>
 
@@ -294,9 +295,11 @@ export default function CaseDetail() {
                     <TimerReset className="h-4 w-4 text-brand-700" />
                     <p className="text-sm font-semibold">Disclaimers & quality warning</p>
                   </div>
-                  <div className="rounded-[24px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-800">
-                    {review.qualityWarning}
-                  </div>
+                  {review.qualityWarning ? (
+                    <div className="rounded-[24px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-800">
+                      {review.qualityWarning}
+                    </div>
+                  ) : null}
                   <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
                     {review.disclaimer}
                   </div>
@@ -316,9 +319,9 @@ export default function CaseDetail() {
         ) : (
           <EmptyState
             title="Chưa có kết quả review"
-            description="Case mới tạo sẽ hiển thị risk score, summary, extracted fields và disclaimer sau khi bạn chạy AI mock-first."
+            description="Case mới tạo sẽ hiển thị risk score, summary, extracted fields và disclaimer sau khi bạn chạy AI review (hybrid/real)."
             action={{
-              label: "Chạy phân tích AI mock",
+              label: "Chạy phân tích AI",
               props: {
                 onClick: handleRequestReview,
               },

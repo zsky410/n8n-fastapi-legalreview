@@ -23,12 +23,18 @@ export default function ChatBubble({ message }) {
             {message.caution}
           </p>
         ) : null}
+        {typeof message.confidence === "number" ? (
+          <p className="mt-2 text-xs text-slate-500">Confidence: {Math.round(message.confidence * 100)}%</p>
+        ) : null}
         {message.citations?.length ? (
           <div className="mt-4 space-y-3">
             {message.citations.map((citation) => (
               <CitationCard key={citation.id || citation.label} citation={citation} />
             ))}
           </div>
+        ) : null}
+        {message.disclaimer ? (
+          <p className="mt-3 border-t border-slate-200 pt-3 text-xs text-slate-500">{message.disclaimer}</p>
         ) : null}
       </div>
     </div>

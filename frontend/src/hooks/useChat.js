@@ -47,6 +47,8 @@ export function useChat(caseId) {
         createdAt: new Date().toISOString(),
         citations: response.citations || [],
         caution: response.caution,
+        confidence: response.confidence,
+        disclaimer: response.disclaimer,
       });
 
       return response;

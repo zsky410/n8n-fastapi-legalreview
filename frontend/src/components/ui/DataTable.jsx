@@ -68,9 +68,9 @@ export default function DataTable({
           />
         </label>
       ) : null}
-      <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white">
+      <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200">
+          <table className="min-w-full divide-y divide-slate-200 md:min-w-[720px]">
             <thead className="bg-slate-50">
               <tr>
                 {columns.map((column) => (
@@ -100,7 +100,7 @@ export default function DataTable({
             <tbody className="divide-y divide-slate-100">
               {visibleRows.length ? (
                 visibleRows.map((row) => (
-                  <tr key={row[rowKey]} className="align-top text-sm text-slate-700">
+                  <tr key={row[rowKey]} className="align-top text-sm text-slate-700 transition hover:bg-slate-50/80">
                     {columns.map((column) => (
                       <td key={`${row[rowKey]}-${column.key}`} className={cn("px-4 py-4", column.className)}>
                         {column.render ? column.render(row) : row[column.key]}

@@ -14,13 +14,13 @@ import Timeline from "../../components/ui/Timeline.jsx";
 import { useCases } from "../../hooks/useCases.js";
 import { useChat } from "../../hooks/useChat.js";
 import { PIPELINE_STAGES } from "../../lib/constants.js";
-import { formatConfidence, formatDateTime, formatSlaLabel } from "../../lib/formatters.js";
-import { getApiMode, reviewLegal } from "../../lib/api.js";
+import { formatConfidence, formatDateTime, formatPriorityLabel, formatReviewAction, formatRiskLevelLabel, formatSlaLabel, formatStageLabel } from "../../lib/formatters.js";
+import { reviewLegal } from "../../lib/api.js";
 
 const tabItems = [
-  { label: "Overview", value: "overview" },
-  { label: "Chat", value: "chat" },
-  { label: "Timeline", value: "timeline" },
+  { label: "Tổng quan", value: "overview" },
+  { label: "Trao đổi", value: "chat" },
+  { label: "Tiến trình", value: "timeline" },
 ];
 
 function renderFieldValue(value) {
@@ -37,11 +37,7 @@ function renderFieldValue(value) {
 
 function getCurrentStage(caseRecord) {
   const stage = caseRecord.timeline?.at(-1)?.stage;
-  if (stage === "Đã tải lên") return "Uploaded";
-  if (stage === "OCR") return "TextExtractOrOCR";
-  if (stage === "Phân tích AI") return "AIAnalyzing";
-  if (stage === "Đã công bố") return "AutoPublished";
-  return stage || "Uploaded";
+  return formatStageLabel(stage || "Đã tải lên");
 }
 
 export default function CaseDetail() {
@@ -57,7 +53,6 @@ export default function CaseDetail() {
   const completedStageIndex = PIPELINE_STAGES.findIndex((stage) => stage === currentStage);
   const slaMs = currentCase?.slaDueAt ? new Date(currentCase.slaDueAt).getTime() - Date.now() : null;
   const slaStatus = slaMs === null ? "on_time" : slaMs < 0 ? "overdue" : slaMs < 60 * 60 * 1000 ? "at_risk" : "on_time";
-  const apiMode = getApiMode();
 
   async function handleRequestReview() {
     if (!currentCase) {
@@ -77,12 +72,13 @@ export default function CaseDetail() {
         metadata: {
           domain: currentCase.domain,
           documentName: currentCase.documentName,
+          priority: currentCase.priority,
         },
       });
 
       updateReview(currentCase.id, response);
     } catch (error) {
-      setReviewError(error.message || "Không thể chạy review cho hồ sơ này.");
+      setReviewError(error.message || "Không thể chạy phân tích AI cho hồ sơ này.");
     } finally {
       setIsReviewLoading(false);
     }
@@ -102,7 +98,7 @@ export default function CaseDetail() {
     return (
       <EmptyState
         title="Không tìm thấy hồ sơ"
-        description="Case này chưa tồn tại trong local state. Hãy quay lại dashboard hoặc tạo hồ sơ mới."
+        description="Hồ sơ này chưa tồn tại trên trình duyệt hiện tại. Hãy quay lại danh sách hoặc tạo hồ sơ mới."
       />
     );
   }
@@ -112,7 +108,6 @@ export default function CaseDetail() {
       <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.16),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_50%,#ecfeff_100%)]">
         <CardContent className="grid gap-5 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-4">
-            <Badge className="border-brand-100 bg-white/80 text-brand-700">Case detail nội bộ 3 tab</Badge>
             <div>
               <h2 className="text-3xl font-semibold text-slate-900">{currentCase.title}</h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">{currentCase.description}</p>
@@ -121,24 +116,25 @@ export default function CaseDetail() {
               <StatusBadge status={currentCase.status} />
               <RiskBadge level={currentCase.riskLevel} />
               <Badge className="border-slate-200 bg-white/80 text-slate-700">{currentCase.documentName}</Badge>
-              {review?.needsAttention ? <Badge className="border-rose-200 bg-rose-50 text-rose-700">Needs attention</Badge> : null}
-              {review?.qualityWarning ? <Badge className="border-amber-200 bg-amber-50 text-amber-700">Quality warning</Badge> : null}
+              <Badge className="border-slate-200 bg-white/80 text-slate-700">Ưu tiên {formatPriorityLabel(currentCase.priority)}</Badge>
+              {review?.needsAttention ? <Badge className="border-rose-200 bg-rose-50 text-rose-700">Cần chú ý</Badge> : null}
+              {review?.qualityWarning ? <Badge className="border-amber-200 bg-amber-50 text-amber-700">Cảnh báo chất lượng</Badge> : null}
             </div>
           </div>
 
           <div className="rounded-[28px] border border-slate-200 bg-slate-950 p-5 text-white">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Snapshot</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Tóm tắt nhanh</p>
             <div className="mt-4 grid gap-4">
               <div>
-                <p className="text-sm text-white/60">Case ID</p>
+                <p className="text-sm text-white/60">Mã hồ sơ</p>
                 <p className="mt-1 text-lg font-semibold">{currentCase.id}</p>
               </div>
               <div>
-                <p className="text-sm text-white/60">Created</p>
+                <p className="text-sm text-white/60">Ngày tạo</p>
                 <p className="mt-1 text-sm font-medium text-slate-200">{formatDateTime(currentCase.createdAt)}</p>
               </div>
               <div>
-                <p className="text-sm text-white/60">Updated</p>
+                <p className="text-sm text-white/60">Cập nhật</p>
                 <p className="mt-1 text-sm font-medium text-slate-200">{formatDateTime(currentCase.updatedAt)}</p>
               </div>
               <div>
@@ -186,7 +182,7 @@ export default function CaseDetail() {
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-slate-900">Không thể chạy review lúc này</h3>
+                <h3 className="text-xl font-semibold text-slate-900">Không thể chạy phân tích lúc này</h3>
                 <p className="mt-2 text-sm leading-6 text-slate-500">{reviewError}</p>
               </div>
               <Button onClick={handleRequestReview}>
@@ -202,30 +198,30 @@ export default function CaseDetail() {
                 <CardContent className="space-y-5 p-6">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">AI review result</p>
+                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Kết quả phân tích</p>
                       <h3 className="mt-2 text-2xl font-semibold text-slate-900">{review.docType}</h3>
                     </div>
                     <Button variant="secondary" onClick={handleRequestReview}>
                       <RefreshCcw className="h-4 w-4" />
-                      {apiMode === "hybrid" ? "Chạy lại AI review (hybrid)" : apiMode === "real" ? "Chạy lại AI review" : "Chạy lại mock review"}
+                      Phân tích lại
                     </Button>
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-3">
                     <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-                      <p className="text-sm text-slate-500">Risk score</p>
+                      <p className="text-sm text-slate-500">Điểm rủi ro</p>
                       <p className="mt-2 text-3xl font-semibold text-slate-900">{review.riskScore}</p>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Mức {review.riskLevel}</p>
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Mức {formatRiskLevelLabel(review.riskLevel)}</p>
                     </div>
                     <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-                      <p className="text-sm text-slate-500">Confidence</p>
+                      <p className="text-sm text-slate-500">Độ tin cậy</p>
                       <p className="mt-2 text-3xl font-semibold text-slate-900">{formatConfidence(review.confidence)}</p>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Model {review.meta?.model || "mock"}</p>
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Mô hình {review.meta?.model || "AI"}</p>
                     </div>
                     <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-                      <p className="text-sm text-slate-500">Latency</p>
+                      <p className="text-sm text-slate-500">Thời gian phản hồi</p>
                       <p className="mt-2 text-3xl font-semibold text-slate-900">{review.meta?.latencyMs || 0}ms</p>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Mock-first engine</p>
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Xử lý tự động</p>
                     </div>
                   </div>
 
@@ -238,13 +234,13 @@ export default function CaseDetail() {
                     <div className="rounded-[28px] border border-slate-200 bg-white px-5 py-5">
                       <div className="flex items-center gap-2">
                         <ShieldAlert className="h-4 w-4 text-amber-500" />
-                        <p className="text-sm font-semibold text-slate-900">Risk flags</p>
+                        <p className="text-sm font-semibold text-slate-900">Cảnh báo rủi ro</p>
                       </div>
                       <div className="mt-4 space-y-3">
                         {review.riskFlags?.length ? (
                           review.riskFlags.map((flag, index) => (
                             <div key={`risk-flag-${index}`} className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-800">
-                              {typeof flag === "string" ? flag : `${flag.severity || "warning"} - ${flag.label || flag.excerpt || "Risk flag"}`}
+                              {typeof flag === "string" ? flag : flag.label || flag.excerpt || "Cảnh báo rủi ro"}
                             </div>
                           ))
                         ) : (
@@ -258,7 +254,7 @@ export default function CaseDetail() {
                     <div className="rounded-[28px] border border-slate-200 bg-white px-5 py-5">
                       <div className="flex items-center gap-2">
                         <FileSearch className="h-4 w-4 text-brand-700" />
-                        <p className="text-sm font-semibold text-slate-900">Extracted fields</p>
+                        <p className="text-sm font-semibold text-slate-900">Trường đã trích xuất</p>
                       </div>
                       <div className="mt-4 space-y-3">
                         {Object.entries(review.extractedFields || {}).map(([key, value]) => (
@@ -282,8 +278,8 @@ export default function CaseDetail() {
                       <Sparkles className="h-5 w-5" />
                     </span>
                     <div>
-                      <p className="text-sm text-white/60">Recommended action</p>
-                      <p className="mt-1 text-lg font-semibold text-white">{review.recommendedAction}</p>
+                      <p className="text-sm text-white/60">Khuyến nghị xử lý</p>
+                      <p className="mt-1 text-lg font-semibold text-white">{formatReviewAction(review.recommendedAction)}</p>
                     </div>
                   </div>
                 </CardContent>
@@ -293,7 +289,7 @@ export default function CaseDetail() {
                 <CardContent className="space-y-4 p-6">
                   <div className="flex items-center gap-2 text-slate-900">
                     <TimerReset className="h-4 w-4 text-brand-700" />
-                    <p className="text-sm font-semibold">Disclaimers & quality warning</p>
+                    <p className="text-sm font-semibold">Lưu ý và cảnh báo chất lượng</p>
                   </div>
                   {review.qualityWarning ? (
                     <div className="rounded-[24px] border border-amber-200 bg-amber-50 px-4 py-4 text-sm leading-6 text-amber-800">
@@ -318,8 +314,8 @@ export default function CaseDetail() {
           </div>
         ) : (
           <EmptyState
-            title="Chưa có kết quả review"
-            description="Case mới tạo sẽ hiển thị risk score, summary, extracted fields và disclaimer sau khi bạn chạy AI review (hybrid/real)."
+            title="Chưa có kết quả phân tích"
+            description="Hồ sơ mới tạo sẽ hiển thị điểm rủi ro, tóm tắt, trường trích xuất và lưu ý sau khi bạn chạy phân tích AI."
             action={{
               label: "Chạy phân tích AI",
               props: {
@@ -336,7 +332,7 @@ export default function CaseDetail() {
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
                 <h3 className="text-xl font-semibold text-slate-900">Trao đổi theo từng hồ sơ</h3>
-                <p className="text-sm text-slate-500">Chat panel đang chạy bằng mock/hybrid mode và giữ hội thoại theo từng case trong local state.</p>
+                <p className="text-sm text-slate-500">Đặt câu hỏi theo đúng hồ sơ để làm rõ điều khoản, cảnh báo và hướng xử lý tiếp theo.</p>
               </div>
               <Badge className="border-slate-200 bg-slate-100 text-slate-700">
                 <Bot className="mr-1 h-3.5 w-3.5" />
@@ -349,7 +345,7 @@ export default function CaseDetail() {
               isSending={isSending}
               onSubmit={sendMessage}
               placeholder={`Hỏi thêm về ${currentCase.title.toLowerCase()}...`}
-              hint="Typing indicator, error handling và lưu hội thoại theo case đã được bật trong Phase 2."
+              hint="Mỗi tin nhắn sẽ được lưu theo hồ sơ để bạn dễ theo dõi lại nội dung trao đổi."
             />
           </CardContent>
         </Card>
@@ -377,7 +373,7 @@ export default function CaseDetail() {
                         : "border-emerald-200 bg-emerald-50 text-emerald-700"
                   }
                 >
-                  {slaStatus === "overdue" ? "overdue" : slaStatus === "at_risk" ? "at risk" : "on time"}
+                  {slaStatus === "overdue" ? "Quá hạn" : slaStatus === "at_risk" ? "Sắp đến hạn" : "Đúng hạn"}
                 </Badge>
               </CardContent>
             </Card>
@@ -393,7 +389,7 @@ export default function CaseDetail() {
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center gap-2">
                 <Clock3 className="h-4 w-4 text-brand-700" />
-                <p className="text-sm font-semibold text-slate-900">Pipeline status</p>
+                <p className="text-sm font-semibold text-slate-900">Tiến trình xử lý</p>
               </div>
               <div className="grid gap-3 md:grid-cols-5">
                 {PIPELINE_STAGES.map((stage, index) => {
@@ -419,14 +415,14 @@ export default function CaseDetail() {
             <CardContent className="space-y-4 p-6">
               <div>
                 <h3 className="text-xl font-semibold text-slate-900">Lịch sử xử lý</h3>
-                <p className="text-sm text-slate-500">Case mới sẽ hiển thị empty state cho đến khi review được chạy và pipeline được cập nhật.</p>
+                <p className="text-sm text-slate-500">Hồ sơ mới sẽ hiển thị trạng thái trống cho đến khi phân tích được chạy và tiến trình được cập nhật.</p>
               </div>
               {currentCase.timeline?.length ? (
                 <Timeline items={currentCase.timeline} />
               ) : (
                 <EmptyState
-                  title="Chưa có sự kiện timeline"
-                  description="Đây là trạng thái đúng cho case mới tạo. Hãy chạy review ở tab Tổng quan để tạo pipeline event và SLA progression."
+                  title="Chưa có mốc xử lý"
+                  description="Đây là trạng thái bình thường của hồ sơ mới. Hãy chạy phân tích AI ở tab Tổng quan để tạo các mốc tiến trình và cập nhật SLA."
                 />
               )}
             </CardContent>

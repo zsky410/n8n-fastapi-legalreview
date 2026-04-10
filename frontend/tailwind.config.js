@@ -13,9 +13,15 @@ export default {
           800: "#10256f",
           900: "#0b1e5d",
         },
+        ink: "#0c0f14",
+        muted: "#5c6370",
+        line: "#e6e8ec",
+        gold: "#b8860b",
       },
       fontFamily: {
         sans: ["Inter", "Segoe UI", "Helvetica Neue", "Arial", "sans-serif"],
+        serif: ["EB Garamond", "Georgia", "serif"],
+        body: ["Lato", "Inter", "Segoe UI", "Helvetica Neue", "Arial", "sans-serif"],
       },
       boxShadow: {
         card: "0 14px 34px rgba(15, 23, 42, 0.08)",

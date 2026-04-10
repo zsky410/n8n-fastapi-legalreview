@@ -22,16 +22,16 @@ todos:
     status: completed
   - id: p2half-api-wiring
     content: "Phase 2.5 (M5 hybrid integration): Nối API thật cho review/chat; giữ mock-first cho các surface chưa có endpoint backend"
-    status: pending
+    status: completed
   - id: p3-admin-dashboard
     content: "Phase 3 (stretch / post-M5): AdminDashboard với KPI strip + stats + charts"
-    status: pending
+    status: completed
   - id: p3-system-monitor
     content: "Phase 3 (stretch / post-M5): SystemMonitor với health thật phần có endpoint và mock cho phần còn lại"
-    status: pending
+    status: completed
   - id: p4-polish
     content: "Phase 4 (post-M5 / demo readiness): Responsive polish, micro-interactions, smoke test, case demo ổn định"
-    status: pending
+    status: completed
 isProject: false
 ---
 

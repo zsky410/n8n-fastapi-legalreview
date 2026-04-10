@@ -2,7 +2,6 @@ import { ArrowRight, FilePlus2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-import Badge from "../../components/ui/Badge.jsx";
 import Card, { CardContent } from "../../components/ui/Card.jsx";
 import DataTable from "../../components/ui/DataTable.jsx";
 import EmptyState from "../../components/ui/EmptyState.jsx";
@@ -89,7 +88,7 @@ export default function ClientDashboard() {
           to={`/client/cases/${row.id}`}
           className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
         >
-          Mở case
+          Mở hồ sơ
           <ArrowRight className="h-4 w-4" />
         </Link>
       ),
@@ -108,11 +107,10 @@ export default function ClientDashboard() {
     <div className="space-y-5">
       <Card>
         <CardContent className="space-y-4 p-6">
-          <Badge className="border-brand-100 bg-brand-50 text-brand-700">Client portal</Badge>
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-semibold text-slate-900">Hồ sơ của tôi</h2>
-              <p className="mt-2 text-sm text-slate-500">Theo dõi trạng thái xử lý, mức rủi ro và truy cập nhanh từng hồ sơ.</p>
+              <p className="mt-2 text-sm text-slate-500">Theo dõi trạng thái xử lý, mức rủi ro và mở nhanh từng hồ sơ từ một bảng tổng hợp duy nhất.</p>
             </div>
             <Link
               to="/client/cases/new"
@@ -126,7 +124,7 @@ export default function ClientDashboard() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Tổng hồ sơ" value={cases.length} trend="+mock/local state" />
+        <KpiCard label="Tổng hồ sơ" value={cases.length} />
         <KpiCard label="Đang xử lý" value={processingCount} />
         <KpiCard label="Đã công bố" value={completedCount} />
         <KpiCard label="Cần chú ý" value={needsAttentionCount} tone="accent" />
@@ -137,7 +135,7 @@ export default function ClientDashboard() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h3 className="text-xl font-semibold text-slate-900">Danh sách hồ sơ</h3>
-              <p className="text-sm text-slate-500">Bảng hồ sơ theo IA của M5 core (caseId, tài liệu, trạng thái, rủi ro, ngày tạo).</p>
+              <p className="text-sm text-slate-500">Lọc nhanh theo mức độ ưu tiên xử lý và mở ngay hồ sơ cần theo dõi.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {filters.map((filter) => (
@@ -163,13 +161,13 @@ export default function ClientDashboard() {
               rows={filteredCases}
               searchKeys={["id", "title", "documentName", "status", "riskLevel"]}
               emptyTitle="Không có hồ sơ khớp bộ lọc"
-              emptyDescription="Thử đổi quick filter hoặc tạo hồ sơ mới để tiếp tục demo flow."
+              emptyDescription="Thử đổi bộ lọc hoặc tạo hồ sơ mới để tiếp tục theo dõi xử lý."
             />
           ) : (
             <div className="space-y-4">
               <EmptyState
                 title="Chưa có hồ sơ nào"
-                description="Bắt đầu từ CreateCase để tạo case đầu tiên, sau đó quay lại đây để theo dõi trạng thái và mức rủi ro."
+                description="Bắt đầu tạo hồ sơ đầu tiên, sau đó quay lại đây để theo dõi trạng thái và mức rủi ro."
               />
               <div className="flex justify-center">
                 <Link

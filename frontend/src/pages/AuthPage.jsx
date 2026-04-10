@@ -2,12 +2,11 @@ import { ShieldCheck, UserRound } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
-import Badge from "../components/ui/Badge.jsx";
 import Button from "../components/ui/Button.jsx";
 import Card, { CardContent } from "../components/ui/Card.jsx";
 import Input from "../components/ui/Input.jsx";
 import { DEMO_ACCOUNTS } from "../lib/constants.js";
-import { getApiMode } from "../lib/api.js";
+import { formatRoleLabel } from "../lib/formatters.js";
 import { useAuth } from "../hooks/useAuth.js";
 
 export default function AuthPage() {
@@ -66,13 +65,12 @@ export default function AuthPage() {
                 <ShieldCheck className="h-4 w-4" />
                 Về landing page
               </Link>
-              <Badge className="border-white/20 bg-white/10 text-brand-100">API {getApiMode().toUpperCase()}</Badge>
               <div className="space-y-4">
                 <h1 className="text-4xl font-semibold leading-tight text-balance">
-                  Đăng nhập vào bộ khung Milestone 5 với 2 role demo đã được cấu hình sẵn.
+                  Đăng nhập bằng tài khoản dùng thử và đi thẳng vào đúng khu vực làm việc.
                 </h1>
                 <p className="max-w-xl text-base leading-7 text-brand-100">
-                  Auth flow này có local persistence, role redirect và shell-aware navigation để Phase 2 có thể cắm feature vào ngay.
+                  Mỗi tài khoản sẽ được đưa tới giao diện phù hợp theo vai trò, giúp bạn bắt đầu xem luồng khách hàng hoặc quản trị ngay lập tức.
                 </p>
               </div>
             </div>
@@ -90,7 +88,7 @@ export default function AuthPage() {
                     <p className="mt-1 text-sm text-brand-100">{account.company}</p>
                   </div>
                   <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
-                    {account.role}
+                    {formatRoleLabel(account.role)}
                   </span>
                 </button>
               ))}
@@ -127,12 +125,12 @@ export default function AuthPage() {
 
             <div>
               <h2 className="text-3xl font-semibold text-slate-900">
-                {activeTab === "login" ? "Đăng nhập demo" : "Khởi động onboarding"}
+                {activeTab === "login" ? "Đăng nhập nhanh" : "Thiết lập ban đầu"}
               </h2>
               <p className="mt-2 text-sm leading-6 text-slate-500">
                 {activeTab === "login"
-                  ? "Dùng một trong hai email demo để vào đúng shell theo role."
-                  : "Bạn đang ở bộ khung Phase 1, onboarding hiện tại là bản wizard mẫu."}
+                  ? "Dùng một trong hai tài khoản có sẵn để mở đúng không gian làm việc."
+                  : "Điền thông tin khởi tạo để chuyển sang bước thiết lập tiếp theo."}
               </p>
             </div>
 
@@ -149,26 +147,23 @@ export default function AuthPage() {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
-                placeholder="demo-password"
-                hint="Mật khẩu hiện chỉ là placeholder cho UI scaffold."
+                placeholder="mat-khau-dung-thu"
+                hint="Trường này đang được giữ để hoàn thiện luồng xác thực ở các bước tiếp theo."
               />
               {error ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
               <Button type="submit" className="w-full" isLoading={isLoading}>
                 <UserRound className="h-4 w-4" />
-                {activeTab === "login" ? "Vào dashboard" : "Mở onboarding"}
+                {activeTab === "login" ? "Vào khu vực làm việc" : "Tiếp tục thiết lập"}
               </Button>
             </form>
 
-            <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-              <p className="text-sm font-semibold text-slate-700">Ghi chú nhanh</p>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
-                `client@demo.vn` vào <strong>/client/dashboard</strong>, `admin@demo.vn` vào <strong>/admin/routing</strong>.
-              </p>
+            <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-500">
+              `client@demo.vn` sẽ vào khu vực khách hàng, còn `admin@demo.vn` sẽ vào khu vực quản trị.
             </div>
 
             <div className="flex items-center justify-between gap-3 text-sm text-slate-500">
               <Link to="/onboarding" className="font-semibold text-brand-700">
-                Xem wizard onboarding
+                Xem thiết lập ban đầu
               </Link>
               <Link to="/" className="font-semibold text-slate-700">
                 Quay về home

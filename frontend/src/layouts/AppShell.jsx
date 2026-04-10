@@ -1,6 +1,5 @@
 import {
   Activity,
-  Bell,
   ChevronRight,
   FilePlus2,
   GaugeCircle,
@@ -17,10 +16,8 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 
 import { ADMIN_NAV_ITEMS, APP_NAME, CLIENT_NAV_ITEMS, ROLE_LABELS } from "../lib/constants.js";
-import { getApiMode } from "../lib/api.js";
 import { cn } from "../lib/cn.js";
 import { useAuth } from "../hooks/useAuth.js";
-import Badge from "../components/ui/Badge.jsx";
 import Button from "../components/ui/Button.jsx";
 
 const iconMap = {
@@ -34,7 +31,7 @@ const iconMap = {
 };
 
 const routeLabels = {
-  "/client/dashboard": "Dashboard",
+  "/client/dashboard": "Tổng quan",
   "/client/cases/new": "Tạo hồ sơ",
   "/admin/dashboard": "Bảng điều khiển",
   "/admin/routing": "Luật định tuyến",
@@ -56,16 +53,13 @@ function SidebarNav({ items, onNavigate }) {
             onClick={onNavigate}
             className={({ isActive }) =>
               cn(
-                "flex items-center justify-between gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition",
+                "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition",
                 isActive ? "bg-white/12 text-white" : "text-brand-100 hover:bg-white/10 hover:text-white",
               )
             }
           >
-            <span className="flex items-center gap-3">
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </span>
-            <span className="text-[10px] uppercase tracking-[0.18em] text-white/50">{item.phase}</span>
+            <Icon className="h-4 w-4" />
+            {item.label}
           </NavLink>
         );
       })}
@@ -90,11 +84,6 @@ function SidebarContent({ role, onNavigate }) {
       </div>
 
       <div className="mt-6 flex-1 space-y-6">
-        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/60">API mode</p>
-          <p className="mt-2 text-lg font-semibold text-white">{getApiMode().toUpperCase()}</p>
-          <p className="mt-1 text-sm text-brand-100">Nền tảng mock-first cho UI Milestone 5.</p>
-        </div>
         <SidebarNav items={navItems} onNavigate={onNavigate} />
       </div>
 
@@ -170,10 +159,6 @@ export default function AppShell({ children, role }) {
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">
-                <Badge className="border-brand-100 bg-brand-50 text-brand-700">M5 core + Phase 3 stretch</Badge>
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-500">
-                  <Bell className="h-4 w-4" />
-                </span>
                 <Button variant="secondary" onClick={handleLogout}>
                   <LogOut className="h-4 w-4" />
                   Đăng xuất

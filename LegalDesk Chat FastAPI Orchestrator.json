@@ -1,0 +1,116 @@
+{
+  "name": "LegalDesk Chat FastAPI Orchestrator",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "legaldesk-chat-fastapi",
+        "responseMode": "lastNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -720,
+        80
+      ],
+      "id": "e72cc8e5-b4db-4f8e-a5ec-ac8f1fb0b6be",
+      "name": "Webhook",
+      "webhookId": "c121c814-c1c3-4928-bdf0-55bd42c2f88f"
+    },
+    {
+      "parameters": {
+        "jsCode": "const envelope = $input.first().json ?? {};\nconst payload = envelope.body && typeof envelope.body === 'object' ? envelope.body : envelope;\nconst conversationContext = Array.isArray(payload.conversationContext)\n  ? payload.conversationContext\n      .filter((message) => message && typeof message === 'object')\n      .map((message) => ({\n        role: String(message.role ?? 'user'),\n        content: String(message.content ?? '').trim(),\n      }))\n      .filter((message) => message.content.length > 0)\n  : [];\n\nreturn [{\n  json: {\n    chatPayload: {\n      caseId: String(payload.caseId ?? `case_${Date.now()}`),\n      question: String(payload.question ?? '').trim(),\n      language: String(payload.language ?? 'vi').toLowerCase(),\n      conversationContext,\n    },\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -464,
+        80
+      ],
+      "id": "5580ac91-51a6-4429-b85c-57b6a3ea55f7",
+      "name": "Normalize Chat Intake"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.17.0.1:8080/v1/legal/chat",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.chatPayload }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        -176,
+        80
+      ],
+      "id": "18c3f9de-47b2-41ce-a741-35d2cecb22c7",
+      "name": "Call Legal Chat API"
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first().json;\nconst confidence = Number(item.confidence ?? 0);\nreturn [{\n  json: {\n    success: true,\n    chat: item,\n    routeDecision: {\n      queue: item.needsAttention || confidence < 0.55 ? 'manual_legal_follow_up_queue' : 'client_chat_queue',\n      reason: item.needsAttention ? 'needs_attention' : confidence < 0.55 ? 'low_confidence' : 'normal_chat',\n      autoEscalated: Boolean(item.needsAttention || confidence < 0.55),\n    },\n    timelineEvent: {\n      caseId: item.caseId,\n      eventType: 'AI_CHAT_COMPLETED',\n      status: 'AIChatResponded',\n      needsAttention: Boolean(item.needsAttention),\n      source: 'n8n',\n    },\n    nextStep: item.needsAttention || confidence < 0.55 ? 'manual_legal_follow_up_queue' : 'client_chat_queue',\n  },\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        112,
+        80
+      ],
+      "id": "c3dcaa45-9b2c-4d7c-b5a5-d3092c6d9a26",
+      "name": "Wrap Chat Result"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Chat Intake",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Chat Intake": {
+      "main": [
+        [
+          {
+            "node": "Call Legal Chat API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Legal Chat API": {
+      "main": [
+        [
+          {
+            "node": "Wrap Chat Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "0ce5a6fa-c53c-4018-aec0-d5451066d955",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "538b6e501627136d95ed458326f8fdadf755f51a94d0253978ee2cbe4bda134c"
+  },
+  "id": "vl3NsuhsZA6kTF6n",
+  "tags": []
+}

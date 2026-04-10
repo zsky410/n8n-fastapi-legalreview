@@ -31,7 +31,7 @@ function buildTimelineAfterReview(caseRecord, review) {
     const existingStages = new Set(caseRecord.timeline.map((entry) => entry.stage));
     const nextTimeline = [...caseRecord.timeline];
 
-    if (!existingStages.has("OCR")) {
+    if (!existingStages.has("OCR") && !existingStages.has("TextExtractOrOCR")) {
       nextTimeline.push({
         id: `timeline-${caseRecord.id}-ocr`,
         title: "OCR và trích xuất hoàn tất",

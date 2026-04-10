@@ -72,14 +72,14 @@ export const ADMIN_NAV_ITEMS = [
     label: "Bảng điều khiển",
     href: "/admin/dashboard",
     icon: "GaugeCircle",
-    showInNav: false,
+    showInNav: true,
     phase: "Stretch",
   },
   {
     label: "Hệ thống",
     href: "/admin/system",
     icon: "Activity",
-    showInNav: false,
+    showInNav: true,
     phase: "Stretch",
   },
 ];

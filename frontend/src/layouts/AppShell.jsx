@@ -33,6 +33,16 @@ const iconMap = {
   Users2,
 };
 
+const routeLabels = {
+  "/client/dashboard": "Dashboard",
+  "/client/cases/new": "Tạo hồ sơ",
+  "/admin/dashboard": "Bảng điều khiển",
+  "/admin/routing": "Luật định tuyến",
+  "/admin/logs": "Nhật ký vận hành",
+  "/admin/users": "Người dùng",
+  "/admin/system": "Hệ thống",
+};
+
 function SidebarNav({ items, onNavigate }) {
   return (
     <nav className="space-y-1.5">
@@ -102,8 +112,9 @@ export default function AppShell({ children, role }) {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const crumbs = location.pathname.split("/").filter(Boolean);
-  const currentLabel = crumbs[crumbs.length - 1]?.replace(/-/g, " ") || "overview";
+  const currentLabel =
+    routeLabels[location.pathname] ||
+    (location.pathname.startsWith("/client/cases/") ? "Chi tiết hồ sơ" : "Tổng quan");
 
   function handleLogout() {
     logout();
@@ -126,6 +137,7 @@ export default function AppShell({ children, role }) {
                   <Button
                     variant="ghost"
                     size="sm"
+                    aria-label="Đóng sidebar"
                     className="absolute right-4 top-4 h-9 w-9 rounded-full bg-white/10 px-0 text-white hover:bg-white/20"
                     onClick={() => setIsSidebarOpen(false)}
                   >
@@ -139,7 +151,13 @@ export default function AppShell({ children, role }) {
           <div className="space-y-4">
             <header className="surface-panel flex flex-wrap items-center justify-between gap-4 px-5 py-4">
               <div className="flex items-center gap-3">
-                <Button variant="secondary" size="sm" className="lg:hidden" onClick={() => setIsSidebarOpen(true)}>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  aria-label="Mở sidebar"
+                  className="lg:hidden"
+                  onClick={() => setIsSidebarOpen(true)}
+                >
                   <Menu className="h-4 w-4" />
                 </Button>
                 <div>

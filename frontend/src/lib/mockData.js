@@ -297,6 +297,14 @@ export const mockWorkflowExecutions = [
     duration: "3m 22s",
     lastStep: "Đã công bố",
     timestamp: "2026-04-08T10:35:00+07:00",
+    triggeredBy: "client@demo.vn",
+    notes: "Workflow hoàn tất tự động và đẩy báo cáo về client portal.",
+    steps: [
+      { label: "Intake", status: "done" },
+      { label: "OCR", status: "done" },
+      { label: "Review", status: "done" },
+      { label: "Publish", status: "done" },
+    ],
   },
   {
     id: "WF-002",
@@ -306,6 +314,13 @@ export const mockWorkflowExecutions = [
     duration: "52s",
     lastStep: "Phân tích AI",
     timestamp: "2026-04-07T15:02:00+07:00",
+    triggeredBy: "system",
+    notes: "Đang chờ hệ thống đánh dấu điều khoản SLA trước khi công bố.",
+    steps: [
+      { label: "Intake", status: "done" },
+      { label: "Review", status: "running" },
+      { label: "Publish", status: "queued" },
+    ],
   },
   {
     id: "WF-003",
@@ -315,6 +330,13 @@ export const mockWorkflowExecutions = [
     duration: "14s",
     lastStep: "OCR",
     timestamp: "2026-04-06T09:00:00+07:00",
+    triggeredBy: "client@demo.vn",
+    notes: "Scan chất lượng trung bình nên workflow đang đợi hàng OCR.",
+    steps: [
+      { label: "Intake", status: "done" },
+      { label: "OCR", status: "queued" },
+      { label: "Review", status: "queued" },
+    ],
   },
 ];
 
@@ -345,25 +367,118 @@ export function getCaseById(caseId) {
   return mockCases.find((entry) => entry.id === caseId) ?? null;
 }
 
-export function buildReviewResponseFromCase(caseRecord) {
-  if (caseRecord?.review) {
-    return caseRecord.review;
+function normalizeReviewInput(caseRecord, payload = {}) {
+  return {
+    title: caseRecord?.title || payload.title || "Hồ sơ pháp lý",
+    description: caseRecord?.description || payload.description || "",
+    domain: caseRecord?.domain || payload.metadata?.domain || payload.domain || "",
+    extractedText: caseRecord?.extractedText || payload.extractedText || "",
+    documentName: caseRecord?.documentName || payload.metadata?.documentName || payload.documentName || "tai_lieu_mau.pdf",
+  };
+}
+
+function deriveReviewHeuristics(caseRecord, payload = {}) {
+  const source = normalizeReviewInput(caseRecord, payload);
+  const combinedText = `${source.title} ${source.description} ${source.domain} ${source.extractedText}`.toLowerCase();
+  const shortExcerpt = source.extractedText || source.description || source.title;
+  const reviewSummary =
+    shortExcerpt.length > 220
+      ? `${shortExcerpt.slice(0, 217).trim()}...`
+      : shortExcerpt || "Hệ thống chưa nhận đủ nội dung để tạo tóm tắt dài hơn.";
+
+  if (combinedText.includes("saas") || combinedText.includes("phần mềm") || combinedText.includes("sla") || combinedText.includes("cloud")) {
+    return {
+      docType: "SaaS Service Agreement",
+      confidence: 0.89,
+      riskScore: 82,
+      riskLevel: "high",
+      riskFlags: [
+        "Thiếu cam kết SLA hoặc chưa định nghĩa RTO/RPO rõ ràng",
+        "Điều khoản thay đổi dịch vụ có thể quá rộng cho môi trường vận hành thực tế",
+      ],
+      extractedFields: {
+        domain: source.domain || "Hợp đồng thương mại",
+        document: source.documentName,
+        keyFocus: "SLA, giới hạn trách nhiệm, bảo mật dữ liệu",
+      },
+      recommendedAction: "Bổ sung phụ lục SLA, làm rõ phạm vi thay đổi dịch vụ và nâng ngưỡng thông báo.",
+      summary: reviewSummary,
+      needsAttention: true,
+      qualityWarning: source.extractedText ? "Mock review đang dựa trên nội dung trích xuất do client cung cấp." : "Chưa có nhiều nội dung OCR nên kết quả mang tính định hướng.",
+    };
+  }
+
+  if (combinedText.includes("thuê") || combinedText.includes("lease") || combinedText.includes("gia hạn") || combinedText.includes("bất động sản")) {
+    return {
+      docType: "Lease / Real Estate Agreement",
+      confidence: 0.86,
+      riskScore: 61,
+      riskLevel: "medium",
+      riskFlags: [
+        "Cần rà lại cơ chế gia hạn và điều chỉnh phí để tránh khoảng mở quá rộng",
+        "Nên kiểm tra điều khoản phạt và nghĩa vụ bảo trì giữa các bên",
+      ],
+      extractedFields: {
+        domain: source.domain || "Bất động sản",
+        document: source.documentName,
+        keyFocus: "Gia hạn, phạt chậm thanh toán, phí quản lý",
+      },
+      recommendedAction: "Chuẩn hóa lại điều khoản gia hạn, mức phạt và phạm vi điều chỉnh chi phí trước khi ký.",
+      summary: reviewSummary,
+      needsAttention: false,
+      qualityWarning: "Bản review này đang mô phỏng kết quả AI để phục vụ UI demo mock-first.",
+    };
+  }
+
+  if (combinedText.includes("bảo mật") || combinedText.includes("nda") || combinedText.includes("dữ liệu")) {
+    return {
+      docType: "NDA / Data Processing Addendum",
+      confidence: 0.92,
+      riskScore: 33,
+      riskLevel: "low",
+      riskFlags: ["Cần xác minh lại thời hạn bảo mật và phạm vi chia sẻ cho bên thứ ba nếu tài liệu là bản scan."],
+      extractedFields: {
+        domain: source.domain || "Doanh nghiệp",
+        document: source.documentName,
+        keyFocus: "Thời hạn bảo mật, chuyển giao dữ liệu, điều khoản xử lý dữ liệu",
+      },
+      recommendedAction: "Đối chiếu chữ ký và phạm vi chia sẻ dữ liệu ở bản gốc trước khi lưu hồ sơ.",
+      summary: reviewSummary,
+      needsAttention: false,
+      qualityWarning: source.extractedText ? "Chất lượng nội dung ổn cho mock review." : "Không có nội dung OCR dài nên review chủ yếu dựa trên metadata.",
+    };
   }
 
   return {
     docType: "General Legal Document",
     confidence: 0.84,
-    riskScore: 45,
+    riskScore: 48,
     riskLevel: "medium",
-    riskFlags: ["Không đủ dữ liệu để map đến case mock cụ thể."],
-    extractedFields: {},
-    recommendedAction: "Kiểm tra thêm thông tin trước khi xử lý tiếp.",
-    summary: "Mock review được tạo từ payload đầu vào.",
+    riskFlags: ["Chưa đủ tín hiệu để phân loại tài liệu vào nhóm hợp đồng chuyên biệt."],
+    extractedFields: {
+      domain: source.domain || "Hợp đồng thương mại",
+      document: source.documentName,
+      keyFocus: "Đối chiếu điều khoản chính, trách nhiệm và nghĩa vụ",
+    },
+    recommendedAction: "Bổ sung thêm nội dung trích xuất hoặc tài liệu gốc trước khi đưa sang bước xử lý tiếp theo.",
+    summary: reviewSummary,
     needsAttention: false,
-    qualityWarning: "Dữ liệu này được sinh ra từ fallback mock.",
-    disclaimer: "Mock response chỉ phục vụ UI integration.",
+    qualityWarning: "Đây là fallback mock nên độ tin cậy thấp hơn khi chưa có dữ liệu case cụ thể.",
+  };
+}
+
+export function buildReviewResponseFromCase(caseRecord, payload = {}) {
+  if (caseRecord?.review) {
+    return caseRecord.review;
+  }
+
+  const derivedReview = deriveReviewHeuristics(caseRecord, payload);
+
+  return {
+    ...derivedReview,
+    disclaimer: "Kết quả AI trong bản demo đang chạy theo chiến lược mock-first để kiểm thử UI flow.",
     meta: {
-      latencyMs: 950,
+      latencyMs: 950 + Math.min((payload.extractedText || "").length * 2, 1200),
       model: "mock-legal-review-v1",
     },
   };
@@ -375,7 +490,7 @@ export function buildChatResponse({ question, caseRecord }) {
   return {
     answer:
       `Với ${title}, điểm cần quan tâm nhất là: ${question || "cần đối chiếu điều khoản và risk flag"}. ` +
-      "Trong Phase 1, câu trả lời này đang được mock để giữ cho luồng UI ổn định.",
+      "Trong bản demo hiện tại, câu trả lời này đang được mock để giữ cho luồng UI ổn định.",
     citations: [
       {
         id: "cit-fallback-001",

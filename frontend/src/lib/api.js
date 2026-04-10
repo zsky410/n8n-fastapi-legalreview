@@ -126,7 +126,7 @@ export async function getHealth() {
 export async function reviewLegal(payload) {
   return runWithMode({
     allowFallback: true,
-    mockHandler: () => buildReviewResponseFromCase(getCaseById(payload.caseId)),
+    mockHandler: () => buildReviewResponseFromCase(getCaseById(payload.caseId), payload),
     realHandler: () =>
       fetchJson("/v1/legal/review", {
         method: "POST",

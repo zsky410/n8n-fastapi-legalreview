@@ -1,5 +1,7 @@
 import { Clock3 } from "lucide-react";
 
+import { formatDateTime } from "../../lib/formatters.js";
+
 export default function Timeline({ items = [] }) {
   return (
     <div className="space-y-5">
@@ -19,7 +21,7 @@ export default function Timeline({ items = [] }) {
               </span>
             </div>
             <p className="mt-2 text-sm leading-6 text-slate-600">{item.detail}</p>
-            <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">{item.at}</p>
+            <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-400">{formatDateTime(item.at)}</p>
           </div>
         </div>
       ))}

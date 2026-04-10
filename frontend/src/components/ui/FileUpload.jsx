@@ -59,7 +59,7 @@ export default function FileUpload({
         <UploadCloud className="h-10 w-10 text-brand-500" />
         <p className="mt-4 text-base font-semibold text-slate-900">Kéo thả file vào đây hoặc bấm để chọn</p>
         <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-          Phase 1 dựng sẵn luồng upload và xem trước. Tạo hồ sơ thực tế sẽ được bật ở Phase 2.
+          Hỗ trợ PDF, DOCX hoặc ảnh scan để tạo hồ sơ demo và chạy luồng review mock-first.
         </p>
         <input
           id={inputId}

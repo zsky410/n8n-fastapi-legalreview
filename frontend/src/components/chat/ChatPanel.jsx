@@ -9,6 +9,7 @@ import ChatBubble from "./ChatBubble.jsx";
 export default function ChatPanel({
   disabled = false,
   error,
+  hint = "Đặt câu hỏi theo hồ sơ này để nhận giải thích ngắn gọn và trích dẫn mẫu.",
   isSending = false,
   messages = [],
   onSubmit,
@@ -52,7 +53,7 @@ export default function ChatPanel({
           disabled={disabled || isSending}
           onChange={(event) => setDraft(event.target.value)}
           placeholder={placeholder}
-          hint="Phase 1 đã có component chat panel; wiring API thật sẽ bật ở Phase 2.5."
+          hint={hint}
         />
         {error ? <p className="text-sm text-rose-600">{error}</p> : null}
         <div className="flex justify-end">

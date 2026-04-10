@@ -20,6 +20,9 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql://legaldesk:legaldesk@postgres:5432/legaldesk_ai"
     redis_url: str = "redis://redis:6379/0"
+    auth_jwt_secret: str = "legaldesk-dev-jwt-secret"
+    auth_jwt_algorithm: str = "HS256"
+    auth_access_token_minutes: int = 720
 
     disclaimer: str = (
         "Kết quả AI chỉ có giá trị tham khảo, không thay thế tư vấn pháp lý chuyên nghiệp."

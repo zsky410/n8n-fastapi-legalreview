@@ -9,32 +9,110 @@ import { DEMO_ACCOUNTS } from "../lib/constants.js";
 import { formatRoleLabel } from "../lib/formatters.js";
 import { useAuth } from "../hooks/useAuth.js";
 
+const EMPTY_FIELD_ERRORS = {
+  name: "",
+  company: "",
+  email: "",
+  password: "",
+};
+
+function getValidationMessage(detail) {
+  const field = String(detail?.field || "").split(".").pop();
+  const code = detail?.code;
+
+  if (field === "email") {
+    if (code === "string_pattern_mismatch") {
+      return "Email chưa đúng định dạng.";
+    }
+    return "Vui lòng nhập email hợp lệ.";
+  }
+
+  if (field === "password") {
+    if (code === "string_too_short") {
+      return "Mật khẩu cần ít nhất 8 ký tự.";
+    }
+    return "Mật khẩu hiện chưa hợp lệ.";
+  }
+
+  if (field === "name") {
+    if (code === "string_too_short") {
+      return "Tên hiển thị cần ít nhất 2 ký tự.";
+    }
+    return "Tên hiển thị hiện chưa hợp lệ.";
+  }
+
+  if (field === "company") {
+    return "Tên công ty hiện chưa hợp lệ.";
+  }
+
+  return detail?.message || "Thông tin nhập vào chưa hợp lệ.";
+}
+
 export default function AuthPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") === "register" ? "register" : "login";
-  const { login, getRedirectPathForRole } = useAuth();
-  const [email, setEmail] = useState(activeTab === "register" ? "client@demo.vn" : "");
+  const { login, register, getRedirectPathForRole } = useAuth();
+  const adminDemoAccounts = DEMO_ACCOUNTS.filter((account) => account.role === "admin");
+  const [name, setName] = useState("");
+  const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState(EMPTY_FIELD_ERRORS);
   const [isLoading, setIsLoading] = useState(false);
+
+  function resetErrors() {
+    setError("");
+    setFieldErrors(EMPTY_FIELD_ERRORS);
+  }
+
+  function handleAuthError(authError) {
+    const nextFieldErrors = { ...EMPTY_FIELD_ERRORS };
+    const details = Array.isArray(authError?.details) ? authError.details : [];
+
+    details.forEach((detail) => {
+      const field = String(detail?.field || "").split(".").pop();
+      if (field in nextFieldErrors) {
+        nextFieldErrors[field] = getValidationMessage(detail);
+      }
+    });
+
+    setFieldErrors(nextFieldErrors);
+
+    const normalizedMessage = String(authError?.message || "").toLowerCase();
+    if (!details.length && (authError?.status === 409 || (authError?.status === 400 && normalizedMessage.includes("email")))) {
+      setFieldErrors((current) => ({
+        ...current,
+        email: authError.message || "Email này hiện chưa dùng được.",
+      }));
+      setError("");
+      return;
+    }
+
+    const hasFieldErrors = Object.values(nextFieldErrors).some(Boolean);
+    if (hasFieldErrors && authError?.code === "validation_error") {
+      setError("Vui lòng kiểm tra lại các trường đang báo lỗi.");
+      return;
+    }
+
+    setError(authError?.message || "Không thể xác thực lúc này.");
+  }
 
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (activeTab === "register") {
-      navigate("/onboarding");
-      return;
-    }
-
     setIsLoading(true);
-    setError("");
+    resetErrors();
 
     try {
-      const sessionUser = await login({ email, password });
+      const sessionUser =
+        activeTab === "register"
+          ? await register({ email, password, name, company })
+          : await login({ email, password });
       navigate(getRedirectPathForRole(sessionUser.role));
     } catch (authError) {
-      setError(authError.message || "Không thể đăng nhập lúc này.");
+      handleAuthError(authError);
     } finally {
       setIsLoading(false);
     }
@@ -43,13 +121,13 @@ export default function AuthPage() {
   async function handleQuickLogin(nextEmail) {
     setEmail(nextEmail);
     setIsLoading(true);
-    setError("");
+    resetErrors();
 
     try {
       const sessionUser = await login({ email: nextEmail });
       navigate(getRedirectPathForRole(sessionUser.role));
     } catch (authError) {
-      setError(authError.message || "Không thể đăng nhập lúc này.");
+      handleAuthError(authError);
     } finally {
       setIsLoading(false);
     }
@@ -67,16 +145,16 @@ export default function AuthPage() {
               </Link>
               <div className="space-y-4">
                 <h1 className="text-4xl font-semibold leading-tight text-balance">
-                  Đăng nhập bằng tài khoản dùng thử và đi thẳng vào đúng khu vực làm việc.
+                  Tài khoản khách hàng giờ có thể đăng ký và đăng nhập thật ngay trên hệ thống.
                 </h1>
                 <p className="max-w-xl text-base leading-7 text-white/70">
-                  Mỗi tài khoản sẽ được đưa tới giao diện phù hợp theo vai trò, giúp bạn bắt đầu xem luồng khách hàng hoặc quản trị ngay lập tức.
+                  Luồng khách hàng đã dùng auth thật để lưu người dùng trong hệ thống. Riêng khu vực quản trị vẫn được giữ ở chế độ demo để tránh mở rộng scope quá sớm.
                 </p>
               </div>
             </div>
 
             <div className="grid gap-3">
-              {DEMO_ACCOUNTS.map((account) => (
+              {adminDemoAccounts.map((account) => (
                 <button
                   key={account.email}
                   type="button"
@@ -108,9 +186,7 @@ export default function AuthPage() {
                   type="button"
                   onClick={() => {
                     setSearchParams({ tab: tab.value });
-                    if (tab.value === "register") {
-                      setEmail("client@demo.vn");
-                    }
+                    resetErrors();
                   }}
                   className={
                     activeTab === tab.value
@@ -125,40 +201,76 @@ export default function AuthPage() {
 
             <div>
               <h2 className="text-3xl font-semibold text-ink">
-                {activeTab === "login" ? "Đăng nhập nhanh" : "Thiết lập ban đầu"}
+                {activeTab === "login" ? "Đăng nhập khách hàng" : "Tạo tài khoản khách hàng"}
               </h2>
               <p className="mt-2 text-sm leading-6 text-muted">
                 {activeTab === "login"
-                  ? "Dùng một trong hai tài khoản có sẵn để mở đúng không gian làm việc."
-                  : "Điền thông tin khởi tạo để chuyển sang bước thiết lập tiếp theo."}
+                  ? "Dùng email và mật khẩu đã tạo để vào cổng khách hàng. Tài khoản admin demo vẫn có thể mở nhanh ở khung bên trái."
+                  : "Điền thông tin thật để tạo tài khoản khách hàng đầu tiên trên hệ thống."}
               </p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {activeTab === "register" ? (
+                <>
+                  <Input
+                    label="Tên hiển thị"
+                    value={name}
+                    onChange={(event) => {
+                      setName(event.target.value);
+                      setFieldErrors((current) => ({ ...current, name: "" }));
+                    }}
+                    placeholder="Nguyễn Minh An"
+                    autoComplete="name"
+                    error={fieldErrors.name}
+                  />
+                  <Input
+                    label="Công ty"
+                    value={company}
+                    onChange={(event) => {
+                      setCompany(event.target.value);
+                      setFieldErrors((current) => ({ ...current, company: "" }));
+                    }}
+                    placeholder="Công ty ABC"
+                    autoComplete="organization"
+                    error={fieldErrors.company}
+                  />
+                </>
+              ) : null}
               <Input
                 label="Email"
                 type="email"
                 value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                placeholder="client@demo.vn"
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setFieldErrors((current) => ({ ...current, email: "" }));
+                }}
+                placeholder="ban@congty.vn"
+                autoComplete="email"
+                error={fieldErrors.email}
               />
               <Input
                 label="Mật khẩu"
                 type="password"
                 value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                placeholder="mat-khau-dung-thu"
-                hint="Trường này đang được giữ để hoàn thiện luồng xác thực ở các bước tiếp theo."
+                onChange={(event) => {
+                  setPassword(event.target.value);
+                  setFieldErrors((current) => ({ ...current, password: "" }));
+                }}
+                placeholder="Tối thiểu 8 ký tự"
+                autoComplete={activeTab === "login" ? "current-password" : "new-password"}
+                hint={activeTab === "register" ? "Chọn mật khẩu đủ mạnh để dùng lại cho các lần đăng nhập sau." : undefined}
+                error={fieldErrors.password}
               />
               {error ? <p className="rounded-sm bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
               <Button type="submit" className="w-full" isLoading={isLoading}>
                 <UserRound className="h-4 w-4" />
-                {activeTab === "login" ? "Vào khu vực làm việc" : "Tiếp tục thiết lập"}
+                {activeTab === "login" ? "Vào cổng khách hàng" : "Tạo tài khoản và bắt đầu"}
               </Button>
             </form>
 
             <div className="rounded-sm border border-line bg-[#fafafa] px-4 py-4 text-sm leading-6 text-muted">
-              `client@demo.vn` sẽ vào khu vực khách hàng, còn `admin@demo.vn` sẽ vào khu vực quản trị.
+              Luồng khách hàng đã dùng xác thực thật. Tài khoản `admin@demo.vn` vẫn được giữ riêng cho demo quản trị.
             </div>
 
             <div className="flex items-center justify-between gap-3 text-sm text-muted">

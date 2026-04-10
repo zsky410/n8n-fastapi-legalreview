@@ -16,12 +16,12 @@ export default function Modal({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-10">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/50 px-4 py-10">
       <div className={cn("surface-panel w-full max-w-lg overflow-hidden", className)}>
-        <div className="flex items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
+        <div className="flex items-start justify-between gap-4 border-b border-line px-6 py-5">
           <div>
-            <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
-            {description ? <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p> : null}
+            <h3 className="text-xl font-semibold text-ink">{title}</h3>
+            {description ? <p className="mt-2 text-sm leading-6 text-muted">{description}</p> : null}
           </div>
           <Button variant="ghost" size="sm" className="h-9 w-9 rounded-full px-0" onClick={onClose} aria-label="Đóng modal">
             <X className="h-4 w-4" />

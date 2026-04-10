@@ -18,6 +18,8 @@ const mockOpsMetrics = [
   { label: "Tỷ lệ lỗi", value: "1,8%" },
 ];
 
+const kpiVariants = ["total", "processing", "published", "attention", "quality"];
+
 const mockEndpointRows = [
   { id: "ep-1", endpoint: "/v1/legal/review", status: "đang theo dõi", latency: "280ms", note: "Tổng hợp từ nhật ký giao diện" },
   { id: "ep-2", endpoint: "/v1/legal/chat", status: "đang theo dõi", latency: "190ms", note: "Tổng hợp từ nhật ký giao diện" },
@@ -76,8 +78,8 @@ export default function SystemMonitor() {
       <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-brand-50">
         <CardContent className="space-y-4 p-6">
           <div>
-            <h2 className="text-3xl font-semibold text-slate-900">Theo dõi hệ thống</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
+            <h2 className="text-3xl font-semibold text-ink">Theo dõi hệ thống</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
               Theo dõi nhanh tình trạng dịch vụ, kết nối phụ thuộc và một số chỉ số vận hành quan trọng trong cùng một màn hình.
             </p>
           </div>
@@ -85,8 +87,13 @@ export default function SystemMonitor() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        {mockOpsMetrics.map((item) => (
-          <KpiCard key={item.label} label={item.label} value={item.value} />
+        {mockOpsMetrics.map((item, index) => (
+          <KpiCard
+            key={item.label}
+            label={item.label}
+            value={item.value}
+            variant={kpiVariants[index % kpiVariants.length]}
+          />
         ))}
       </div>
 
@@ -94,8 +101,8 @@ export default function SystemMonitor() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Tình trạng dịch vụ</h3>
-              <p className="text-sm text-slate-500">Nguồn dữ liệu: `GET /health` từ FastAPI.</p>
+              <h3 className="text-xl font-semibold text-ink">Tình trạng dịch vụ</h3>
+              <p className="text-sm text-muted">Nguồn dữ liệu: `GET /health` từ FastAPI.</p>
             </div>
             <Button variant="secondary" onClick={loadHealth} disabled={isLoading}>
               Làm mới trạng thái
@@ -104,7 +111,7 @@ export default function SystemMonitor() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Spinner className="h-7 w-7 text-brand-700" />
+              <Spinner className="h-7 w-7 text-gold" />
             </div>
           ) : error ? (
             <div className="space-y-3">
@@ -115,7 +122,7 @@ export default function SystemMonitor() {
             </div>
           ) : health ? (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              <div className="rounded-2xl border border-line bg-slate-50 px-4 py-3 text-sm text-ink">
                 <p>Dịch vụ: {health.service || "legaldesk-fastapi"}</p>
                 <p>Trạng thái: {formatHealthStatus(health.status)}</p>
                 <p>Môi trường: {health.environment || "-"}</p>
@@ -139,8 +146,8 @@ export default function SystemMonitor() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Chỉ số vận hành và endpoint</h3>
-              <p className="text-sm text-slate-500">Tổng hợp một số số liệu hữu ích để theo dõi khả năng phản hồi của hệ thống.</p>
+              <h3 className="text-xl font-semibold text-ink">Chỉ số vận hành và endpoint</h3>
+              <p className="text-sm text-muted">Tổng hợp một số số liệu hữu ích để theo dõi khả năng phản hồi của hệ thống.</p>
             </div>
             <Badge className="border-amber-200 bg-amber-50 text-amber-700">Dữ liệu tham khảo</Badge>
           </div>

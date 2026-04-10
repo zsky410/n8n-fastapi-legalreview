@@ -10,12 +10,12 @@ export default function ChatBubble({ message }) {
       <div
         className={cn(
           "max-w-2xl rounded-[24px] px-4 py-4 shadow-sm",
-          isAssistant ? "border border-slate-200 bg-white text-slate-700" : "bg-brand-900 text-white",
+          isAssistant ? "border border-line bg-white text-ink" : "bg-ink text-white",
         )}
       >
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]">
           <span>{isAssistant ? "Trợ lý AI" : "Bạn"}</span>
-          <span className={cn(isAssistant ? "text-slate-400" : "text-brand-100")}>{formatDateTime(message.createdAt)}</span>
+          <span className={cn(isAssistant ? "text-muted" : "text-white/60")}>{formatDateTime(message.createdAt)}</span>
         </div>
         <p className="mt-3 whitespace-pre-wrap text-sm leading-6">{message.content}</p>
         {message.caution ? (
@@ -24,7 +24,7 @@ export default function ChatBubble({ message }) {
           </p>
         ) : null}
         {typeof message.confidence === "number" ? (
-          <p className="mt-2 text-xs text-slate-500">Độ tin cậy: {Math.round(message.confidence * 100)}%</p>
+          <p className="mt-2 text-xs text-muted">Độ tin cậy: {Math.round(message.confidence * 100)}%</p>
         ) : null}
         {message.citations?.length ? (
           <div className="mt-4 space-y-3">
@@ -34,7 +34,7 @@ export default function ChatBubble({ message }) {
           </div>
         ) : null}
         {message.disclaimer ? (
-          <p className="mt-3 border-t border-slate-200 pt-3 text-xs text-slate-500">{message.disclaimer}</p>
+          <p className="mt-3 border-t border-line pt-3 text-xs text-muted">{message.disclaimer}</p>
         ) : null}
       </div>
     </div>

@@ -100,7 +100,7 @@ export default function RoutingRules() {
       key: "active",
       label: "Trạng thái",
       render: (row) => (
-        <Badge className={row.active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-slate-200 bg-slate-100 text-slate-700"}>
+        <Badge className={row.active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-line bg-[#f4f4f5] text-ink"}>
           {row.active ? "Đang bật" : "Tạm tắt"}
         </Badge>
       ),
@@ -184,8 +184,8 @@ export default function RoutingRules() {
       <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_52%,#f8fafc_100%)]">
         <CardContent className="space-y-4 p-6">
           <div>
-            <h2 className="text-3xl font-semibold text-slate-900">Quản lý luật định tuyến cho workflow full-auto.</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
+            <h2 className="text-3xl font-semibold text-ink">Quản lý luật định tuyến cho workflow full-auto.</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
               Thêm, sửa hoặc tạm tắt các luật tự động để phân luồng hồ sơ theo mức độ rủi ro và chất lượng dữ liệu.
             </p>
           </div>
@@ -196,8 +196,8 @@ export default function RoutingRules() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Luật định tuyến</h3>
-              <p className="text-sm text-slate-500">Các thay đổi được giữ lại trên trình duyệt hiện tại để bạn kiểm tra nhanh nhiều kịch bản xử lý.</p>
+              <h3 className="text-xl font-semibold text-ink">Luật định tuyến</h3>
+              <p className="text-sm text-muted">Các thay đổi được giữ lại trên trình duyệt hiện tại để bạn kiểm tra nhanh nhiều kịch bản xử lý.</p>
             </div>
             <Button
               onClick={() => {
@@ -213,7 +213,7 @@ export default function RoutingRules() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-14">
-              <Spinner className="h-7 w-7 text-brand-700" />
+              <Spinner className="h-7 w-7 text-gold" />
             </div>
           ) : loadError ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>

@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     app_debug: bool = True
     api_v1_prefix: str = "/v1"
     log_level: str = "INFO"
-    cors_origins: str = "http://localhost:3000,http://localhost:8080"
+    cors_origins: str = "http://localhost:3000,http://localhost:5173,http://localhost:4173,http://localhost:8080"
 
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash"
@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     redis_url: str = "redis://redis:6379/0"
 
     disclaimer: str = (
-        "Ket qua AI chi co gia tri tham khao, khong thay the tu van phap ly chuyen nghiep."
+        "Kết quả AI chỉ có giá trị tham khảo, không thay thế tư vấn pháp lý chuyên nghiệp."
     )
 
     model_config = SettingsConfigDict(

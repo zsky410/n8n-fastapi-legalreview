@@ -10,8 +10,8 @@ export default function ClientLayout() {
 
   if (!isHydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100">
-        <Spinner className="h-8 w-8 text-brand-700" />
+      <div className="flex min-h-screen items-center justify-center bg-[#fafafa]">
+        <Spinner className="h-8 w-8 text-gold" />
       </div>
     );
   }

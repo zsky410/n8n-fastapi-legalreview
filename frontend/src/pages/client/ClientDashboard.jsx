@@ -48,16 +48,18 @@ export default function ClientDashboard() {
       key: "id",
       label: "Mã hồ sơ",
       sortable: true,
-      render: (row) => <span className="font-semibold text-slate-900">{row.id}</span>,
+      className: "w-[12%] min-w-[8.5rem]",
+      render: (row) => <span className="font-semibold text-ink">{row.id}</span>,
     },
     {
       key: "documentName",
       label: "Tên tài liệu",
       sortable: true,
+      className: "w-[32%] min-w-0",
       render: (row) => (
-        <div className="min-w-[240px]">
-          <p className="font-semibold text-slate-900">{row.documentName}</p>
-          <p className="mt-1 text-xs text-slate-500">{row.title}</p>
+        <div className="min-w-0 pr-2">
+          <p className="break-words font-semibold text-ink">{row.documentName}</p>
+          <p className="mt-1 line-clamp-2 text-xs text-muted">{row.title}</p>
         </div>
       ),
     },
@@ -65,28 +67,31 @@ export default function ClientDashboard() {
       key: "status",
       label: "Trạng thái",
       sortable: true,
+      className: "w-[16%]",
       render: (row) => <StatusBadge status={row.status} />,
     },
     {
       key: "riskLevel",
       label: "Rủi ro",
       sortable: true,
+      className: "w-[12%]",
       render: (row) => <RiskBadge level={row.riskLevel} />,
     },
     {
       key: "createdAt",
       label: "Ngày tạo",
       sortable: true,
-      render: (row) => <span className="text-slate-700">{formatDateTime(row.createdAt)}</span>,
+      className: "w-[14%] whitespace-nowrap",
+      render: (row) => <span className="text-muted">{formatDateTime(row.createdAt)}</span>,
     },
     {
       key: "action",
       label: "Chi tiết",
-      className: "w-[132px]",
+      className: "w-[14%] min-w-[8.5rem] text-right",
       render: (row) => (
         <Link
           to={`/client/cases/${row.id}`}
-          className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-brand-200 hover:bg-brand-50 hover:text-brand-700"
+          className="inline-flex items-center justify-end gap-2 rounded-sm border border-line px-3 py-2 text-sm font-semibold text-ink transition hover:border-gold/40 hover:bg-brand-50 hover:text-gold"
         >
           Mở hồ sơ
           <ArrowRight className="h-4 w-4" />
@@ -98,7 +103,7 @@ export default function ClientDashboard() {
   if (!isReady) {
     return (
       <div className="surface-panel flex items-center justify-center px-6 py-16">
-        <Spinner className="h-8 w-8 text-brand-700" />
+        <Spinner className="h-8 w-8 text-gold" />
       </div>
     );
   }
@@ -109,12 +114,12 @@ export default function ClientDashboard() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-2xl font-semibold text-slate-900">Hồ sơ của tôi</h2>
-              <p className="mt-2 text-sm text-slate-500">Theo dõi trạng thái xử lý, mức rủi ro và mở nhanh từng hồ sơ từ một bảng tổng hợp duy nhất.</p>
+              <h2 className="text-2xl font-semibold text-ink">Hồ sơ của tôi</h2>
+              <p className="mt-2 text-sm text-muted">Theo dõi trạng thái xử lý, mức rủi ro và mở nhanh từng hồ sơ từ một bảng tổng hợp duy nhất.</p>
             </div>
             <Link
               to="/client/cases/new"
-              className="inline-flex items-center gap-2 rounded-2xl bg-brand-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700"
+              className="inline-flex items-center gap-2 rounded-sm bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-ink/90"
             >
               <FilePlus2 className="h-4 w-4" />
               Tạo hồ sơ mới
@@ -124,18 +129,18 @@ export default function ClientDashboard() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Tổng hồ sơ" value={cases.length} />
-        <KpiCard label="Đang xử lý" value={processingCount} />
-        <KpiCard label="Đã công bố" value={completedCount} />
-        <KpiCard label="Cần chú ý" value={needsAttentionCount} tone="accent" />
+        <KpiCard label="Tổng hồ sơ" value={cases.length} variant="total" />
+        <KpiCard label="Đang xử lý" value={processingCount} variant="processing" />
+        <KpiCard label="Đã công bố" value={completedCount} variant="published" />
+        <KpiCard label="Cần chú ý" value={needsAttentionCount} variant="attention" />
       </div>
 
       <Card>
         <CardContent className="space-y-5 p-6">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Danh sách hồ sơ</h3>
-              <p className="text-sm text-slate-500">Lọc nhanh theo mức độ ưu tiên xử lý và mở ngay hồ sơ cần theo dõi.</p>
+              <h3 className="text-xl font-semibold text-ink">Danh sách hồ sơ</h3>
+              <p className="text-sm text-muted">Lọc nhanh theo mức độ ưu tiên xử lý và mở ngay hồ sơ cần theo dõi.</p>
             </div>
             <div className="flex flex-wrap gap-2">
               {filters.map((filter) => (
@@ -145,8 +150,8 @@ export default function ClientDashboard() {
                   onClick={() => setActiveFilter(filter.value)}
                   className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                     activeFilter === filter.value
-                      ? "bg-brand-500 text-white shadow-sm shadow-brand-200"
-                      : "border border-slate-200 bg-white text-slate-600 hover:border-brand-200 hover:text-brand-700"
+                      ? "!bg-ink text-white shadow-sm"
+                      : "border border-line bg-white text-muted hover:border-gold/40 hover:text-gold"
                   }`}
                 >
                   {filter.label}
@@ -172,7 +177,7 @@ export default function ClientDashboard() {
               <div className="flex justify-center">
                 <Link
                   to="/client/cases/new"
-                  className="inline-flex items-center gap-2 rounded-2xl bg-brand-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-700"
+                  className="inline-flex items-center gap-2 rounded-sm bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-ink/90"
                 >
                   <FilePlus2 className="h-4 w-4" />
                   Tạo hồ sơ mới

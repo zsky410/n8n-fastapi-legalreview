@@ -40,6 +40,18 @@ function getCurrentStage(caseRecord) {
   return formatStageLabel(stage || "Đã tải lên");
 }
 
+function getReviewSourceLabel(review) {
+  if (!review?.meta) {
+    return "Nguồn AI chưa xác định";
+  }
+
+  if (review.meta.provider === "gemini") {
+    return `Mô hình ${review.meta.model || "Gemini"}`;
+  }
+
+  return "Chế độ dự phòng nội bộ";
+}
+
 export default function CaseDetail() {
   const { id } = useParams();
   const { getCaseById, isReady, updateReview } = useCases();
@@ -53,6 +65,7 @@ export default function CaseDetail() {
   const completedStageIndex = PIPELINE_STAGES.findIndex((stage) => stage === currentStage);
   const slaMs = currentCase?.slaDueAt ? new Date(currentCase.slaDueAt).getTime() - Date.now() : null;
   const slaStatus = slaMs === null ? "on_time" : slaMs < 0 ? "overdue" : slaMs < 60 * 60 * 1000 ? "at_risk" : "on_time";
+  const reviewSourceLabel = getReviewSourceLabel(review);
 
   async function handleRequestReview() {
     if (!currentCase) {
@@ -109,20 +122,20 @@ export default function CaseDetail() {
         <CardContent className="grid gap-5 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-4">
             <div>
-              <h2 className="text-3xl font-semibold text-slate-900">{currentCase.title}</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-500">{currentCase.description}</p>
+              <h2 className="text-3xl font-semibold text-ink">{currentCase.title}</h2>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{currentCase.description}</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <StatusBadge status={currentCase.status} />
               <RiskBadge level={currentCase.riskLevel} />
-              <Badge className="border-slate-200 bg-white/80 text-slate-700">{currentCase.documentName}</Badge>
-              <Badge className="border-slate-200 bg-white/80 text-slate-700">Ưu tiên {formatPriorityLabel(currentCase.priority)}</Badge>
+              <Badge className="border-line bg-white/80 text-ink">{currentCase.documentName}</Badge>
+              <Badge className="border-line bg-white/80 text-ink">Ưu tiên {formatPriorityLabel(currentCase.priority)}</Badge>
               {review?.needsAttention ? <Badge className="border-rose-200 bg-rose-50 text-rose-700">Cần chú ý</Badge> : null}
               {review?.qualityWarning ? <Badge className="border-amber-200 bg-amber-50 text-amber-700">Cảnh báo chất lượng</Badge> : null}
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-slate-200 bg-slate-950 p-5 text-white">
+          <div className="rounded-[28px] border border-line bg-ink p-5 text-white">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Tóm tắt nhanh</p>
             <div className="mt-4 grid gap-4">
               <div>
@@ -152,7 +165,7 @@ export default function CaseDetail() {
 
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Tabs tabs={tabItems} value={activeTab} onChange={setActiveTab} />
-        <p className="text-sm text-slate-500">Lĩnh vực: {currentCase.domain || "Chưa gắn lĩnh vực"}</p>
+        <p className="text-sm text-muted">Lĩnh vực: {currentCase.domain || "Chưa gắn lĩnh vực"}</p>
       </div>
 
       <TabPanel activeValue={activeTab} value="overview">
@@ -182,8 +195,8 @@ export default function CaseDetail() {
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-slate-900">Không thể chạy phân tích lúc này</h3>
-                <p className="mt-2 text-sm leading-6 text-slate-500">{reviewError}</p>
+                <h3 className="text-xl font-semibold text-ink">Không thể chạy phân tích lúc này</h3>
+                <p className="mt-2 text-sm leading-6 text-muted">{reviewError}</p>
               </div>
               <Button onClick={handleRequestReview}>
                 <RefreshCcw className="h-4 w-4" />
@@ -198,8 +211,8 @@ export default function CaseDetail() {
                 <CardContent className="space-y-5 p-6">
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Kết quả phân tích</p>
-                      <h3 className="mt-2 text-2xl font-semibold text-slate-900">{review.docType}</h3>
+                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Kết quả phân tích</p>
+                      <h3 className="mt-2 text-2xl font-semibold text-ink">{review.docType}</h3>
                     </div>
                     <Button variant="secondary" onClick={handleRequestReview}>
                       <RefreshCcw className="h-4 w-4" />
@@ -208,33 +221,33 @@ export default function CaseDetail() {
                   </div>
 
                   <div className="grid gap-4 md:grid-cols-3">
-                    <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-                      <p className="text-sm text-slate-500">Điểm rủi ro</p>
-                      <p className="mt-2 text-3xl font-semibold text-slate-900">{review.riskScore}</p>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Mức {formatRiskLevelLabel(review.riskLevel)}</p>
+                    <div className="rounded-[24px] border border-line bg-slate-50 px-4 py-4">
+                      <p className="text-sm text-muted">Điểm rủi ro</p>
+                      <p className="mt-2 text-3xl font-semibold text-ink">{review.riskScore}</p>
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted">Mức {formatRiskLevelLabel(review.riskLevel)}</p>
                     </div>
-                    <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-                      <p className="text-sm text-slate-500">Độ tin cậy</p>
-                      <p className="mt-2 text-3xl font-semibold text-slate-900">{formatConfidence(review.confidence)}</p>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Mô hình {review.meta?.model || "AI"}</p>
+                    <div className="rounded-[24px] border border-line bg-slate-50 px-4 py-4">
+                      <p className="text-sm text-muted">Độ tin cậy</p>
+                      <p className="mt-2 text-3xl font-semibold text-ink">{formatConfidence(review.confidence)}</p>
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted">{reviewSourceLabel}</p>
                     </div>
-                    <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4">
-                      <p className="text-sm text-slate-500">Thời gian phản hồi</p>
-                      <p className="mt-2 text-3xl font-semibold text-slate-900">{review.meta?.latencyMs || 0}ms</p>
-                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">Xử lý tự động</p>
+                    <div className="rounded-[24px] border border-line bg-slate-50 px-4 py-4">
+                      <p className="text-sm text-muted">Thời gian phản hồi</p>
+                      <p className="mt-2 text-3xl font-semibold text-ink">{review.meta?.latencyMs || 0}ms</p>
+                      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted">Xử lý tự động</p>
                     </div>
                   </div>
 
-                  <div className="rounded-[28px] border border-slate-200 bg-white px-5 py-5">
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">Tóm tắt hồ sơ</p>
-                    <p className="mt-3 text-sm leading-7 text-slate-600">{review.summary}</p>
+                  <div className="rounded-[28px] border border-line bg-white px-5 py-5">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Tóm tắt hồ sơ</p>
+                    <p className="mt-3 text-sm leading-7 text-muted">{review.summary}</p>
                   </div>
 
                   <div className="grid gap-4 lg:grid-cols-2">
-                    <div className="rounded-[28px] border border-slate-200 bg-white px-5 py-5">
+                    <div className="rounded-[28px] border border-line bg-white px-5 py-5">
                       <div className="flex items-center gap-2">
                         <ShieldAlert className="h-4 w-4 text-amber-500" />
-                        <p className="text-sm font-semibold text-slate-900">Cảnh báo rủi ro</p>
+                        <p className="text-sm font-semibold text-ink">Cảnh báo rủi ro</p>
                       </div>
                       <div className="mt-4 space-y-3">
                         {review.riskFlags?.length ? (
@@ -251,16 +264,16 @@ export default function CaseDetail() {
                       </div>
                     </div>
 
-                    <div className="rounded-[28px] border border-slate-200 bg-white px-5 py-5">
+                    <div className="rounded-[28px] border border-line bg-white px-5 py-5">
                       <div className="flex items-center gap-2">
-                        <FileSearch className="h-4 w-4 text-brand-700" />
-                        <p className="text-sm font-semibold text-slate-900">Trường đã trích xuất</p>
+                        <FileSearch className="h-4 w-4 text-gold" />
+                        <p className="text-sm font-semibold text-ink">Trường đã trích xuất</p>
                       </div>
                       <div className="mt-4 space-y-3">
                         {Object.entries(review.extractedFields || {}).map(([key, value]) => (
                           <div key={key} className="rounded-2xl bg-slate-50 px-4 py-3">
-                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">{key}</p>
-                            <p className="mt-2 text-sm leading-6 text-slate-700">{renderFieldValue(value)}</p>
+                            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted">{key}</p>
+                            <p className="mt-2 text-sm leading-6 text-ink">{renderFieldValue(value)}</p>
                           </div>
                         ))}
                       </div>
@@ -271,7 +284,7 @@ export default function CaseDetail() {
             </div>
 
             <div className="space-y-5">
-              <Card className="bg-slate-950 text-white">
+              <Card className="!bg-ink !text-white">
                 <CardContent className="space-y-4 p-6">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white">
@@ -287,8 +300,8 @@ export default function CaseDetail() {
 
               <Card>
                 <CardContent className="space-y-4 p-6">
-                  <div className="flex items-center gap-2 text-slate-900">
-                    <TimerReset className="h-4 w-4 text-brand-700" />
+                  <div className="flex items-center gap-2 text-ink">
+                    <TimerReset className="h-4 w-4 text-gold" />
                     <p className="text-sm font-semibold">Lưu ý và cảnh báo chất lượng</p>
                   </div>
                   {review.qualityWarning ? (
@@ -296,7 +309,7 @@ export default function CaseDetail() {
                       {review.qualityWarning}
                     </div>
                   ) : null}
-                  <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-600">
+                  <div className="rounded-[24px] border border-line bg-slate-50 px-4 py-4 text-sm leading-6 text-muted">
                     {review.disclaimer}
                   </div>
                 </CardContent>
@@ -304,8 +317,8 @@ export default function CaseDetail() {
 
               <Card>
                 <CardContent className="space-y-4 p-6">
-                  <p className="text-sm font-semibold text-slate-900">Đoạn trích văn bản đầu vào</p>
-                  <p className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-7 text-slate-600">
+                  <p className="text-sm font-semibold text-ink">Đoạn trích văn bản đầu vào</p>
+                  <p className="rounded-[24px] border border-line bg-slate-50 px-4 py-4 text-sm leading-7 text-muted">
                     {currentCase.extractedText || "Chưa có nội dung trích xuất. Review đang dựa nhiều hơn vào metadata hồ sơ."}
                   </p>
                 </CardContent>
@@ -331,10 +344,10 @@ export default function CaseDetail() {
           <CardContent className="space-y-4 p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="text-xl font-semibold text-slate-900">Trao đổi theo từng hồ sơ</h3>
-                <p className="text-sm text-slate-500">Đặt câu hỏi theo đúng hồ sơ để làm rõ điều khoản, cảnh báo và hướng xử lý tiếp theo.</p>
+                <h3 className="text-xl font-semibold text-ink">Trao đổi theo từng hồ sơ</h3>
+                <p className="text-sm text-muted">Đặt câu hỏi theo đúng hồ sơ để làm rõ điều khoản, cảnh báo và hướng xử lý tiếp theo.</p>
               </div>
-              <Badge className="border-slate-200 bg-slate-100 text-slate-700">
+              <Badge className="border-line bg-[#f4f4f5] text-ink">
                 <Bot className="mr-1 h-3.5 w-3.5" />
                 {messages.length} tin nhắn
               </Badge>
@@ -345,7 +358,7 @@ export default function CaseDetail() {
               isSending={isSending}
               onSubmit={sendMessage}
               placeholder={`Hỏi thêm về ${currentCase.title.toLowerCase()}...`}
-              hint="Mỗi tin nhắn sẽ được lưu theo hồ sơ để bạn dễ theo dõi lại nội dung trao đổi."
+              hint="Mỗi tin nhắn sẽ được lưu theo hồ sơ để bạn dễ theo dõi lại nội dung trao đổi. Câu hỏi nên từ 3 ký tự trở lên."
             />
           </CardContent>
         </Card>
@@ -356,14 +369,14 @@ export default function CaseDetail() {
           <div className="grid gap-4 lg:grid-cols-3">
             <Card>
               <CardContent className="space-y-2 p-6">
-                <p className="text-sm text-slate-500">Stage hiện tại</p>
-                <p className="text-2xl font-semibold text-slate-900">{currentStage}</p>
+                <p className="text-sm text-muted">Stage hiện tại</p>
+                <p className="text-2xl font-semibold text-ink">{currentStage}</p>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="space-y-2 p-6">
-                <p className="text-sm text-slate-500">SLA</p>
-                <p className="text-2xl font-semibold text-slate-900">{formatSlaLabel(currentCase.slaDueAt)}</p>
+                <p className="text-sm text-muted">SLA</p>
+                <p className="text-2xl font-semibold text-ink">{formatSlaLabel(currentCase.slaDueAt)}</p>
                 <Badge
                   className={
                     slaStatus === "overdue"
@@ -379,8 +392,8 @@ export default function CaseDetail() {
             </Card>
             <Card>
               <CardContent className="space-y-2 p-6">
-                <p className="text-sm text-slate-500">Lần cập nhật cuối</p>
-                <p className="text-lg font-semibold text-slate-900">{formatDateTime(currentCase.updatedAt)}</p>
+                <p className="text-sm text-muted">Lần cập nhật cuối</p>
+                <p className="text-lg font-semibold text-ink">{formatDateTime(currentCase.updatedAt)}</p>
               </CardContent>
             </Card>
           </div>
@@ -388,8 +401,8 @@ export default function CaseDetail() {
           <Card>
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center gap-2">
-                <Clock3 className="h-4 w-4 text-brand-700" />
-                <p className="text-sm font-semibold text-slate-900">Tiến trình xử lý</p>
+                <Clock3 className="h-4 w-4 text-gold" />
+                <p className="text-sm font-semibold text-ink">Tiến trình xử lý</p>
               </div>
               <div className="grid gap-3 md:grid-cols-5">
                 {PIPELINE_STAGES.map((stage, index) => {
@@ -399,8 +412,8 @@ export default function CaseDetail() {
                       key={stage}
                       className={`rounded-[24px] border px-4 py-4 text-sm font-semibold transition ${
                         isCompleted
-                          ? "border-brand-200 bg-brand-50 text-brand-700"
-                          : "border-slate-200 bg-slate-50 text-slate-500"
+                          ? "border-gold/40 bg-brand-50 text-gold"
+                          : "border-line bg-slate-50 text-muted"
                       }`}
                     >
                       {stage}
@@ -414,8 +427,8 @@ export default function CaseDetail() {
           <Card>
             <CardContent className="space-y-4 p-6">
               <div>
-                <h3 className="text-xl font-semibold text-slate-900">Lịch sử xử lý</h3>
-                <p className="text-sm text-slate-500">Hồ sơ mới sẽ hiển thị trạng thái trống cho đến khi phân tích được chạy và tiến trình được cập nhật.</p>
+                <h3 className="text-xl font-semibold text-ink">Lịch sử xử lý</h3>
+                <p className="text-sm text-muted">Hồ sơ mới sẽ hiển thị trạng thái trống cho đến khi phân tích được chạy và tiến trình được cập nhật.</p>
               </div>
               {currentCase.timeline?.length ? (
                 <Timeline items={currentCase.timeline} />

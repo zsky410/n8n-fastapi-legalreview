@@ -37,7 +37,7 @@ def test_legal_review_returns_bootstrap_analysis() -> None:
         assert payload["riskLevel"] in {"low", "medium", "high"}
         assert isinstance(payload["riskFlags"], list)
         assert "meta" in payload
-        assert payload["meta"]["provider"] == "gemini"
+        assert payload["meta"]["provider"] == "bootstrap"
 
 
 def test_legal_review_retries_when_model_returns_invalid_json_then_succeeds() -> None:

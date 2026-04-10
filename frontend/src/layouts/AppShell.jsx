@@ -53,8 +53,8 @@ function SidebarNav({ items, onNavigate }) {
             onClick={onNavigate}
             className={({ isActive }) =>
               cn(
-                "flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-semibold transition",
-                isActive ? "bg-white/12 text-white" : "text-brand-100 hover:bg-white/10 hover:text-white",
+                "flex items-center gap-3 rounded-sm px-4 py-3 text-sm font-semibold transition",
+                isActive ? "bg-white/12 text-gold" : "text-white/70 hover:bg-white/10 hover:text-white",
               )
             }
           >
@@ -74,12 +74,12 @@ function SidebarContent({ role, onNavigate }) {
   return (
     <div className="surface-sidebar flex h-full flex-col p-5">
       <div className="flex items-center gap-3 border-b border-white/10 pb-5">
-        <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white">
+        <span className="flex h-11 w-11 items-center justify-center rounded-sm border border-white/15 bg-white/5 text-white">
           <Scale className="h-5 w-5" />
         </span>
         <div>
           <p className="text-base font-semibold">{APP_NAME}</p>
-          <p className="text-sm text-brand-100">{ROLE_LABELS[role]}</p>
+          <p className="text-sm text-white/65">{ROLE_LABELS[role]}</p>
         </div>
       </div>
 
@@ -87,9 +87,9 @@ function SidebarContent({ role, onNavigate }) {
         <SidebarNav items={navItems} onNavigate={onNavigate} />
       </div>
 
-      <div className="mt-6 rounded-2xl border border-white/10 bg-white/5 p-4">
+      <div className="mt-6 rounded-sm border border-white/10 bg-white/5 p-4">
         <p className="text-sm font-semibold text-white">{user?.name}</p>
-        <p className="mt-1 text-sm text-brand-100">{user?.company}</p>
+        <p className="mt-1 text-sm text-white/65">{user?.company}</p>
         <p className="mt-3 text-xs uppercase tracking-[0.18em] text-white/50">{user?.subtitle}</p>
       </div>
     </div>
@@ -111,15 +111,15 @@ export default function AppShell({ children, role }) {
   }
 
   return (
-    <div className="min-h-screen p-4 lg:p-5">
-      <div className="legal-grid min-h-[calc(100vh-2rem)] rounded-[36px] border border-white/70 bg-white/30 p-3 shadow-card lg:p-4">
+    <div className="min-h-screen bg-[#fafafa] p-4 lg:p-5">
+      <div className="legal-grid min-h-[calc(100vh-2rem)] rounded-sm border border-line bg-white p-3 shadow-sm lg:p-4">
         <div className="grid min-h-[calc(100vh-3.5rem)] gap-4 lg:grid-cols-[310px_minmax(0,1fr)]">
           <div className="hidden lg:block">
             <SidebarContent role={role} />
           </div>
 
           {isSidebarOpen ? (
-            <div className="fixed inset-0 z-40 bg-slate-950/45 lg:hidden">
+            <div className="fixed inset-0 z-40 bg-ink/45 lg:hidden">
               <div className="h-full w-[86vw] max-w-[320px] p-4">
                 <div className="relative h-full">
                   <SidebarContent role={role} onNavigate={() => setIsSidebarOpen(false)} />
@@ -150,12 +150,12 @@ export default function AppShell({ children, role }) {
                   <Menu className="h-4 w-4" />
                 </Button>
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted">
                     <span>{ROLE_LABELS[role]}</span>
                     <ChevronRight className="h-3.5 w-3.5" />
-                    <span className="text-brand-700">{currentLabel}</span>
+                    <span className="text-gold">{currentLabel}</span>
                   </div>
-                  <h1 className="mt-1 text-2xl font-semibold capitalize text-slate-900">{currentLabel}</h1>
+                  <h1 className="mt-1 text-2xl font-semibold capitalize text-ink">{currentLabel}</h1>
                 </div>
               </div>
               <div className="flex flex-wrap items-center gap-3">

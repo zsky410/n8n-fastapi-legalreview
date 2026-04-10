@@ -4,16 +4,20 @@ export default {
   theme: {
     extend: {
       colors: {
+        /* Đồng bộ với home: ink + gold; brand-* dùng cho CTA / accent nhất quán */
         brand: {
-          50: "#eef3ff",
-          100: "#dce7ff",
-          400: "#4f73ff",
-          500: "#2f55e7",
-          700: "#16308b",
-          800: "#10256f",
-          900: "#0b1e5d",
+          50: "#faf8f2",
+          100: "#f0e9db",
+          200: "#e2d4bc",
+          300: "#c9a24a",
+          400: "#b8860b",
+          500: "#1f3158",
+          600: "#1b2a4a",
+          700: "#172440",
+          800: "#14203a",
+          900: "#101a31",
         },
-        ink: "#0c0f14",
+        ink: "#1b2a4a",
         muted: "#5c6370",
         line: "#e6e8ec",
         gold: "#b8860b",

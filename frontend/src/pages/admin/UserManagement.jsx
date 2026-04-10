@@ -92,7 +92,7 @@ export default function UserManagement() {
       label: "Vai trò",
       sortable: true,
       render: (row) => (
-        <Badge className={row.role === "admin" ? "border-brand-100 bg-brand-50 text-brand-700" : "border-slate-200 bg-slate-100 text-slate-700"}>
+        <Badge className={row.role === "admin" ? "border-gold/30 bg-brand-50 text-gold" : "border-line bg-[#f4f4f5] text-ink"}>
           {formatRoleLabel(row.role)}
         </Badge>
       ),
@@ -192,8 +192,8 @@ export default function UserManagement() {
       <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_52%,#f8fafc_100%)]">
         <CardContent className="space-y-4 p-6">
           <div>
-            <h2 className="text-3xl font-semibold text-slate-900">Quản lý người dùng của khách hàng và quản trị viên.</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
+            <h2 className="text-3xl font-semibold text-ink">Quản lý người dùng của khách hàng và quản trị viên.</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
               Thêm hoặc cập nhật tài khoản vận hành, kiểm soát trạng thái truy cập và theo dõi lần hoạt động gần nhất của từng người dùng.
             </p>
           </div>
@@ -204,8 +204,8 @@ export default function UserManagement() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Danh sách người dùng</h3>
-              <p className="text-sm text-slate-500">Các thay đổi được giữ lại trên trình duyệt hiện tại để thuận tiện kiểm tra nhanh trong cùng phiên làm việc.</p>
+              <h3 className="text-xl font-semibold text-ink">Danh sách người dùng</h3>
+              <p className="text-sm text-muted">Các thay đổi được giữ lại trên trình duyệt hiện tại để thuận tiện kiểm tra nhanh trong cùng phiên làm việc.</p>
             </div>
             <Button
               onClick={() => {
@@ -221,7 +221,7 @@ export default function UserManagement() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-14">
-              <Spinner className="h-7 w-7 text-brand-700" />
+              <Spinner className="h-7 w-7 text-gold" />
             </div>
           ) : loadError ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
@@ -293,7 +293,7 @@ export default function UserManagement() {
         </form>
       </Modal>
 
-      <Card className="bg-slate-950 text-white">
+      <Card className="!bg-ink !text-white">
         <CardContent className="flex items-center gap-4 p-6">
           <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
             <UserRound className="h-5 w-5" />

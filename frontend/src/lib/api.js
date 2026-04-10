@@ -13,9 +13,11 @@ import {
   mockWorkflowExecutions,
 } from "./mockData.js";
 
-const DEFAULT_BASE_URL = "http://localhost:8000";
+const DEFAULT_BASE_URL = "http://localhost:8080";
+const DEFAULT_N8N_BASE_URL = "http://localhost:5678";
 const DEFAULT_DISCLAIMER = "Kết quả AI chỉ có giá trị tham khảo, không thay thế tư vấn pháp lý chuyên nghiệp.";
 const REVIEW_MIN_TEXT_LENGTH = 50;
+const REVIEW_TRANSPORT_OPTIONS = ["api", "n8n"];
 
 function normalizeMode(mode) {
   return API_MODE_OPTIONS.includes(mode) ? mode : "mock";
@@ -27,8 +29,11 @@ function wait(ms = 320) {
   });
 }
 
-async function fetchJson(path, options = {}) {
-  const baseUrl = (import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
+function normalizeTransport(transport) {
+  return REVIEW_TRANSPORT_OPTIONS.includes(transport) ? transport : "api";
+}
+
+async function requestJson(baseUrl, path, options = {}) {
   const response = await fetch(`${baseUrl}${path}`, {
     method: options.method || "GET",
     headers: {
@@ -58,8 +63,69 @@ async function fetchJson(path, options = {}) {
   return response.json();
 }
 
+async function requestFormData(baseUrl, path, options = {}) {
+  const response = await fetch(`${baseUrl}${path}`, {
+    method: options.method || "POST",
+    headers: {
+      ...(options.headers || {}),
+    },
+    body: options.body,
+  });
+
+  if (!response.ok) {
+    const fallbackMessage = `${response.status} ${response.statusText}`;
+    let payload = null;
+
+    try {
+      payload = await response.json();
+    } catch {
+      payload = null;
+    }
+
+    throw new Error(payload?.detail || payload?.message || fallbackMessage);
+  }
+
+  if (response.status === 204) {
+    return null;
+  }
+
+  return response.json();
+}
+
+async function fetchJson(path, options = {}) {
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
+  return requestJson(baseUrl, path, options);
+}
+
+async function fetchN8nJson(path, options = {}) {
+  const baseUrl = (import.meta.env.VITE_N8N_BASE_URL || DEFAULT_N8N_BASE_URL).replace(/\/$/, "");
+  const payload = await requestJson(baseUrl, path, options);
+
+  if (payload?.success === false) {
+    throw new Error(payload?.error?.message || "Workflow n8n trả về trạng thái thất bại.");
+  }
+
+  return payload;
+}
+
+async function postFormData(path, formData) {
+  const baseUrl = (import.meta.env.VITE_API_BASE_URL || DEFAULT_BASE_URL).replace(/\/$/, "");
+  return requestFormData(baseUrl, path, {
+    method: "POST",
+    body: formData,
+  });
+}
+
 export function getApiMode() {
   return normalizeMode((import.meta.env.VITE_API_MODE || "hybrid").toLowerCase());
+}
+
+export function getReviewTransport() {
+  return normalizeTransport((import.meta.env.VITE_REVIEW_TRANSPORT || "api").toLowerCase());
+}
+
+export function isN8nTransport() {
+  return getReviewTransport() === "n8n";
 }
 
 export function isMockMode() {
@@ -213,6 +279,28 @@ function normalizeChatResponse(raw = {}, fallbackPayload = {}) {
   };
 }
 
+function normalizeReviewTransportResponse(raw = {}, fallbackPayload = {}) {
+  const reviewPayload = raw?.review && typeof raw.review === "object" ? raw.review : raw;
+  return {
+    ...normalizeReviewResponse(reviewPayload, fallbackPayload),
+    routeDecision: raw?.routeDecision || null,
+    timelineEvent: raw?.timelineEvent || null,
+    notification: raw?.notification || null,
+    orchestration: raw?.orchestration || null,
+    nextStep: raw?.nextStep || null,
+  };
+}
+
+function normalizeChatTransportResponse(raw = {}, fallbackPayload = {}) {
+  const chatPayload = raw?.chat && typeof raw.chat === "object" ? raw.chat : raw;
+  return {
+    ...normalizeChatResponse(chatPayload, fallbackPayload),
+    routeDecision: raw?.routeDecision || null,
+    timelineEvent: raw?.timelineEvent || null,
+    nextStep: raw?.nextStep || null,
+  };
+}
+
 export async function getCases() {
   await wait();
   return mockCases;
@@ -246,16 +334,57 @@ export async function getHealth() {
   });
 }
 
+export async function extractDocumentText(file, language = "vi") {
+  if (!(file instanceof File)) {
+    throw new Error("Chưa có tệp hợp lệ để OCR.");
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("language", language);
+
+  return runWithMode({
+    allowFallback: false,
+    mockHandler: async () => {
+      const isTextFile = String(file.type || "").startsWith("text/") || /\.(txt|md|markdown|csv|json|xml|html?)$/i.test(file.name);
+      if (!isTextFile) {
+        throw new Error("OCR thật cho PDF hoặc ảnh chỉ hoạt động khi frontend đang dùng API thật.");
+      }
+
+      const extractedText = String(await file.text()).trim();
+      return {
+        fileName: file.name,
+        mimeType: file.type || null,
+        extractedText,
+        provider: "browser",
+        source: "direct_text",
+        textLength: extractedText.length,
+        truncated: false,
+        warning: "OCR thật chỉ hoạt động khi frontend đang dùng API thật.",
+      };
+    },
+    realHandler: () => postFormData("/v1/legal/ocr", formData),
+  });
+}
+
 export async function reviewLegal(payload) {
   const normalizedPayload = normalizeReviewPayload(payload);
   return runWithMode({
     allowFallback: true,
-    mockHandler: () => normalizeReviewResponse(buildReviewResponseFromCase(getCaseById(payload.caseId), normalizedPayload), normalizedPayload),
-    realHandler: () =>
-      fetchJson("/v1/legal/review", {
+    mockHandler: () => normalizeReviewTransportResponse(buildReviewResponseFromCase(getCaseById(payload.caseId), normalizedPayload), normalizedPayload),
+    realHandler: () => {
+      if (isN8nTransport()) {
+        return fetchN8nJson("/webhook/legaldesk-review-fastapi", {
+          method: "POST",
+          body: normalizedPayload,
+        }).then((response) => normalizeReviewTransportResponse(response, normalizedPayload));
+      }
+
+      return fetchJson("/v1/legal/review", {
         method: "POST",
         body: normalizedPayload,
-      }).then((response) => normalizeReviewResponse(response, normalizedPayload)),
+      }).then((response) => normalizeReviewTransportResponse(response, normalizedPayload));
+    },
   });
 }
 
@@ -269,14 +398,22 @@ export async function chatLegal(payload) {
   return runWithMode({
     allowFallback: true,
     mockHandler: () =>
-      normalizeChatResponse(
+      normalizeChatTransportResponse(
         buildChatResponse({ question: normalizedPayload.question, caseRecord: getCaseById(normalizedPayload.caseId) }),
         normalizedPayload,
       ),
-    realHandler: () =>
-      fetchJson("/v1/legal/chat", {
+    realHandler: () => {
+      if (isN8nTransport()) {
+        return fetchN8nJson("/webhook/legaldesk-chat-fastapi", {
+          method: "POST",
+          body: normalizedPayload,
+        }).then((response) => normalizeChatTransportResponse(response, normalizedPayload));
+      }
+
+      return fetchJson("/v1/legal/chat", {
         method: "POST",
         body: normalizedPayload,
-      }).then((response) => normalizeChatResponse(response, normalizedPayload)),
+      }).then((response) => normalizeChatTransportResponse(response, normalizedPayload));
+    },
   });
 }

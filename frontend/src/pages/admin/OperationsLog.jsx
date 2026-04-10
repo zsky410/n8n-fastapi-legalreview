@@ -31,10 +31,10 @@ function getExecutionBadgeClass(status) {
   }
 
   if (status === "running") {
-    return "border-brand-100 bg-brand-50 text-brand-700";
+    return "border-brand-100 bg-brand-50 text-gold";
   }
 
-  return "border-slate-200 bg-slate-100 text-slate-700";
+  return "border-line bg-[#f4f4f5] text-ink";
 }
 
 export default function OperationsLog() {
@@ -177,8 +177,8 @@ export default function OperationsLog() {
       <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_52%,#f8fafc_100%)]">
         <CardContent className="space-y-4 p-6">
           <div>
-            <h2 className="text-3xl font-semibold text-slate-900">Nhật ký hoạt động và tiến trình xử lý tự động.</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
+            <h2 className="text-3xl font-semibold text-ink">Nhật ký hoạt động và tiến trình xử lý tự động.</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
               Theo dõi lịch sử thao tác, lần chạy tự động và từng bước xử lý để nắm rõ luồng vận hành của hệ thống.
             </p>
           </div>
@@ -187,15 +187,15 @@ export default function OperationsLog() {
 
       <div className="flex items-center justify-between gap-3">
         <Tabs tabs={tabs} value={activeTab} onChange={setActiveTab} />
-        <Badge className="border-slate-200 bg-slate-100 text-slate-700">Dữ liệu vận hành gần nhất</Badge>
+        <Badge className="border-line bg-[#f4f4f5] text-ink">Dữ liệu vận hành gần nhất</Badge>
       </div>
 
       <TabPanel activeValue={activeTab} value="audit">
         <Card>
           <CardContent className="space-y-4 p-6">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Nhật ký kiểm toán</h3>
-              <p className="text-sm text-slate-500">Lọc theo loại sự kiện, mã hồ sơ hoặc người dùng để xem lịch sử xử lý.</p>
+              <h3 className="text-xl font-semibold text-ink">Nhật ký kiểm toán</h3>
+              <p className="text-sm text-muted">Lọc theo loại sự kiện, mã hồ sơ hoặc người dùng để xem lịch sử xử lý.</p>
             </div>
             <div className="grid gap-3 md:grid-cols-5">
               <Select
@@ -211,7 +211,7 @@ export default function OperationsLog() {
             </div>
             {isLoading ? (
               <div className="flex items-center justify-center py-14">
-                <Spinner className="h-7 w-7 text-brand-700" />
+                <Spinner className="h-7 w-7 text-gold" />
               </div>
             ) : loadError ? (
               <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
@@ -225,14 +225,14 @@ export default function OperationsLog() {
               />
             )}
             {selectedAudit ? (
-              <div className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-4 text-sm text-slate-700">
-                <p className="font-semibold text-slate-900">Chi tiết sự kiện</p>
+              <div className="rounded-2xl border border-line bg-slate-50 px-4 py-4 text-sm text-ink">
+                <p className="font-semibold text-ink">Chi tiết sự kiện</p>
                 <p className="mt-2">Thời gian: {formatDateTime(selectedAudit.timestamp)}</p>
                 <p>Loại sự kiện: {selectedAudit.eventType}</p>
                 <p>Mã hồ sơ: {selectedAudit.caseId}</p>
                 <p>Người dùng: {selectedAudit.userId}</p>
                 <p className="mt-2">{selectedAudit.description}</p>
-                <p className="mt-1 text-slate-500">{selectedAudit.details}</p>
+                <p className="mt-1 text-muted">{selectedAudit.details}</p>
               </div>
             ) : null}
           </CardContent>
@@ -244,8 +244,8 @@ export default function OperationsLog() {
           <Card>
             <CardContent className="space-y-4 p-6">
               <div>
-                <h3 className="text-xl font-semibold text-slate-900">Lượt chạy tự động</h3>
-                <p className="text-sm text-slate-500">Chọn một lượt chạy để xem trạng thái, thời lượng và tiến độ từng bước.</p>
+                <h3 className="text-xl font-semibold text-ink">Lượt chạy tự động</h3>
+                <p className="text-sm text-muted">Chọn một lượt chạy để xem trạng thái, thời lượng và tiến độ từng bước.</p>
               </div>
               <div className="grid gap-3 md:grid-cols-4">
                 <Select
@@ -270,7 +270,7 @@ export default function OperationsLog() {
               </div>
               {isLoading ? (
                 <div className="flex items-center justify-center py-14">
-                  <Spinner className="h-7 w-7 text-brand-700" />
+                  <Spinner className="h-7 w-7 text-gold" />
                 </div>
               ) : loadError ? (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
@@ -286,7 +286,7 @@ export default function OperationsLog() {
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-950 text-white">
+          <Card className="!bg-ink !text-white">
             <CardContent className="space-y-5 p-6">
               <div className="flex items-center gap-3">
                 <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white">

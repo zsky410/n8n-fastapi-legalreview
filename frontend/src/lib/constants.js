@@ -86,23 +86,23 @@ export const ADMIN_NAV_ITEMS = [
 
 export const STATUS_META = {
   uploaded: {
-    label: "Đã tải lên",
+    label: "Uploaded",
     className: "border-slate-200 bg-slate-100 text-slate-700",
   },
   extracting: {
-    label: "OCR / Trích xuất",
+    label: "TextExtractOrOCR",
     className: "border-amber-200 bg-amber-50 text-amber-700",
   },
   ai_analyzing: {
-    label: "AI đang phân tích",
+    label: "AIAnalyzing",
     className: "border-blue-200 bg-blue-50 text-blue-700",
   },
   auto_published: {
-    label: "Tự động công bố",
+    label: "AutoPublished",
     className: "border-emerald-200 bg-emerald-50 text-emerald-700",
   },
   finalized: {
-    label: "Hoàn tất",
+    label: "Finalized",
     className: "border-brand-100 bg-brand-50 text-brand-700",
   },
 };
@@ -123,11 +123,11 @@ export const RISK_META = {
 };
 
 export const PIPELINE_STAGES = [
-  "Đã tải lên",
-  "OCR",
-  "Phân tích AI",
-  "Định tuyến",
-  "Đã công bố",
+  "Uploaded",
+  "TextExtractOrOCR",
+  "AIAnalyzing",
+  "AutoPublished",
+  "Finalized",
 ];
 
 export const LEGAL_DOMAINS = [

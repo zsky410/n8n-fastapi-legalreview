@@ -8,6 +8,8 @@ import DataTable from "../../components/ui/DataTable.jsx";
 import Input from "../../components/ui/Input.jsx";
 import Modal from "../../components/ui/Modal.jsx";
 import Select from "../../components/ui/Select.jsx";
+import Spinner from "../../components/ui/Spinner.jsx";
+import { getUsers } from "../../lib/api.js";
 import { formatDateTime } from "../../lib/formatters.js";
 import { mockUsers } from "../../lib/mockData.js";
 
@@ -33,7 +35,35 @@ function readStoredUsers() {
 
 export default function UserManagement() {
   const [users, setUsers] = useState(() => readStoredUsers());
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadError, setLoadError] = useState("");
   const [formState, setFormState] = useState(defaultFormState);
+  useEffect(() => {
+    let isMounted = true;
+    async function loadUsers() {
+      setIsLoading(true);
+      setLoadError("");
+      try {
+        const data = await getUsers();
+        if (isMounted) {
+          setUsers(data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          setLoadError(error.message || "Không thể tải danh sách người dùng.");
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    }
+    loadUsers();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const [error, setError] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -72,27 +102,42 @@ export default function UserManagement() {
     },
     {
       key: "edit",
-      label: "Sửa",
+      label: "Hành động",
       render: (row) => (
-        <Button
-          variant="secondary"
-          size="sm"
-          onClick={() => {
-            setFormState({
-              id: row.id,
-              name: row.name,
-              email: row.email,
-              role: row.role,
-              company: row.company,
-              status: row.status,
-            });
-            setError("");
-            setIsModalOpen(true);
-          }}
-        >
-          <PencilLine className="h-4 w-4" />
-          Chỉnh sửa
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => {
+              setFormState({
+                id: row.id,
+                name: row.name,
+                email: row.email,
+                role: row.role,
+                company: row.company,
+                status: row.status,
+              });
+              setError("");
+              setIsModalOpen(true);
+            }}
+          >
+            <PencilLine className="h-4 w-4" />
+            Chỉnh sửa
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+              setUsers((currentUsers) =>
+                currentUsers.map((entry) =>
+                  entry.id === row.id ? { ...entry, status: entry.status === "Đang hoạt động" ? "Đã mời" : "Đang hoạt động" } : entry,
+                ),
+              )
+            }
+          >
+            {row.status === "Đang hoạt động" ? "Disable" : "Enable"}
+          </Button>
+        </div>
       ),
     },
   ];
@@ -162,13 +207,21 @@ export default function UserManagement() {
             </Button>
           </div>
 
-          <DataTable
-            columns={columns}
-            rows={users}
-            searchKeys={["name", "email", "company", "role", "status"]}
-            emptyTitle="Chưa có người dùng nào"
-            emptyDescription="Admin có thể thêm client hoặc admin đầu tiên trực tiếp từ modal."
-          />
+          {isLoading ? (
+            <div className="flex items-center justify-center py-14">
+              <Spinner className="h-7 w-7 text-brand-700" />
+            </div>
+          ) : loadError ? (
+            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
+          ) : (
+            <DataTable
+              columns={columns}
+              rows={users}
+              searchKeys={["name", "email", "company", "role", "status"]}
+              emptyTitle="Chưa có người dùng nào"
+              emptyDescription="Admin có thể thêm client hoặc admin đầu tiên trực tiếp từ modal."
+            />
+          )}
         </CardContent>
       </Card>
 

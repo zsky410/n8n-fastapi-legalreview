@@ -36,27 +36,27 @@ function buildTimelineAfterReview(caseRecord, review) {
         id: `timeline-${caseRecord.id}-ocr`,
         title: "OCR và trích xuất hoàn tất",
         detail: "Hệ thống đã chuẩn hóa nội dung để chuẩn bị cho phân tích AI.",
-        stage: "OCR",
+        stage: "TextExtractOrOCR",
         at: ocrAt,
       });
     }
 
-    if (!existingStages.has("Phân tích AI")) {
+    if (!existingStages.has("AIAnalyzing")) {
       nextTimeline.push({
         id: `timeline-${caseRecord.id}-review`,
         title: "AI đã hoàn tất đánh giá",
         detail: `${review.riskFlags?.length || 0} cảnh báo đã được ghi nhận vào báo cáo tự động.`,
-        stage: "Phân tích AI",
+        stage: "AIAnalyzing",
         at: reviewAt,
       });
     }
 
-    if (!existingStages.has("Đã công bố")) {
+    if (!existingStages.has("AutoPublished")) {
       nextTimeline.push({
         id: `timeline-${caseRecord.id}-published`,
         title: "Báo cáo đã sẵn sàng",
         detail: "Client có thể xem kết quả review và tiếp tục trao đổi theo case.",
-        stage: "Đã công bố",
+        stage: "AutoPublished",
         at: publishedAt,
       });
     }
@@ -69,28 +69,28 @@ function buildTimelineAfterReview(caseRecord, review) {
       id: `timeline-${caseRecord.id}-uploaded`,
       title: "Hồ sơ đã tiếp nhận",
       detail: "Client đã tạo hồ sơ mới từ CreateCase và chờ xử lý tự động.",
-      stage: "Đã tải lên",
+      stage: "Uploaded",
       at: caseRecord.createdAt,
     },
     {
       id: `timeline-${caseRecord.id}-ocr`,
       title: "OCR và trích xuất hoàn tất",
       detail: "Hệ thống đã chuẩn hóa nội dung từ tài liệu để chuẩn bị cho AI review.",
-      stage: "OCR",
+      stage: "TextExtractOrOCR",
       at: ocrAt,
     },
     {
       id: `timeline-${caseRecord.id}-review`,
       title: "AI đã hoàn tất đánh giá",
       detail: `${review.riskFlags?.length || 0} cảnh báo đã được ghi nhận vào báo cáo tự động.`,
-      stage: "Phân tích AI",
+      stage: "AIAnalyzing",
       at: reviewAt,
     },
     {
       id: `timeline-${caseRecord.id}-published`,
       title: "Báo cáo được công bố",
       detail: "Kết quả review đã sẵn sàng trong client portal cùng disclaimer và khuyến nghị.",
-      stage: "Đã công bố",
+      stage: "AutoPublished",
       at: publishedAt,
     },
   ];

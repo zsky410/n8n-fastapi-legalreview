@@ -23,7 +23,7 @@ export default function Modal({
             <h3 className="text-xl font-semibold text-slate-900">{title}</h3>
             {description ? <p className="mt-2 text-sm leading-6 text-slate-500">{description}</p> : null}
           </div>
-          <Button variant="ghost" size="sm" className="h-9 w-9 rounded-full px-0" onClick={onClose}>
+          <Button variant="ghost" size="sm" className="h-9 w-9 rounded-full px-0" onClick={onClose} aria-label="Đóng modal">
             <X className="h-4 w-4" />
           </Button>
         </div>

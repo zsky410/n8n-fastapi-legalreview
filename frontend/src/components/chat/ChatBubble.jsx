@@ -1,4 +1,5 @@
 import { cn } from "../../lib/cn.js";
+import { formatDateTime } from "../../lib/formatters.js";
 import CitationCard from "./CitationCard.jsx";
 
 export default function ChatBubble({ message }) {
@@ -14,7 +15,7 @@ export default function ChatBubble({ message }) {
       >
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]">
           <span>{isAssistant ? "Trợ lý AI" : "Bạn"}</span>
-          <span className={cn(isAssistant ? "text-slate-400" : "text-brand-100")}>{message.createdAt}</span>
+          <span className={cn(isAssistant ? "text-slate-400" : "text-brand-100")}>{formatDateTime(message.createdAt)}</span>
         </div>
         <p className="mt-3 whitespace-pre-wrap text-sm leading-6">{message.content}</p>
         {message.caution ? (

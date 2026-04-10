@@ -7,19 +7,19 @@ todos:
     status: completed
   - id: p2-client-dashboard
     content: "Phase 2a (M5 core): ClientDashboard với stats cards + bảng hồ sơ"
-    status: pending
+    status: completed
   - id: p2-create-case
     content: "Phase 2b (M5 core): CreateCase form + FileUpload -> tạo case trong local/mock state, chuyển sang CaseDetail"
-    status: pending
+    status: completed
   - id: p2-case-detail
     content: "Phase 2c (M5 core): CaseDetail với 3 tab nội bộ (Overview + Chat + Timeline), hiển thị kết quả AI, disclaimer, SLA"
-    status: pending
+    status: completed
   - id: p2-admin-routing-logs
     content: "Phase 2d (M5 core): Admin RoutingRules + OperationsLog (Audit Logs + Workflow Executions mock-first)"
-    status: pending
+    status: completed
   - id: p2-admin-users
     content: "Phase 2e (M5 core): UserManagement (chỉ Client/Admin roles)"
-    status: pending
+    status: completed
   - id: p2half-api-wiring
     content: "Phase 2.5 (M5 hybrid integration): Nối API thật cho review/chat; giữ mock-first cho các surface chưa có endpoint backend"
     status: pending

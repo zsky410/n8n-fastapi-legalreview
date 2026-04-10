@@ -5,6 +5,97 @@ import { mockCases } from "../lib/mockData.js";
 const STORAGE_KEY = "legaldesk-ui-cases";
 const CasesContext = createContext(null);
 
+function getRiskLevelFromReview(review) {
+  if (review?.riskLevel) {
+    return review.riskLevel;
+  }
+
+  if ((review?.riskScore || 0) >= 75) {
+    return "high";
+  }
+
+  if ((review?.riskScore || 0) >= 45) {
+    return "medium";
+  }
+
+  return "low";
+}
+
+function buildTimelineAfterReview(caseRecord, review) {
+  const createdAt = new Date(caseRecord.createdAt || Date.now());
+  const ocrAt = new Date(createdAt.getTime() + 2 * 60 * 1000).toISOString();
+  const reviewAt = new Date(createdAt.getTime() + 5 * 60 * 1000).toISOString();
+  const publishedAt = new Date(createdAt.getTime() + 7 * 60 * 1000).toISOString();
+
+  if (caseRecord.timeline?.length) {
+    const existingStages = new Set(caseRecord.timeline.map((entry) => entry.stage));
+    const nextTimeline = [...caseRecord.timeline];
+
+    if (!existingStages.has("OCR")) {
+      nextTimeline.push({
+        id: `timeline-${caseRecord.id}-ocr`,
+        title: "OCR và trích xuất hoàn tất",
+        detail: "Hệ thống đã chuẩn hóa nội dung để chuẩn bị cho phân tích AI.",
+        stage: "OCR",
+        at: ocrAt,
+      });
+    }
+
+    if (!existingStages.has("Phân tích AI")) {
+      nextTimeline.push({
+        id: `timeline-${caseRecord.id}-review`,
+        title: "AI đã hoàn tất đánh giá",
+        detail: `${review.riskFlags?.length || 0} cảnh báo đã được ghi nhận vào báo cáo tự động.`,
+        stage: "Phân tích AI",
+        at: reviewAt,
+      });
+    }
+
+    if (!existingStages.has("Đã công bố")) {
+      nextTimeline.push({
+        id: `timeline-${caseRecord.id}-published`,
+        title: "Báo cáo đã sẵn sàng",
+        detail: "Client có thể xem kết quả review và tiếp tục trao đổi theo case.",
+        stage: "Đã công bố",
+        at: publishedAt,
+      });
+    }
+
+    return nextTimeline;
+  }
+
+  return [
+    {
+      id: `timeline-${caseRecord.id}-uploaded`,
+      title: "Hồ sơ đã tiếp nhận",
+      detail: "Client đã tạo hồ sơ mới từ CreateCase và chờ xử lý tự động.",
+      stage: "Đã tải lên",
+      at: caseRecord.createdAt,
+    },
+    {
+      id: `timeline-${caseRecord.id}-ocr`,
+      title: "OCR và trích xuất hoàn tất",
+      detail: "Hệ thống đã chuẩn hóa nội dung từ tài liệu để chuẩn bị cho AI review.",
+      stage: "OCR",
+      at: ocrAt,
+    },
+    {
+      id: `timeline-${caseRecord.id}-review`,
+      title: "AI đã hoàn tất đánh giá",
+      detail: `${review.riskFlags?.length || 0} cảnh báo đã được ghi nhận vào báo cáo tự động.`,
+      stage: "Phân tích AI",
+      at: reviewAt,
+    },
+    {
+      id: `timeline-${caseRecord.id}-published`,
+      title: "Báo cáo được công bố",
+      detail: "Kết quả review đã sẵn sàng trong client portal cùng disclaimer và khuyến nghị.",
+      stage: "Đã công bố",
+      at: publishedAt,
+    },
+  ];
+}
+
 function readStoredCases() {
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
@@ -28,28 +119,29 @@ export function CasesProvider({ children }) {
 
   function createCase(payload) {
     const createdAt = new Date().toISOString();
+    const createdAtMs = new Date(createdAt).getTime();
     const generatedId = `CASE-LOCAL-${String(cases.length + 1).padStart(3, "0")}`;
+    const normalizedFiles = (payload.files || []).map((file) => ({
+      name: file.name,
+      size: file.size,
+      type: file.type,
+    }));
     const nextCase = {
       id: generatedId,
       title: payload.title || "Hồ sơ mới",
       documentName: payload.documentName || "draft-upload.pdf",
-      description: payload.description || "Hồ sơ nháp được tạo từ scaffold Phase 1.",
+      description: payload.description || "Hồ sơ được tạo từ luồng demo Milestone 5.",
+      domain: payload.domain || "",
       status: "uploaded",
-      riskLevel: "low",
+      riskLevel: "medium",
       needsAttention: false,
       createdAt,
       updatedAt: createdAt,
-      extractedText: payload.extractedText || "",
+      extractedText: payload.extractedText || payload.description || "",
+      attachments: normalizedFiles,
+      slaDueAt: payload.slaDueAt || new Date(createdAtMs + 4 * 60 * 60 * 1000).toISOString(),
       review: null,
-      timeline: [
-        {
-          id: `timeline-${generatedId}`,
-          title: "Đã tạo hồ sơ nháp",
-          detail: "Hồ sơ được tạo từ scaffold local state.",
-          stage: "Đã tải lên",
-          at: createdAt,
-        },
-      ],
+      timeline: [],
       chatMessages: [],
     };
 
@@ -92,7 +184,11 @@ export function CasesProvider({ children }) {
           ? {
               ...entry,
               review,
+              riskLevel: getRiskLevelFromReview(review),
+              needsAttention: Boolean(review?.needsAttention || getRiskLevelFromReview(review) === "high"),
+              status: "auto_published",
               updatedAt: new Date().toISOString(),
+              timeline: buildTimelineAfterReview(entry, review),
             }
           : entry,
       ),

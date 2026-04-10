@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 
+import PageFrame from "../../components/layout/PageFrame.jsx";
 import Card, { CardContent } from "../../components/ui/Card.jsx";
 import DataTable from "../../components/ui/DataTable.jsx";
 import EmptyState from "../../components/ui/EmptyState.jsx";
@@ -7,6 +8,7 @@ import KpiCard from "../../components/ui/KpiCard.jsx";
 import RiskBadge from "../../components/ui/RiskBadge.jsx";
 import StatusBadge from "../../components/ui/StatusBadge.jsx";
 import { useCases } from "../../hooks/useCases.js";
+import { ROLE_LABELS } from "../../lib/constants.js";
 import { formatDateTime, formatSlaLabel } from "../../lib/formatters.js";
 
 export default function AdminDashboard() {
@@ -68,15 +70,18 @@ export default function AdminDashboard() {
 
   if (!isReady) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="loading-shimmer h-44 rounded-[24px]" />
-        </CardContent>
-      </Card>
+      <PageFrame segments={[ROLE_LABELS.admin, "Bảng điều khiển"]}>
+        <Card>
+          <CardContent className="p-6">
+            <div className="loading-shimmer h-44 rounded-[24px]" />
+          </CardContent>
+        </Card>
+      </PageFrame>
     );
   }
 
   return (
+    <PageFrame segments={[ROLE_LABELS.admin, "Bảng điều khiển"]}>
     <div className="space-y-5">
       <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-brand-50">
         <CardContent className="space-y-4 p-6">
@@ -169,5 +174,6 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
     </div>
+    </PageFrame>
   );
 }

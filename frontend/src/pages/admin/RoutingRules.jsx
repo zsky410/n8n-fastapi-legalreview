@@ -1,6 +1,7 @@
 import { PencilLine, Plus, Save, Trash2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
+import PageFrame from "../../components/layout/PageFrame.jsx";
 import Badge from "../../components/ui/Badge.jsx";
 import Button from "../../components/ui/Button.jsx";
 import Card, { CardContent } from "../../components/ui/Card.jsx";
@@ -10,6 +11,7 @@ import Modal from "../../components/ui/Modal.jsx";
 import Select from "../../components/ui/Select.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import { getRoutingRules } from "../../lib/api.js";
+import { ROLE_LABELS } from "../../lib/constants.js";
 import { mockRoutingRules } from "../../lib/mockData.js";
 
 const STORAGE_KEY = "legaldesk-ui-routing-rules";
@@ -180,6 +182,8 @@ export default function RoutingRules() {
   }
 
   return (
+    <Fragment>
+    <PageFrame segments={[ROLE_LABELS.admin, "Luật định tuyến"]}>
     <div className="space-y-5">
       <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_52%,#f8fafc_100%)]">
         <CardContent className="space-y-4 p-6">
@@ -228,6 +232,8 @@ export default function RoutingRules() {
           )}
         </CardContent>
       </Card>
+    </div>
+    </PageFrame>
 
       <Modal
         open={isModalOpen}
@@ -297,6 +303,6 @@ export default function RoutingRules() {
           </div>
         </form>
       </Modal>
-    </div>
+    </Fragment>
   );
 }

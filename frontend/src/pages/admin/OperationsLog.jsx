@@ -1,6 +1,7 @@
 import { ChevronRight, ScrollText, Workflow } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 
+import PageFrame from "../../components/layout/PageFrame.jsx";
 import Badge from "../../components/ui/Badge.jsx";
 import Button from "../../components/ui/Button.jsx";
 import Card, { CardContent } from "../../components/ui/Card.jsx";
@@ -10,6 +11,7 @@ import Select from "../../components/ui/Select.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import Tabs, { TabPanel } from "../../components/ui/Tabs.jsx";
 import { getAuditLogs, getWorkflowExecutions } from "../../lib/api.js";
+import { ROLE_LABELS } from "../../lib/constants.js";
 import { formatDateTime, formatExecutionStatus, formatWorkflowName, formatWorkflowStepLabel } from "../../lib/formatters.js";
 
 const tabs = [
@@ -173,6 +175,7 @@ export default function OperationsLog() {
   );
 
   return (
+    <PageFrame segments={[ROLE_LABELS.admin, "Nhật ký vận hành"]}>
     <div className="space-y-5">
       <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_52%,#f8fafc_100%)]">
         <CardContent className="space-y-4 p-6">
@@ -334,5 +337,6 @@ export default function OperationsLog() {
         </div>
       </TabPanel>
     </div>
+    </PageFrame>
   );
 }

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 
 import ChatPanel from "../../components/chat/ChatPanel.jsx";
+import PageFrame from "../../components/layout/PageFrame.jsx";
 import Badge from "../../components/ui/Badge.jsx";
 import Button from "../../components/ui/Button.jsx";
 import Card, { CardContent } from "../../components/ui/Card.jsx";
@@ -13,7 +14,7 @@ import Tabs, { TabPanel } from "../../components/ui/Tabs.jsx";
 import Timeline from "../../components/ui/Timeline.jsx";
 import { useCases } from "../../hooks/useCases.js";
 import { useChat } from "../../hooks/useChat.js";
-import { PIPELINE_STAGES } from "../../lib/constants.js";
+import { PIPELINE_STAGES, ROLE_LABELS } from "../../lib/constants.js";
 import { formatConfidence, formatDateTime, formatPriorityLabel, formatReviewAction, formatRiskLevelLabel, formatSlaLabel, formatStageLabel } from "../../lib/formatters.js";
 import { reviewLegal } from "../../lib/api.js";
 
@@ -99,24 +100,29 @@ export default function CaseDetail() {
 
   if (!isReady) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="loading-shimmer h-36 rounded-[24px]" />
-        </CardContent>
-      </Card>
+      <PageFrame segments={[ROLE_LABELS.client, "Chi tiết hồ sơ"]}>
+        <Card>
+          <CardContent className="p-6">
+            <div className="loading-shimmer h-36 rounded-[24px]" />
+          </CardContent>
+        </Card>
+      </PageFrame>
     );
   }
 
   if (!currentCase) {
     return (
-      <EmptyState
-        title="Không tìm thấy hồ sơ"
-        description="Hồ sơ này chưa tồn tại trên trình duyệt hiện tại. Hãy quay lại danh sách hoặc tạo hồ sơ mới."
-      />
+      <PageFrame segments={[ROLE_LABELS.client, "Chi tiết hồ sơ"]}>
+        <EmptyState
+          title="Không tìm thấy hồ sơ"
+          description="Hồ sơ này chưa tồn tại trên trình duyệt hiện tại. Hãy quay lại danh sách hoặc tạo hồ sơ mới."
+        />
+      </PageFrame>
     );
   }
 
   return (
+    <PageFrame segments={[ROLE_LABELS.client, "Chi tiết hồ sơ"]}>
     <div className="space-y-5">
       <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.16),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_50%,#ecfeff_100%)]">
         <CardContent className="grid gap-5 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
@@ -314,15 +320,6 @@ export default function CaseDetail() {
                   </div>
                 </CardContent>
               </Card>
-
-              <Card>
-                <CardContent className="space-y-4 p-6">
-                  <p className="text-sm font-semibold text-ink">Đoạn trích văn bản đầu vào</p>
-                  <p className="rounded-[24px] border border-line bg-slate-50 px-4 py-4 text-sm leading-7 text-muted">
-                    {currentCase.extractedText || "Chưa có nội dung trích xuất. Review đang dựa nhiều hơn vào metadata hồ sơ."}
-                  </p>
-                </CardContent>
-              </Card>
             </div>
           </div>
         ) : (
@@ -443,5 +440,6 @@ export default function CaseDetail() {
         </div>
       </TabPanel>
     </div>
+    </PageFrame>
   );
 }

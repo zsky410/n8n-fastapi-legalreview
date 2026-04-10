@@ -59,7 +59,7 @@ export default function FileUpload({
         <UploadCloud className="h-10 w-10 text-gold" />
         <p className="mt-4 text-base font-semibold text-ink">Kéo thả file vào đây hoặc bấm để chọn</p>
         <p className="mt-2 max-w-md text-sm leading-6 text-muted">
-          Hỗ trợ PDF, DOCX, ảnh scan, TXT hoặc MD. Sau khi chọn file, bạn có thể chạy OCR để nạp nội dung phục vụ review thật.
+          Hỗ trợ PDF, DOCX, ảnh scan, TXT hoặc MD. Nội dung sẽ được nạp tự động sau khi bạn chọn file.
         </p>
         <input
           id={inputId}
@@ -87,7 +87,7 @@ export default function FileUpload({
                 </div>
               </div>
               <span className="rounded-full bg-[#f4f4f5] px-2.5 py-1 text-xs font-semibold text-muted">
-                Xem trước
+                Đã chọn
               </span>
             </div>
           ))}

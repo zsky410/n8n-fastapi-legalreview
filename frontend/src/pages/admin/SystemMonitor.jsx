@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 
+import PageFrame from "../../components/layout/PageFrame.jsx";
 import Badge from "../../components/ui/Badge.jsx";
 import Button from "../../components/ui/Button.jsx";
 import Card, { CardContent } from "../../components/ui/Card.jsx";
@@ -8,6 +9,7 @@ import EmptyState from "../../components/ui/EmptyState.jsx";
 import KpiCard from "../../components/ui/KpiCard.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import { getHealth } from "../../lib/api.js";
+import { ROLE_LABELS } from "../../lib/constants.js";
 import { formatDateTime, formatHealthStatus } from "../../lib/formatters.js";
 
 const mockOpsMetrics = [
@@ -74,6 +76,7 @@ export default function SystemMonitor() {
   ];
 
   return (
+    <PageFrame segments={[ROLE_LABELS.admin, "Hệ thống"]}>
     <div className="space-y-5">
       <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-brand-50">
         <CardContent className="space-y-4 p-6">
@@ -161,5 +164,6 @@ export default function SystemMonitor() {
         </CardContent>
       </Card>
     </div>
+    </PageFrame>
   );
 }

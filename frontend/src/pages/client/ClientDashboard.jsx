@@ -2,6 +2,7 @@ import { ArrowRight, FilePlus2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
+import PageFrame from "../../components/layout/PageFrame.jsx";
 import Card, { CardContent } from "../../components/ui/Card.jsx";
 import DataTable from "../../components/ui/DataTable.jsx";
 import EmptyState from "../../components/ui/EmptyState.jsx";
@@ -10,6 +11,7 @@ import RiskBadge from "../../components/ui/RiskBadge.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import StatusBadge from "../../components/ui/StatusBadge.jsx";
 import { useCases } from "../../hooks/useCases.js";
+import { ROLE_LABELS } from "../../lib/constants.js";
 import { formatDateTime } from "../../lib/formatters.js";
 
 const filters = [
@@ -102,13 +104,16 @@ export default function ClientDashboard() {
 
   if (!isReady) {
     return (
-      <div className="surface-panel flex items-center justify-center px-6 py-16">
-        <Spinner className="h-8 w-8 text-gold" />
-      </div>
+      <PageFrame segments={[ROLE_LABELS.client, "Tổng quan"]}>
+        <div className="flex items-center justify-center py-16">
+          <Spinner className="h-8 w-8 text-gold" />
+        </div>
+      </PageFrame>
     );
   }
 
   return (
+    <PageFrame segments={[ROLE_LABELS.client, "Tổng quan"]}>
     <div className="space-y-5">
       <Card>
         <CardContent className="space-y-4 p-6">
@@ -188,5 +193,6 @@ export default function ClientDashboard() {
         </CardContent>
       </Card>
     </div>
+    </PageFrame>
   );
 }

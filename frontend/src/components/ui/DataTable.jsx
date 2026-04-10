@@ -58,28 +58,40 @@ export default function DataTable({
     <div className="space-y-4">
       {searchable && searchKeys.length ? (
         <label className="relative block">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
           <input
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Tìm trong bảng"
-            className="h-11 w-full rounded-2xl border border-slate-200 bg-white pl-11 pr-4 text-sm text-slate-700 outline-none transition focus:border-brand-400 focus:ring-4 focus:ring-brand-100"
+            className="h-11 w-full rounded-sm border border-line bg-white pl-11 pr-4 text-sm text-ink outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/15"
           />
         </label>
       ) : null}
-      <div className="overflow-hidden rounded-[24px] border border-slate-200 bg-white shadow-sm">
+      <div className="overflow-hidden rounded-sm border border-line bg-white shadow-sm">
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-slate-200 md:min-w-[720px]">
-            <thead className="bg-slate-50">
+          <table className="w-full min-w-[720px] table-fixed border-collapse divide-y divide-line">
+            <thead className="bg-[#fafafa]">
               <tr>
                 {columns.map((column) => (
-                  <th key={column.key} className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+                  <th
+                    key={column.key}
+                    className={cn(
+                      "px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted",
+                      column.className?.includes("text-right") ? "text-right" : "text-left",
+                      column.className,
+                    )}
+                  >
                     {column.sortable ? (
                       <button
                         type="button"
                         onClick={() => toggleSort(column.key)}
-                        className="inline-flex items-center gap-2 text-left"
+                        className={cn(
+                          "inline-flex items-center gap-2",
+                          column.className?.includes("text-right")
+                            ? "ml-auto w-full justify-end text-right"
+                            : "text-left",
+                        )}
                       >
                         {column.label}
                         {activeSortKey === column.key ? (
@@ -97,12 +109,15 @@ export default function DataTable({
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-line">
               {visibleRows.length ? (
                 visibleRows.map((row) => (
-                  <tr key={row[rowKey]} className="align-top text-sm text-slate-700 transition hover:bg-slate-50/80">
+                  <tr key={row[rowKey]} className="align-top text-sm text-ink transition hover:bg-[#fafafa]">
                     {columns.map((column) => (
-                      <td key={`${row[rowKey]}-${column.key}`} className={cn("px-4 py-4", column.className)}>
+                      <td
+                        key={`${row[rowKey]}-${column.key}`}
+                        className={cn("px-4 py-4 align-middle", column.className)}
+                      >
                         {column.render ? column.render(row) : row[column.key]}
                       </td>
                     ))}

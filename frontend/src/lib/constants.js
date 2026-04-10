@@ -100,7 +100,7 @@ export const STATUS_META = {
   },
   finalized: {
     label: "Hoàn tất",
-    className: "border-brand-100 bg-brand-50 text-brand-700",
+    className: "border-gold/30 bg-brand-50 text-ink",
   },
 };
 

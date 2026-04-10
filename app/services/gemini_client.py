@@ -34,4 +34,3 @@ class GeminiClient:
         self.logger.info("Gemini response received successfully.")
 
         return text
-

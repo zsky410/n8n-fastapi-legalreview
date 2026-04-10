@@ -12,7 +12,14 @@ export function useChat(caseId) {
   const messages = currentCase?.chatMessages || [];
 
   async function sendMessage(question) {
-    if (!question.trim()) {
+    const normalizedQuestion = question.trim();
+
+    if (!normalizedQuestion) {
+      return null;
+    }
+
+    if (normalizedQuestion.length < 3) {
+      setError("Câu hỏi cần ít nhất 3 ký tự để workflow và AI xử lý đúng.");
       return null;
     }
 
@@ -20,7 +27,7 @@ export function useChat(caseId) {
     const userMessage = {
       id: `chat-user-${Date.now()}`,
       role: "user",
-      content: question.trim(),
+      content: normalizedQuestion,
       createdAt,
       citations: [],
     };
@@ -32,7 +39,7 @@ export function useChat(caseId) {
     try {
       const response = await chatLegal({
         caseId,
-        question: question.trim(),
+        question: normalizedQuestion,
         language: "vi",
         conversationContext: messages.map((message) => ({
           role: message.role,
@@ -53,7 +60,12 @@ export function useChat(caseId) {
 
       return response;
     } catch (apiError) {
-      setError(apiError.message || "Không thể gửi câu hỏi lúc này.");
+      const message =
+        apiError.message === "Error in workflow"
+          ? "Workflow n8n đang lỗi khi xử lý câu hỏi này. Hãy mở execution trong n8n để xem node bị lỗi."
+          : apiError.message || "Không thể gửi câu hỏi lúc này.";
+
+      setError(message);
       throw apiError;
     } finally {
       setIsSending(false);

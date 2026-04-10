@@ -1,6 +1,7 @@
 import { PencilLine, Plus, Save, UserRound } from "lucide-react";
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 
+import PageFrame from "../../components/layout/PageFrame.jsx";
 import Badge from "../../components/ui/Badge.jsx";
 import Button from "../../components/ui/Button.jsx";
 import Card, { CardContent } from "../../components/ui/Card.jsx";
@@ -10,6 +11,7 @@ import Modal from "../../components/ui/Modal.jsx";
 import Select from "../../components/ui/Select.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import { getUsers } from "../../lib/api.js";
+import { ROLE_LABELS } from "../../lib/constants.js";
 import { formatDateTime, formatRoleLabel } from "../../lib/formatters.js";
 import { mockUsers } from "../../lib/mockData.js";
 
@@ -92,7 +94,7 @@ export default function UserManagement() {
       label: "Vai trò",
       sortable: true,
       render: (row) => (
-        <Badge className={row.role === "admin" ? "border-brand-100 bg-brand-50 text-brand-700" : "border-slate-200 bg-slate-100 text-slate-700"}>
+        <Badge className={row.role === "admin" ? "border-gold/30 bg-brand-50 text-gold" : "border-line bg-[#f4f4f5] text-ink"}>
           {formatRoleLabel(row.role)}
         </Badge>
       ),
@@ -188,12 +190,14 @@ export default function UserManagement() {
   }
 
   return (
+    <Fragment>
+    <PageFrame segments={[ROLE_LABELS.admin, "Người dùng"]}>
     <div className="space-y-5">
       <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_52%,#f8fafc_100%)]">
         <CardContent className="space-y-4 p-6">
           <div>
-            <h2 className="text-3xl font-semibold text-slate-900">Quản lý người dùng của khách hàng và quản trị viên.</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
+            <h2 className="text-3xl font-semibold text-ink">Quản lý người dùng của khách hàng và quản trị viên.</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
               Thêm hoặc cập nhật tài khoản vận hành, kiểm soát trạng thái truy cập và theo dõi lần hoạt động gần nhất của từng người dùng.
             </p>
           </div>
@@ -204,8 +208,8 @@ export default function UserManagement() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-slate-900">Danh sách người dùng</h3>
-              <p className="text-sm text-slate-500">Các thay đổi được giữ lại trên trình duyệt hiện tại để thuận tiện kiểm tra nhanh trong cùng phiên làm việc.</p>
+              <h3 className="text-xl font-semibold text-ink">Danh sách người dùng</h3>
+              <p className="text-sm text-muted">Các thay đổi được giữ lại trên trình duyệt hiện tại để thuận tiện kiểm tra nhanh trong cùng phiên làm việc.</p>
             </div>
             <Button
               onClick={() => {
@@ -221,7 +225,7 @@ export default function UserManagement() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-14">
-              <Spinner className="h-7 w-7 text-brand-700" />
+              <Spinner className="h-7 w-7 text-gold" />
             </div>
           ) : loadError ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
@@ -236,6 +240,20 @@ export default function UserManagement() {
           )}
         </CardContent>
       </Card>
+
+      <Card className="!bg-ink !text-white">
+        <CardContent className="flex items-center gap-4 p-6">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
+            <UserRound className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="text-lg font-semibold">Chỉ quản lý 2 vai trò chính</p>
+            <p className="mt-1 text-sm text-slate-300">Gồm khách hàng và quản trị viên để giữ giao diện gọn và dễ vận hành.</p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+    </PageFrame>
 
       <Modal
         open={isModalOpen}
@@ -292,18 +310,6 @@ export default function UserManagement() {
           </div>
         </form>
       </Modal>
-
-      <Card className="bg-slate-950 text-white">
-        <CardContent className="flex items-center gap-4 p-6">
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
-            <UserRound className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="text-lg font-semibold">Chỉ quản lý 2 vai trò chính</p>
-            <p className="mt-1 text-sm text-slate-300">Gồm khách hàng và quản trị viên để giữ giao diện gọn và dễ vận hành.</p>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    </Fragment>
   );
 }

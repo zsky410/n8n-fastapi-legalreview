@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 
+import PageFrame from "../../components/layout/PageFrame.jsx";
 import Card, { CardContent } from "../../components/ui/Card.jsx";
 import DataTable from "../../components/ui/DataTable.jsx";
 import EmptyState from "../../components/ui/EmptyState.jsx";
@@ -7,6 +8,7 @@ import KpiCard from "../../components/ui/KpiCard.jsx";
 import RiskBadge from "../../components/ui/RiskBadge.jsx";
 import StatusBadge from "../../components/ui/StatusBadge.jsx";
 import { useCases } from "../../hooks/useCases.js";
+import { ROLE_LABELS } from "../../lib/constants.js";
 import { formatDateTime, formatSlaLabel } from "../../lib/formatters.js";
 
 export default function AdminDashboard() {
@@ -68,21 +70,24 @@ export default function AdminDashboard() {
 
   if (!isReady) {
     return (
-      <Card>
-        <CardContent className="p-6">
-          <div className="loading-shimmer h-44 rounded-[24px]" />
-        </CardContent>
-      </Card>
+      <PageFrame segments={[ROLE_LABELS.admin, "Bảng điều khiển"]}>
+        <Card>
+          <CardContent className="p-6">
+            <div className="loading-shimmer h-44 rounded-[24px]" />
+          </CardContent>
+        </Card>
+      </PageFrame>
     );
   }
 
   return (
+    <PageFrame segments={[ROLE_LABELS.admin, "Bảng điều khiển"]}>
     <div className="space-y-5">
       <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-brand-50">
         <CardContent className="space-y-4 p-6">
           <div>
-            <h2 className="text-3xl font-semibold text-slate-900">Bảng điều hành vận hành</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500">
+            <h2 className="text-3xl font-semibold text-ink">Bảng điều hành vận hành</h2>
+            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
               Theo dõi nhanh các chỉ số chính, phân bố rủi ro và danh sách hồ sơ mới nhất trong hệ thống.
             </p>
           </div>
@@ -90,23 +95,23 @@ export default function AdminDashboard() {
       </Card>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Tỷ lệ đọc dữ liệu" value="96%" trend="+2,1%" />
-        <KpiCard label="Tỷ lệ cảnh báo" value="4%" />
-        <KpiCard label="Tự động phân luồng" value="82%" />
-        <KpiCard label="Xử lý trung bình" value="1,2 giây" tone="accent" />
+        <KpiCard label="Tỷ lệ đọc dữ liệu" value="96%" trend="+2,1%" variant="published" />
+        <KpiCard label="Tỷ lệ cảnh báo" value="4%" variant="attention" />
+        <KpiCard label="Tự động phân luồng" value="82%" variant="processing" />
+        <KpiCard label="Xử lý trung bình" value="1,2 giây" variant="total" />
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Tổng hồ sơ" value={totals.total} />
-        <KpiCard label="Đang xử lý" value={totals.processing} />
-        <KpiCard label="Cần chú ý" value={totals.needsAttention} tone="accent" />
-        <KpiCard label="Cảnh báo chất lượng" value={totals.qualityWarning} />
+        <KpiCard label="Tổng hồ sơ" value={totals.total} variant="total" />
+        <KpiCard label="Đang xử lý" value={totals.processing} variant="processing" />
+        <KpiCard label="Cần chú ý" value={totals.needsAttention} variant="attention" />
+        <KpiCard label="Cảnh báo chất lượng" value={totals.qualityWarning} variant="quality" />
       </div>
 
       <div className="grid gap-5 xl:grid-cols-2">
         <Card>
           <CardContent className="space-y-4 p-6">
-            <p className="text-sm font-semibold text-slate-900">Phân bố rủi ro</p>
+            <p className="text-sm font-semibold text-ink">Phân bố rủi ro</p>
             {totals.total ? (
               <div className="space-y-4">
                 {[
@@ -115,11 +120,11 @@ export default function AdminDashboard() {
                   { label: "Cao", value: riskDistribution.high, color: "bg-rose-500" },
                 ].map((item) => (
                   <div key={item.label} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm text-slate-600">
+                    <div className="flex items-center justify-between text-sm text-muted">
                       <span>{item.label}</span>
                       <span>{item.value}</span>
                     </div>
-                    <div className="h-3 rounded-full bg-slate-100">
+                    <div className="h-3 rounded-full bg-[#f4f4f5]">
                       <div className={`h-3 rounded-full ${item.color}`} style={{ width: `${toPercent(item.value)}%` }} />
                     </div>
                   </div>
@@ -133,16 +138,16 @@ export default function AdminDashboard() {
 
         <Card>
           <CardContent className="space-y-4 p-6">
-            <p className="text-sm font-semibold text-slate-900">Hồ sơ theo trạng thái</p>
+            <p className="text-sm font-semibold text-ink">Hồ sơ theo trạng thái</p>
             {totals.total ? (
               <div className="space-y-4">
                 {statusDistribution.map((item) => (
                   <div key={item.key} className="grid grid-cols-[150px_minmax(0,1fr)_40px] items-center gap-3 text-sm">
-                    <span className="text-slate-600">{item.label}</span>
-                    <div className="h-3 rounded-full bg-slate-100">
+                    <span className="text-muted">{item.label}</span>
+                    <div className="h-3 rounded-full bg-[#f4f4f5]">
                       <div className="h-3 rounded-full bg-sky-500" style={{ width: `${toPercent(item.count)}%` }} />
                     </div>
-                    <span className="text-right text-slate-600">{item.count}</span>
+                    <span className="text-right text-muted">{item.count}</span>
                   </div>
                 ))}
               </div>
@@ -156,8 +161,8 @@ export default function AdminDashboard() {
       <Card>
         <CardContent className="space-y-4 p-6">
           <div>
-            <h3 className="text-xl font-semibold text-slate-900">Hồ sơ mới cập nhật</h3>
-            <p className="text-sm text-slate-500">Bảng theo dõi nhanh mã hồ sơ, mức rủi ro, SLA và trạng thái xử lý.</p>
+            <h3 className="text-xl font-semibold text-ink">Hồ sơ mới cập nhật</h3>
+            <p className="text-sm text-muted">Bảng theo dõi nhanh mã hồ sơ, mức rủi ro, SLA và trạng thái xử lý.</p>
           </div>
           <DataTable
             columns={tableColumns}
@@ -169,5 +174,6 @@ export default function AdminDashboard() {
         </CardContent>
       </Card>
     </div>
+    </PageFrame>
   );
 }

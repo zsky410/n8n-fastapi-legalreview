@@ -1,4 +1,5 @@
 import logging
+import unicodedata
 
 from app.core.config import Settings, get_settings
 from app.prompts.legal_chat import build_legal_chat_prompt
@@ -22,18 +23,21 @@ class LegalChatService:
         self.logger = logging.getLogger(__name__)
 
     def answer(self, payload: LegalChatRequest) -> LegalChatResponse:
+        fallback_reason = ""
+
         if self.gemini_client.is_enabled():
             try:
                 llm_output = self._run_live_chat(payload)
             except Exception as exc:
+                fallback_reason = str(exc)
                 self.logger.warning(
                     "Gemini live chat failed for caseId=%s, falling back to bootstrap mode: %s",
                     payload.caseId,
                     exc,
                 )
-                llm_output = self._build_fallback_output(payload)
+                llm_output = self._build_fallback_output(payload, fallback_reason)
         else:
-            llm_output = self._build_fallback_output(payload)
+            llm_output = self._build_fallback_output(payload, "Gemini live calls are disabled.")
 
         return LegalChatResponse(
             caseId=payload.caseId,
@@ -44,6 +48,12 @@ class LegalChatService:
             needsAttention=llm_output.needsAttention,
             disclaimer=self.settings.disclaimer,
         )
+
+    @staticmethod
+    def _normalize_for_matching(value: str) -> str:
+        normalized = unicodedata.normalize("NFD", value)
+        without_marks = "".join(char for char in normalized if unicodedata.category(char) != "Mn")
+        return without_marks.lower()
 
     def _run_live_chat(self, payload: LegalChatRequest) -> LegalChatLLMOutput:
         prompt = build_legal_chat_prompt(payload)
@@ -80,7 +90,7 @@ class LegalChatService:
 
         return LegalChatLLMOutput.model_validate(
             {
-                "answer": answer or "Khong the tao cau tra loi tu dau vao hien tai.",
+                "answer": answer or "Không thể tạo câu trả lời từ đầu vào hiện tại.",
                 "citations": normalized_citations,
                 "caution": caution,
                 "confidence": round(max(0.0, min(float(payload.confidence), 1.0)), 2),
@@ -88,29 +98,37 @@ class LegalChatService:
             }
         )
 
-    def _build_fallback_output(self, payload: LegalChatRequest) -> LegalChatLLMOutput:
-        lowered = payload.question.lower()
+    def _build_fallback_output(self, payload: LegalChatRequest, reason: str = "") -> LegalChatLLMOutput:
+        lowered = self._normalize_for_matching(payload.question)
+        normalized_reason = self._normalize_for_matching(reason)
 
         if "tom tat" in lowered or "summary" in lowered:
             answer = (
-                "He thong dang o che do bootstrap cho chat. Ban nen xem AI review truoc, "
-                "sau do uu tien cac dieu khoan ve phat, cham dut don phuong va co che tranh chap."
+                "Hiện hệ thống đang trả lời theo chế độ dự phòng. Từ góc nhìn pháp lý tổng quát, bạn nên ưu tiên rà soát "
+                "điều khoản phạt vi phạm, quyền chấm dứt đơn phương, cơ chế giải quyết tranh chấp và luật áp dụng."
             )
         elif "rui ro" in lowered or "risk" in lowered or "dieu khoan" in lowered:
             answer = (
-                "Can uu tien xem lai dieu khoan phat, quyen cham dut don phuong, "
-                "co che giai quyet tranh chap va luat ap dung cua tai lieu."
+                "Bạn nên xem kỹ các điều khoản về phạt vi phạm, chấm dứt đơn phương, giới hạn trách nhiệm, "
+                "giải quyết tranh chấp và luật áp dụng vì đây thường là nhóm rủi ro ảnh hưởng trực tiếp đến nghĩa vụ của các bên."
             )
         else:
             answer = (
-                "He thong da nhan cau hoi cho ho so nay. Trong che do bootstrap, "
-                "hay doi chieu cau tra loi voi ket qua AI review va van ban goc."
+                "Hệ thống đã nhận câu hỏi cho hồ sơ này. Trong chế độ dự phòng, bạn nên đối chiếu câu trả lời với kết quả review hiện có "
+                "và văn bản gốc trước khi sử dụng cho quyết định pháp lý."
             )
+
+        if "quota" in normalized_reason or "resource_exhausted" in normalized_reason:
+            caution = "Gemini đang vượt hạn mức sử dụng, nên hệ thống tạm thời trả lời theo chế độ dự phòng. Hãy thử lại sau ít phút."
+        elif "unavailable" in normalized_reason or "high demand" in normalized_reason:
+            caution = "Gemini đang quá tải tạm thời, nên hệ thống chuyển sang chế độ dự phòng. Hãy thử lại sau."
+        else:
+            caution = "Cần đối chiếu với tài liệu gốc và ý kiến tư vấn pháp lý chuyên nghiệp."
 
         return LegalChatLLMOutput(
             answer=answer,
             citations=[],
-            caution="Can doi chieu voi tai lieu goc va y kien tu van phap ly chuyen nghiep.",
+            caution=caution,
             confidence=0.42,
-            needsAttention="khieu kien" in lowered or "court" in lowered or "litigation" in lowered,
+            needsAttention="khieu kien" in lowered or "khieu nai" in lowered or "court" in lowered or "litigation" in lowered,
         )

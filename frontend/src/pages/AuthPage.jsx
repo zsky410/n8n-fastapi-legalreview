@@ -56,12 +56,12 @@ export default function AuthPage() {
   }
 
   return (
-    <main className="min-h-screen px-4 py-5 lg:px-6">
+    <main className="min-h-screen bg-[#fafafa] px-4 py-5 lg:px-6">
       <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[minmax(0,1fr)_480px]">
-        <Card className="overflow-hidden bg-gradient-to-br from-brand-900 via-brand-800 to-slate-900 text-white">
+        <Card className="overflow-hidden border-0 bg-gradient-to-br from-ink via-brand-800 to-brand-900 text-white shadow-sm">
           <CardContent className="flex h-full flex-col justify-between gap-8 p-8 lg:p-10">
             <div className="space-y-6">
-              <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-100">
+              <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-gold/90 hover:text-gold">
                 <ShieldCheck className="h-4 w-4" />
                 Về landing page
               </Link>
@@ -69,7 +69,7 @@ export default function AuthPage() {
                 <h1 className="text-4xl font-semibold leading-tight text-balance">
                   Đăng nhập bằng tài khoản dùng thử và đi thẳng vào đúng khu vực làm việc.
                 </h1>
-                <p className="max-w-xl text-base leading-7 text-brand-100">
+                <p className="max-w-xl text-base leading-7 text-white/70">
                   Mỗi tài khoản sẽ được đưa tới giao diện phù hợp theo vai trò, giúp bạn bắt đầu xem luồng khách hàng hoặc quản trị ngay lập tức.
                 </p>
               </div>
@@ -81,11 +81,11 @@ export default function AuthPage() {
                   key={account.email}
                   type="button"
                   onClick={() => handleQuickLogin(account.email)}
-                  className="flex items-center justify-between rounded-[24px] border border-white/10 bg-white/10 px-4 py-4 text-left transition hover:bg-white/15"
+                  className="flex items-center justify-between rounded-sm border border-white/10 bg-white/10 px-4 py-4 text-left transition hover:bg-white/15"
                 >
                   <div>
                     <p className="font-semibold text-white">{account.email}</p>
-                    <p className="mt-1 text-sm text-brand-100">{account.company}</p>
+                    <p className="mt-1 text-sm text-white/65">{account.company}</p>
                   </div>
                   <span className="rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-white/70">
                     {formatRoleLabel(account.role)}
@@ -98,7 +98,7 @@ export default function AuthPage() {
 
         <Card>
           <CardContent className="space-y-6 p-8">
-            <div className="inline-flex rounded-2xl border border-slate-200 bg-slate-50 p-1">
+            <div className="inline-flex rounded-sm border border-line bg-[#fafafa] p-1">
               {[
                 { label: "Đăng nhập", value: "login" },
                 { label: "Đăng ký", value: "register" },
@@ -114,8 +114,8 @@ export default function AuthPage() {
                   }}
                   className={
                     activeTab === tab.value
-                      ? "rounded-[14px] bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm"
-                      : "rounded-[14px] px-4 py-2 text-sm font-semibold text-slate-500"
+                      ? "rounded-sm bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm"
+                      : "rounded-sm px-4 py-2 text-sm font-semibold text-muted"
                   }
                 >
                   {tab.label}
@@ -124,10 +124,10 @@ export default function AuthPage() {
             </div>
 
             <div>
-              <h2 className="text-3xl font-semibold text-slate-900">
+              <h2 className="text-3xl font-semibold text-ink">
                 {activeTab === "login" ? "Đăng nhập nhanh" : "Thiết lập ban đầu"}
               </h2>
-              <p className="mt-2 text-sm leading-6 text-slate-500">
+              <p className="mt-2 text-sm leading-6 text-muted">
                 {activeTab === "login"
                   ? "Dùng một trong hai tài khoản có sẵn để mở đúng không gian làm việc."
                   : "Điền thông tin khởi tạo để chuyển sang bước thiết lập tiếp theo."}
@@ -150,22 +150,22 @@ export default function AuthPage() {
                 placeholder="mat-khau-dung-thu"
                 hint="Trường này đang được giữ để hoàn thiện luồng xác thực ở các bước tiếp theo."
               />
-              {error ? <p className="rounded-2xl bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
+              {error ? <p className="rounded-sm bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
               <Button type="submit" className="w-full" isLoading={isLoading}>
                 <UserRound className="h-4 w-4" />
                 {activeTab === "login" ? "Vào khu vực làm việc" : "Tiếp tục thiết lập"}
               </Button>
             </form>
 
-            <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-4 text-sm leading-6 text-slate-500">
+            <div className="rounded-sm border border-line bg-[#fafafa] px-4 py-4 text-sm leading-6 text-muted">
               `client@demo.vn` sẽ vào khu vực khách hàng, còn `admin@demo.vn` sẽ vào khu vực quản trị.
             </div>
 
-            <div className="flex items-center justify-between gap-3 text-sm text-slate-500">
-              <Link to="/onboarding" className="font-semibold text-brand-700">
+            <div className="flex items-center justify-between gap-3 text-sm text-muted">
+              <Link to="/onboarding" className="font-semibold text-gold hover:text-gold/90">
                 Xem thiết lập ban đầu
               </Link>
-              <Link to="/" className="font-semibold text-slate-700">
+              <Link to="/" className="font-semibold text-ink">
                 Quay về home
               </Link>
             </div>

@@ -20,7 +20,7 @@ function formatBytes(size) {
 }
 
 export default function FileUpload({
-  accept = ".pdf,.doc,.docx,.png,.jpg,.jpeg",
+  accept = ".pdf,.doc,.docx,.png,.jpg,.jpeg,.txt,.md",
   files = [],
   label = "Tài liệu",
   multiple = true,
@@ -36,7 +36,7 @@ export default function FileUpload({
 
   return (
     <div className="space-y-3">
-      <div className="text-sm font-semibold text-slate-700">{label}</div>
+      <div className="text-sm font-semibold text-ink">{label}</div>
       <label
         htmlFor={inputId}
         onDragOver={(event) => {
@@ -50,16 +50,16 @@ export default function FileUpload({
           pushFiles(event.dataTransfer.files);
         }}
         className={cn(
-          "flex cursor-pointer flex-col items-center justify-center rounded-[28px] border border-dashed px-6 py-10 text-center transition",
+          "flex cursor-pointer flex-col items-center justify-center rounded-sm border border-dashed px-6 py-10 text-center transition",
           isDragging
-            ? "border-brand-400 bg-brand-50"
-            : "border-slate-300 bg-white hover:border-brand-300 hover:bg-brand-50/40",
+            ? "border-gold bg-brand-50"
+            : "border-line bg-white hover:border-gold/50 hover:bg-brand-50/60",
         )}
       >
-        <UploadCloud className="h-10 w-10 text-brand-500" />
-        <p className="mt-4 text-base font-semibold text-slate-900">Kéo thả file vào đây hoặc bấm để chọn</p>
-        <p className="mt-2 max-w-md text-sm leading-6 text-slate-500">
-          Hỗ trợ PDF, DOCX hoặc ảnh scan để hệ thống xử lý và tổng hợp kết quả nhanh hơn.
+        <UploadCloud className="h-10 w-10 text-gold" />
+        <p className="mt-4 text-base font-semibold text-ink">Kéo thả file vào đây hoặc bấm để chọn</p>
+        <p className="mt-2 max-w-md text-sm leading-6 text-muted">
+          Hỗ trợ PDF, DOCX, ảnh scan, TXT hoặc MD. Nội dung sẽ được nạp tự động sau khi bạn chọn file.
         </p>
         <input
           id={inputId}
@@ -75,19 +75,19 @@ export default function FileUpload({
           {files.map((file) => (
             <div
               key={`${file.name}-${file.size}`}
-              className="flex items-center justify-between rounded-2xl border border-slate-200 bg-white px-4 py-3"
+              className="flex items-center justify-between rounded-sm border border-line bg-white px-4 py-3"
             >
               <div className="flex items-center gap-3">
-                <span className="rounded-full bg-brand-50 p-2 text-brand-700">
+                <span className="rounded-full bg-brand-50 p-2 text-gold">
                   <Paperclip className="h-4 w-4" />
                 </span>
                 <div>
-                  <p className="text-sm font-semibold text-slate-900">{file.name}</p>
-                  <p className="text-xs text-slate-500">{formatBytes(file.size)}</p>
+                  <p className="text-sm font-semibold text-ink">{file.name}</p>
+                  <p className="text-xs text-muted">{formatBytes(file.size)}</p>
                 </div>
               </div>
-              <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
-                Xem trước
+              <span className="rounded-full bg-[#f4f4f5] px-2.5 py-1 text-xs font-semibold text-muted">
+                Đã chọn
               </span>
             </div>
           ))}

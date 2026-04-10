@@ -31,16 +31,16 @@ export default function ChatPanel({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-4 rounded-[28px] border border-slate-200 bg-slate-50/70 p-4">
+      <div className="space-y-4 rounded-sm border border-line bg-[#fafafa] p-4">
         {messages.length ? (
           messages.map((message) => <ChatBubble key={message.id} message={message} />)
         ) : (
-          <div className="rounded-[24px] border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-sm text-slate-500">
+          <div className="rounded-sm border border-dashed border-line bg-white px-4 py-8 text-center text-sm text-muted">
             Chưa có hội đáp nào cho hồ sơ này.
           </div>
         )}
         {isSending ? (
-          <div className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-500">
+          <div className="flex items-center gap-3 rounded-sm border border-line bg-white px-4 py-3 text-sm text-muted">
             <Spinner />
             Đang chuẩn bị câu trả lời...
           </div>

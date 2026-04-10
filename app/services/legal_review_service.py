@@ -34,6 +34,8 @@ class LegalReviewService:
     def analyze(self, payload: LegalReviewRequest) -> LegalReviewResponse:
         started_at = time.perf_counter()
         request_id = str(uuid.uuid4())
+        provider = "bootstrap"
+        model_name = "bootstrap-fallback"
 
         self.logger.info(
             "Running legal review analysis for caseId=%s with model=%s",
@@ -44,6 +46,8 @@ class LegalReviewService:
         if self.gemini_client.is_enabled():
             try:
                 llm_output = self._run_live_review(payload)
+                provider = "gemini"
+                model_name = self.settings.gemini_model
             except Exception as exc:
                 self.logger.warning(
                     "Gemini live review failed for caseId=%s, falling back to bootstrap mode: %s",
@@ -71,8 +75,8 @@ class LegalReviewService:
             disclaimer=self.settings.disclaimer,
             meta=ReviewMeta(
                 requestId=request_id,
-                provider="gemini",
-                model=self.settings.gemini_model,
+                provider=provider,
+                model=model_name,
                 processingMs=processing_ms,
             ),
         )
@@ -344,14 +348,14 @@ class LegalReviewService:
     ) -> str:
         if not risk_flags:
             return (
-                f"Tai lieu duoc nhan dang la {doc_type} voi muc rui ro {risk_level.value}. "
-                "Khong phat hien co canh bao lon trong pha phan tich bootstrap."
+                f"Tài liệu được nhận dạng là {doc_type} với mức rủi ro {risk_level.value}. "
+                "Chưa phát hiện cảnh báo lớn trong pha phân tích dự phòng."
             )
 
         first_flag = risk_flags[0].label
-        quality_suffix = " Chat luong van ban dau vao can duoc kiem tra them." if quality_warning else ""
+        quality_suffix = " Chất lượng văn bản đầu vào cần được kiểm tra thêm." if quality_warning else ""
 
         return (
-            f"Tai lieu duoc nhan dang la {doc_type} voi muc rui ro {risk_level.value}. "
-            f"Canh bao noi bat: {first_flag}.{quality_suffix}"
+            f"Tài liệu được nhận dạng là {doc_type} với mức rủi ro {risk_level.value}. "
+            f"Cảnh báo nổi bật: {first_flag}.{quality_suffix}"
         )

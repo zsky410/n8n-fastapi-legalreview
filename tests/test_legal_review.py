@@ -132,4 +132,34 @@ def test_legal_review_falls_back_after_invalid_model_payloads_exhaust_retries() 
     payload = response.json()
 
     assert payload["docType"] in {"rental_contract", "general_contract", "legal_document"}
-    assert mock_generate.call_count == 3
+    assert mock_generate.call_count == 2
+
+
+def test_legal_review_does_not_retry_when_gemini_hits_quota_limit() -> None:
+    with (
+        patch("app.services.gemini_client.GeminiClient.is_enabled", return_value=True),
+        patch(
+            "app.services.gemini_client.GeminiClient.generate_text",
+            side_effect=RuntimeError("429 RESOURCE_EXHAUSTED: quota exceeded"),
+        ) as mock_generate,
+        patch("app.services.retry_service.time.sleep", return_value=None),
+    ):
+        response = client.post(
+            "/v1/legal/review",
+            json={
+                "caseId": "case_quota_review",
+                "language": "vi",
+                "extractedText": "Employment agreement with governing law and termination clause.",
+                "metadata": {
+                    "documentName": "employment-agreement.pdf",
+                    "priority": "medium",
+                    "submittedBy": "client_123",
+                },
+            },
+        )
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["meta"]["provider"] == "bootstrap"
+    assert mock_generate.call_count == 1

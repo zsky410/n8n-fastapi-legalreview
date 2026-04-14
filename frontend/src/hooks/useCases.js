@@ -1,9 +1,94 @@
-import { createContext, createElement, useContext, useEffect, useState } from "react";
+import { createContext, createElement, useContext, useEffect, useReducer } from "react";
 
-import { mockCases } from "../lib/mockData.js";
+import { useAuth } from "./useAuth.js";
+import { createClientCase, listClientCases, saveClientCaseReview } from "../lib/api.js";
 
-const STORAGE_KEY = "legaldesk-ui-cases";
 const CasesContext = createContext(null);
+
+const initialState = {
+  cases: [],
+  error: "",
+  isReady: false,
+};
+
+function casesReducer(state, action) {
+  switch (action.type) {
+    case "reset":
+      return {
+        cases: [],
+        error: "",
+        isReady: true,
+      };
+    case "load_start":
+      return {
+        ...state,
+        error: "",
+        isReady: false,
+      };
+    case "load_success":
+      return {
+        cases: action.cases,
+        error: "",
+        isReady: true,
+      };
+    case "load_error":
+      return {
+        cases: [],
+        error: action.error,
+        isReady: true,
+      };
+    case "set_cases":
+      return {
+        ...state,
+        cases: action.cases,
+      };
+    case "prepend_case":
+      return {
+        ...state,
+        cases: [action.caseRecord, ...state.cases.filter((entry) => entry.id !== action.caseRecord.id)],
+      };
+    case "replace_case":
+      return {
+        ...state,
+        cases: state.cases.map((entry) =>
+          entry.id === action.caseId
+            ? {
+                ...action.caseRecord,
+                chatMessages: entry.chatMessages || action.caseRecord.chatMessages,
+              }
+            : entry,
+        ),
+      };
+    case "append_chat_message":
+      return {
+        ...state,
+        cases: state.cases.map((entry) =>
+          entry.id === action.caseId
+            ? {
+                ...entry,
+                updatedAt: new Date().toISOString(),
+                chatMessages: [...(entry.chatMessages || []), action.message],
+              }
+            : entry,
+        ),
+      };
+    case "append_timeline_event":
+      return {
+        ...state,
+        cases: state.cases.map((entry) =>
+          entry.id === action.caseId
+            ? {
+                ...entry,
+                updatedAt: action.event.at || new Date().toISOString(),
+                timeline: [...(entry.timeline || []), action.event],
+              }
+            : entry,
+        ),
+      };
+    default:
+      return state;
+  }
+}
 
 function getRiskLevelFromReview(review) {
   if (review?.riskLevel) {
@@ -96,109 +181,183 @@ function buildTimelineAfterReview(caseRecord, review) {
   ];
 }
 
-function readStoredCases() {
-  try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : mockCases;
-  } catch {
-    return mockCases;
+function normalizeReview(review) {
+  if (!review) {
+    return null;
   }
+
+  return {
+    ...review,
+    confidence: Number(review.confidence ?? 0),
+    riskScore: Number(review.riskScore ?? 0),
+    qualityWarning:
+      typeof review.qualityWarning === "string"
+        ? review.qualityWarning
+        : review.qualityWarning
+          ? "Chất lượng dữ liệu đầu vào cần được kiểm tra thêm."
+          : "",
+    meta: {
+      ...(review.meta || {}),
+      latencyMs: Number(review?.meta?.latencyMs ?? review?.meta?.processingMs ?? 0),
+    },
+  };
+}
+
+function normalizeChatMessage(message = {}, index = 0) {
+  const citations = Array.isArray(message.citations)
+    ? message.citations.map((citation, citationIndex) => ({
+        id: citation.id || `chat-citation-${index}-${citationIndex}`,
+        label: citation.label || citation.source || `Trích dẫn ${citationIndex + 1}`,
+        excerpt: citation.excerpt || "",
+        source: citation.source || citation.label || "",
+        rationale: citation.rationale || "",
+      }))
+    : [];
+
+  return {
+    id: message.id || `chat-message-${index}`,
+    role: message.role || "assistant",
+    content: message.content || "",
+    createdAt: message.createdAt || new Date().toISOString(),
+    citations,
+    caution: message.caution || "",
+    confidence: typeof message.confidence === "number" ? message.confidence : null,
+    disclaimer: message.disclaimer || "",
+  };
+}
+
+function normalizeCaseRecord(caseRecord) {
+  const review = normalizeReview(caseRecord.review);
+  const nextCase = {
+    id: caseRecord.id,
+    title: caseRecord.title || "Hồ sơ mới",
+    documentName: caseRecord.documentName || "tai_lieu_moi.pdf",
+    description: caseRecord.description || "Hồ sơ đang chờ hệ thống phân tích và tổng hợp kết quả.",
+    domain: caseRecord.domain || "",
+    priority: caseRecord.priority || "medium",
+    status: caseRecord.status || "uploaded",
+    riskLevel: caseRecord.riskLevel || getRiskLevelFromReview(review),
+    needsAttention: Boolean(caseRecord.needsAttention),
+    createdAt: caseRecord.createdAt || new Date().toISOString(),
+    updatedAt: caseRecord.updatedAt || caseRecord.createdAt || new Date().toISOString(),
+    extractedText: caseRecord.extractedText || "",
+    attachments: Array.isArray(caseRecord.attachments) ? caseRecord.attachments : [],
+    slaDueAt: caseRecord.slaDueAt || null,
+    review,
+    timeline: [],
+    chatMessages: Array.isArray(caseRecord.chatMessages)
+      ? caseRecord.chatMessages.map((message, index) => normalizeChatMessage(message, index))
+      : [],
+  };
+
+  if (review) {
+    nextCase.timeline = buildTimelineAfterReview(nextCase, review);
+  }
+
+  return nextCase;
 }
 
 export function CasesProvider({ children }) {
-  const [cases, setCases] = useState(() => readStoredCases());
-  const isReady = true;
+  const { accessToken, isHydrated, user } = useAuth();
+  const [{ cases, error, isReady }, dispatch] = useReducer(casesReducer, initialState);
 
   useEffect(() => {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(cases));
-  }, [cases]);
+    if (!isHydrated) {
+      return;
+    }
+
+    if (!user || user.role !== "client" || !accessToken) {
+      dispatch({ type: "reset" });
+      return;
+    }
+
+    let isActive = true;
+
+    dispatch({ type: "load_start" });
+
+    listClientCases(accessToken)
+      .then((nextCases) => {
+        if (!isActive) {
+          return;
+        }
+
+        dispatch({
+          type: "load_success",
+          cases: nextCases.map((caseRecord) => normalizeCaseRecord(caseRecord)),
+        });
+      })
+      .catch((loadError) => {
+        if (!isActive) {
+          return;
+        }
+
+        dispatch({
+          type: "load_error",
+          error: loadError.message || "Không thể tải danh sách hồ sơ lúc này.",
+        });
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [accessToken, isHydrated, user]);
 
   function getCaseById(caseId) {
     return cases.find((entry) => entry.id === caseId) ?? null;
   }
 
-  function createCase(payload) {
-    const createdAt = new Date().toISOString();
-    const createdAtMs = new Date(createdAt).getTime();
-    const generatedId = `CASE-LOCAL-${String(cases.length + 1).padStart(3, "0")}`;
+  async function createCase(payload) {
+    if (!accessToken) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại trước khi tạo hồ sơ.");
+    }
+
     const normalizedFiles = (payload.files || []).map((file) => ({
       name: file.name,
       size: file.size,
       type: file.type,
     }));
-    const nextCase = {
-      id: generatedId,
+
+    const createdCase = await createClientCase(accessToken, {
       title: payload.title || "Hồ sơ mới",
       documentName: payload.documentName || "tai_lieu_nhap_tay.pdf",
       description: payload.description || "Hồ sơ đang chờ hệ thống phân tích và tổng hợp kết quả.",
       domain: payload.domain || "",
       priority: payload.priority || "medium",
-      status: "uploaded",
-      riskLevel: "medium",
-      needsAttention: false,
-      createdAt,
-      updatedAt: createdAt,
       extractedText: payload.extractedText || payload.description || "",
       attachments: normalizedFiles,
-      slaDueAt: payload.slaDueAt || new Date(createdAtMs + 4 * 60 * 60 * 1000).toISOString(),
-      review: null,
-      timeline: [],
-      chatMessages: [],
-    };
+      slaDueAt: payload.slaDueAt || null,
+    });
 
-    setCases((currentCases) => [nextCase, ...currentCases]);
-    return nextCase;
+    const normalizedCase = normalizeCaseRecord(createdCase);
+    dispatch({ type: "prepend_case", caseRecord: normalizedCase });
+    return normalizedCase;
   }
 
   function appendChatMessage(caseId, message) {
-    setCases((currentCases) =>
-      currentCases.map((entry) =>
-        entry.id === caseId
-          ? {
-              ...entry,
-              updatedAt: new Date().toISOString(),
-              chatMessages: [...(entry.chatMessages || []), message],
-            }
-          : entry,
-      ),
-    );
+    dispatch({ type: "append_chat_message", caseId, message });
   }
 
   function appendTimelineEvent(caseId, event) {
-    setCases((currentCases) =>
-      currentCases.map((entry) =>
-        entry.id === caseId
-          ? {
-              ...entry,
-              updatedAt: event.at || new Date().toISOString(),
-              timeline: [...(entry.timeline || []), event],
-            }
-          : entry,
-      ),
-    );
+    dispatch({ type: "append_timeline_event", caseId, event });
   }
 
-  function updateReview(caseId, review) {
-    setCases((currentCases) =>
-      currentCases.map((entry) =>
-        entry.id === caseId
-          ? {
-              ...entry,
-              review,
-              riskLevel: getRiskLevelFromReview(review),
-              needsAttention: Boolean(review?.needsAttention || getRiskLevelFromReview(review) === "high"),
-              status: "auto_published",
-              updatedAt: new Date().toISOString(),
-              timeline: buildTimelineAfterReview(entry, review),
-            }
-          : entry,
-      ),
-    );
+  async function updateReview(caseId, review) {
+    if (!accessToken) {
+      throw new Error("Phiên đăng nhập đã hết hạn. Hãy đăng nhập lại trước khi lưu kết quả phân tích.");
+    }
+
+    const savedCase = await saveClientCaseReview(accessToken, caseId, review);
+    const normalizedCase = normalizeCaseRecord(savedCase);
+
+    dispatch({ type: "replace_case", caseId, caseRecord: normalizedCase });
+
+    return normalizedCase;
   }
 
   const value = {
     cases,
     isReady,
+    error,
     getCaseById,
     createCase,
     appendChatMessage,

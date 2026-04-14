@@ -4,6 +4,7 @@ import unicodedata
 from app.core.config import Settings, get_settings
 from app.prompts.legal_chat import build_legal_chat_prompt
 from app.schemas.legal_chat import LegalChatLLMOutput, LegalChatRequest, LegalChatResponse
+from app.services.client_case_repository import ClientCaseRepository, StoredCaseRecord
 from app.services.gemini_client import GeminiClient
 from app.services.parser_service import ParserService
 from app.services.retry_service import RetryService
@@ -15,19 +16,26 @@ class LegalChatService:
         settings: Settings | None = None,
         parser_service: ParserService | None = None,
         retry_service: RetryService | None = None,
+        case_repository: ClientCaseRepository | None = None,
     ) -> None:
         self.settings = settings or get_settings()
         self.gemini_client = GeminiClient(self.settings)
         self.parser_service = parser_service or ParserService()
-        self.retry_service = retry_service or RetryService()
+        self.retry_service = retry_service or RetryService(
+            retries=self.settings.llm_max_retries,
+            delay_seconds=self.settings.llm_retry_delay_seconds,
+        )
+        self.case_repository = case_repository or ClientCaseRepository(self.settings)
         self.logger = logging.getLogger(__name__)
 
     def answer(self, payload: LegalChatRequest) -> LegalChatResponse:
         fallback_reason = ""
+        case_record = self.case_repository.get_case_by_id(payload.caseId)
+        enriched_payload = self._enrich_payload(payload, case_record)
 
         if self.gemini_client.is_enabled():
             try:
-                llm_output = self._run_live_chat(payload)
+                llm_output = self._run_live_chat(enriched_payload, case_record)
             except Exception as exc:
                 fallback_reason = str(exc)
                 self.logger.warning(
@@ -35,12 +43,15 @@ class LegalChatService:
                     payload.caseId,
                     exc,
                 )
-                llm_output = self._build_fallback_output(payload, fallback_reason)
+                llm_output = self._build_fallback_output(enriched_payload, case_record, fallback_reason)
         else:
-            llm_output = self._build_fallback_output(payload, "Gemini live calls are disabled.")
+            llm_output = self._build_fallback_output(enriched_payload, case_record, "Gemini live calls are disabled.")
+
+        if case_record:
+            self._persist_chat_exchange(enriched_payload, llm_output)
 
         return LegalChatResponse(
-            caseId=payload.caseId,
+            caseId=enriched_payload.caseId,
             answer=llm_output.answer,
             citations=llm_output.citations,
             caution=llm_output.caution,
@@ -55,8 +66,8 @@ class LegalChatService:
         without_marks = "".join(char for char in normalized if unicodedata.category(char) != "Mn")
         return without_marks.lower()
 
-    def _run_live_chat(self, payload: LegalChatRequest) -> LegalChatLLMOutput:
-        prompt = build_legal_chat_prompt(payload)
+    def _run_live_chat(self, payload: LegalChatRequest, case_record: StoredCaseRecord | None) -> LegalChatLLMOutput:
+        prompt = build_legal_chat_prompt(payload, self._build_case_context(case_record))
 
         def generate_parse_normalize() -> LegalChatLLMOutput:
             raw_response = self.gemini_client.generate_text(prompt)
@@ -98,20 +109,39 @@ class LegalChatService:
             }
         )
 
-    def _build_fallback_output(self, payload: LegalChatRequest, reason: str = "") -> LegalChatLLMOutput:
+    def _build_fallback_output(
+        self,
+        payload: LegalChatRequest,
+        case_record: StoredCaseRecord | None,
+        reason: str = "",
+    ) -> LegalChatLLMOutput:
         lowered = self._normalize_for_matching(payload.question)
         normalized_reason = self._normalize_for_matching(reason)
+        review_summary = ""
+        top_risk_label = ""
+
+        if case_record and case_record.review_json:
+            review_summary = str(case_record.review_json.get("summary", "")).strip()
+            risk_flags = case_record.review_json.get("riskFlags") or []
+            if risk_flags:
+                top_risk_label = str(risk_flags[0].get("label") or risk_flags[0].get("excerpt") or "").strip()
 
         if "tom tat" in lowered or "summary" in lowered:
-            answer = (
-                "Hiện hệ thống đang trả lời theo chế độ dự phòng. Từ góc nhìn pháp lý tổng quát, bạn nên ưu tiên rà soát "
-                "điều khoản phạt vi phạm, quyền chấm dứt đơn phương, cơ chế giải quyết tranh chấp và luật áp dụng."
-            )
+            if review_summary:
+                answer = f"Tóm tắt hiện có của hồ sơ này là: {review_summary}"
+            else:
+                answer = (
+                    "Hiện hệ thống đang trả lời theo chế độ dự phòng. Từ góc nhìn pháp lý tổng quát, bạn nên ưu tiên rà soát "
+                    "điều khoản phạt vi phạm, quyền chấm dứt đơn phương, cơ chế giải quyết tranh chấp và luật áp dụng."
+                )
         elif "rui ro" in lowered or "risk" in lowered or "dieu khoan" in lowered:
-            answer = (
-                "Bạn nên xem kỹ các điều khoản về phạt vi phạm, chấm dứt đơn phương, giới hạn trách nhiệm, "
-                "giải quyết tranh chấp và luật áp dụng vì đây thường là nhóm rủi ro ảnh hưởng trực tiếp đến nghĩa vụ của các bên."
-            )
+            if top_risk_label:
+                answer = f"Điểm cần chú ý nhất trong hồ sơ hiện tại là: {top_risk_label}. Bạn nên đối chiếu thêm với bản gốc và phần review đã lưu."
+            else:
+                answer = (
+                    "Bạn nên xem kỹ các điều khoản về phạt vi phạm, chấm dứt đơn phương, giới hạn trách nhiệm, "
+                    "giải quyết tranh chấp và luật áp dụng vì đây thường là nhóm rủi ro ảnh hưởng trực tiếp đến nghĩa vụ của các bên."
+                )
         else:
             answer = (
                 "Hệ thống đã nhận câu hỏi cho hồ sơ này. Trong chế độ dự phòng, bạn nên đối chiếu câu trả lời với kết quả review hiện có "
@@ -131,4 +161,60 @@ class LegalChatService:
             caution=caution,
             confidence=0.42,
             needsAttention="khieu kien" in lowered or "khieu nai" in lowered or "court" in lowered or "litigation" in lowered,
+        )
+
+    def _enrich_payload(self, payload: LegalChatRequest, case_record: StoredCaseRecord | None) -> LegalChatRequest:
+        def to_message_dict(message: object) -> dict[str, str]:
+            if isinstance(message, dict):
+                return {
+                    "role": str(message.get("role", "user")),
+                    "content": str(message.get("content", "")).strip(),
+                }
+            return {
+                "role": str(getattr(message, "role", "user")),
+                "content": str(getattr(message, "content", "")).strip(),
+            }
+
+        if not case_record or case_record.chat_messages:
+            conversation_context = [to_message_dict(message) for message in (case_record.chat_messages if case_record else payload.conversationContext)]
+        else:
+            conversation_context = [to_message_dict(message) for message in payload.conversationContext]
+
+        return LegalChatRequest.model_validate(
+            {
+                "caseId": payload.caseId,
+                "question": payload.question,
+                "language": payload.language,
+                "conversationContext": conversation_context,
+            }
+        )
+
+    @staticmethod
+    def _build_case_context(case_record: StoredCaseRecord | None) -> dict | None:
+        if not case_record:
+            return None
+
+        return {
+            "title": case_record.title,
+            "documentName": case_record.document_name,
+            "domain": case_record.domain,
+            "description": case_record.description,
+            "extractedText": case_record.extracted_text[:12000],
+            "review": case_record.review_json,
+        }
+
+    def _persist_chat_exchange(self, payload: LegalChatRequest, llm_output: LegalChatLLMOutput) -> None:
+        self.case_repository.append_chat_message(
+            case_id=payload.caseId,
+            role="user",
+            content=payload.question,
+        )
+        self.case_repository.append_chat_message(
+            case_id=payload.caseId,
+            role="assistant",
+            content=llm_output.answer,
+            citations=[citation.model_dump() for citation in llm_output.citations],
+            caution=llm_output.caution,
+            confidence=llm_output.confidence,
+            disclaimer=self.settings.disclaimer,
         )

@@ -22,7 +22,7 @@ const filters = [
 ];
 
 export default function ClientDashboard() {
-  const { cases, isReady } = useCases();
+  const { cases, error, isReady } = useCases();
   const [activeFilter, setActiveFilter] = useState("all");
 
   const needsAttentionCount = cases.filter((entry) => entry.needsAttention).length;
@@ -115,6 +115,11 @@ export default function ClientDashboard() {
   return (
     <PageFrame segments={[ROLE_LABELS.client, "Tổng quan"]}>
     <div className="space-y-5">
+      {error ? (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
+          {error}
+        </div>
+      ) : null}
       <Card>
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">

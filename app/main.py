@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes.client_cases import router as client_cases_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.health import router as health_router
 from app.api.routes.legal import router as legal_router
@@ -11,6 +12,7 @@ from app.core.config import get_settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import configure_logging
 from app.services.auth_service import AuthService
+from app.services.client_case_service import ClientCaseService
 
 settings = get_settings()
 
@@ -19,6 +21,7 @@ settings = get_settings()
 async def lifespan(_: FastAPI):
     configure_logging(settings.log_level)
     AuthService(settings).ensure_schema()
+    ClientCaseService(settings).ensure_schema()
     yield
 
 
@@ -54,6 +57,7 @@ async def attach_request_id(request: Request, call_next):
 
 app.include_router(health_router)
 app.include_router(auth_router, prefix=settings.api_v1_prefix)
+app.include_router(client_cases_router, prefix=settings.api_v1_prefix)
 app.include_router(legal_router, prefix=settings.api_v1_prefix)
 
 

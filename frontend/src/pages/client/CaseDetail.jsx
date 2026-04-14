@@ -55,7 +55,7 @@ function getReviewSourceLabel(review) {
 
 export default function CaseDetail() {
   const { id } = useParams();
-  const { getCaseById, isReady, updateReview } = useCases();
+  const { error: casesError, getCaseById, isReady, updateReview } = useCases();
   const { messages, isSending, error: chatError, sendMessage } = useChat(id);
   const [activeTab, setActiveTab] = useState("overview");
   const [isReviewLoading, setIsReviewLoading] = useState(false);
@@ -90,7 +90,7 @@ export default function CaseDetail() {
         },
       });
 
-      updateReview(currentCase.id, response);
+      await updateReview(currentCase.id, response);
     } catch (error) {
       setReviewError(error.message || "Không thể chạy phân tích AI cho hồ sơ này.");
     } finally {
@@ -115,7 +115,11 @@ export default function CaseDetail() {
       <PageFrame segments={[ROLE_LABELS.client, "Chi tiết hồ sơ"]}>
         <EmptyState
           title="Không tìm thấy hồ sơ"
-          description="Hồ sơ này chưa tồn tại trên trình duyệt hiện tại. Hãy quay lại danh sách hoặc tạo hồ sơ mới."
+          description={
+            casesError
+              ? `Không thể tải hồ sơ từ máy chủ: ${casesError}`
+              : "Hồ sơ này chưa tồn tại trong tài khoản hiện tại. Hãy quay lại danh sách hoặc tạo hồ sơ mới."
+          }
         />
       </PageFrame>
     );

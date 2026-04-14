@@ -28,7 +28,10 @@ class LegalReviewService:
         self.settings = settings or get_settings()
         self.gemini_client = GeminiClient(self.settings)
         self.parser_service = parser_service or ParserService()
-        self.retry_service = retry_service or RetryService()
+        self.retry_service = retry_service or RetryService(
+            retries=self.settings.llm_max_retries,
+            delay_seconds=self.settings.llm_retry_delay_seconds,
+        )
         self.logger = logging.getLogger(__name__)
 
     def analyze(self, payload: LegalReviewRequest) -> LegalReviewResponse:

@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     gemini_api_key: str | None = None
     gemini_model: str = "gemini-2.5-flash"
     enable_llm_calls: bool = False
+    llm_max_retries: int = 1
+    llm_retry_delay_seconds: float = 0.8
     request_timeout_seconds: int = 30
     healthcheck_timeout_seconds: int = 2
 

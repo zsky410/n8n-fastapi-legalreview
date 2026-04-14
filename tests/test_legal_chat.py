@@ -113,4 +113,4 @@ def test_legal_chat_falls_back_after_invalid_model_payloads_exhaust_retries() ->
 
     assert payload["answer"]
     assert payload["confidence"] == 0.42
-    assert mock_generate.call_count == 3
+    assert mock_generate.call_count == 2

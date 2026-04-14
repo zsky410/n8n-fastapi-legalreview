@@ -45,3 +45,14 @@ class LegalChatResponse(ApiBaseModel):
     confidence: float = Field(..., ge=0, le=1)
     needsAttention: bool
     disclaimer: str | None = None
+
+
+class PersistedChatMessage(ApiBaseModel):
+    id: str
+    role: ChatRoleEnum
+    content: str = Field(..., min_length=1)
+    createdAt: str
+    citations: list[ChatCitation] = Field(default_factory=list)
+    caution: str | None = None
+    confidence: float | None = Field(default=None, ge=0, le=1)
+    disclaimer: str | None = None

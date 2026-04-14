@@ -33,6 +33,39 @@ function normalizeTransport(transport) {
   return REVIEW_TRANSPORT_OPTIONS.includes(transport) ? transport : "api";
 }
 
+function buildAuthHeaders(accessToken) {
+  if (!accessToken) {
+    throw new Error("Thiếu access token để gọi API yêu cầu đăng nhập.");
+  }
+
+  return {
+    Authorization: `Bearer ${accessToken}`,
+  };
+}
+
+function normalizePersistableReviewPayload(review = {}) {
+  return {
+    caseId: review.caseId || "",
+    docType: review.docType || "legal_document",
+    confidence: Number(review.confidence ?? 0),
+    riskScore: Number(review.riskScore ?? 0),
+    riskLevel: review.riskLevel || "low",
+    riskFlags: Array.isArray(review.riskFlags) ? review.riskFlags : [],
+    extractedFields: review.extractedFields || {},
+    recommendedAction: review.recommendedAction || "review",
+    summary: review.summary || "",
+    needsAttention: Boolean(review.needsAttention),
+    qualityWarning: Boolean(review.qualityWarning),
+    disclaimer: review.disclaimer || DEFAULT_DISCLAIMER,
+    meta: {
+      requestId: review.meta?.requestId || "",
+      provider: review.meta?.provider || "mock",
+      model: review.meta?.model || "mock-legal-review-v1",
+      processingMs: Number(review.meta?.processingMs ?? review.meta?.latencyMs ?? 0),
+    },
+  };
+}
+
 function createApiError({ response, payload, fallbackMessage }) {
   const error = new Error(payload?.detail || payload?.message || fallbackMessage);
   error.name = "ApiError";
@@ -385,6 +418,34 @@ export async function getCurrentClientAccount(accessToken) {
     headers: {
       Authorization: `Bearer ${accessToken}`,
     },
+  });
+}
+
+export async function listClientCases(accessToken) {
+  return fetchJson("/v1/client/cases", {
+    headers: buildAuthHeaders(accessToken),
+  });
+}
+
+export async function getClientCase(accessToken, caseId) {
+  return fetchJson(`/v1/client/cases/${caseId}`, {
+    headers: buildAuthHeaders(accessToken),
+  });
+}
+
+export async function createClientCase(accessToken, payload) {
+  return fetchJson("/v1/client/cases", {
+    method: "POST",
+    headers: buildAuthHeaders(accessToken),
+    body: payload,
+  });
+}
+
+export async function saveClientCaseReview(accessToken, caseId, payload) {
+  return fetchJson(`/v1/client/cases/${caseId}/review`, {
+    method: "PUT",
+    headers: buildAuthHeaders(accessToken),
+    body: normalizePersistableReviewPayload(payload),
   });
 }
 

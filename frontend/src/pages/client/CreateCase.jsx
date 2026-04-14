@@ -109,19 +109,24 @@ export default function CreateCase() {
 
     setIsSubmitting(true);
     setError("");
+    try {
+      const primaryFile = files[0];
+      const nextCase = await createCase({
+        title: title.trim(),
+        description: summary.trim() || "Hồ sơ đang chờ hệ thống tiếp nhận và phân tích.",
+        domain,
+        priority,
+        documentName: primaryFile?.name || "tai_lieu_moi.pdf",
+        extractedText: extractedText.trim() || summary.trim(),
+        files,
+      });
 
-    const primaryFile = files[0];
-    const nextCase = createCase({
-      title: title.trim(),
-      description: summary.trim() || "Hồ sơ đang chờ hệ thống tiếp nhận và phân tích.",
-      domain,
-      priority,
-      documentName: primaryFile?.name || "tai_lieu_moi.pdf",
-      extractedText: extractedText.trim() || summary.trim(),
-      files,
-    });
-
-    navigate(`/client/cases/${nextCase.id}`);
+      navigate(`/client/cases/${nextCase.id}`);
+    } catch (submitError) {
+      setError(submitError.message || "Không thể tạo hồ sơ lúc này.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (

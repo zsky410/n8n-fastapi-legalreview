@@ -23,6 +23,13 @@ def get_bearer_token(
     return credentials.credentials
 
 
+def get_current_client_user(
+    token: str = Depends(get_bearer_token),
+    service: AuthService = Depends(get_auth_service),
+) -> AuthUser:
+    return service.get_current_user(token)
+
+
 @router.post("/register", response_model=AuthTokenResponse, summary="Register a client account")
 def register_client_account(
     payload: AuthRegisterRequest,
@@ -41,7 +48,6 @@ def login_client_account(
 
 @router.get("/me", response_model=AuthUser, summary="Get current authenticated client profile")
 def get_current_client_profile(
-    token: str = Depends(get_bearer_token),
-    service: AuthService = Depends(get_auth_service),
+    current_user: AuthUser = Depends(get_current_client_user),
 ) -> AuthUser:
-    return service.get_current_user(token)
+    return current_user

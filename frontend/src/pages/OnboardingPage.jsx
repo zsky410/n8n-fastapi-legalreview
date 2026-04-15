@@ -1,10 +1,10 @@
 import { CheckCircle2, ChevronRight } from "lucide-react";
 import { useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 
 import Badge from "../components/ui/Badge.jsx";
 import Button from "../components/ui/Button.jsx";
 import Card, { CardContent } from "../components/ui/Card.jsx";
+import { useAuthModal } from "../hooks/useAuthModal.js";
 import Select from "../components/ui/Select.jsx";
 import { CUSTOMER_TYPES, LEGAL_DOMAINS } from "../lib/constants.js";
 import { onboardingDefaults } from "../lib/mockData.js";
@@ -16,7 +16,7 @@ const notificationLabels = {
 };
 
 export default function OnboardingPage() {
-  const navigate = useNavigate();
+  const { openAuthModal } = useAuthModal();
   const [customerType, setCustomerType] = useState(onboardingDefaults.customerType);
   const [selectedDomains, setSelectedDomains] = useState(onboardingDefaults.legalDomains);
   const [notifications, setNotifications] = useState(onboardingDefaults.notifications);
@@ -42,17 +42,17 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#fafafa] px-4 py-5 lg:px-6">
+    <main className="min-h-screen bg-white px-4 py-5 lg:px-6">
       <div className="mx-auto max-w-6xl space-y-5">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <Badge className="border-gold/30 bg-brand-50 text-gold">Thiết lập ban đầu</Badge>
+            <Badge className="border-brand-200 bg-brand-50 text-brand-700">Thiết lập ban đầu</Badge>
             <h1 className="mt-3 text-4xl font-semibold text-ink">Cấu hình nhanh không gian làm việc</h1>
             <p className="mt-2 max-w-3xl text-sm leading-6 text-muted">
               Chọn loại hình khách hàng, lĩnh vực ưu tiên và kênh thông báo để LegalDesk AI gợi ý trải nghiệm phù hợp hơn.
             </p>
           </div>
-          <Button variant="secondary" onClick={() => navigate("/auth?tab=login")}>
+          <Button variant="secondary" onClick={() => openAuthModal("login")}>
             Về đăng nhập
           </Button>
         </div>
@@ -62,7 +62,7 @@ export default function OnboardingPage() {
             <Card>
               <CardContent className="space-y-5 p-6">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-gold">1</span>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-brand-700">1</span>
                   <div>
                     <h2 className="text-xl font-semibold text-ink">Chọn loại khách hàng</h2>
                     <p className="text-sm text-muted">Thông tin này giúp điều chỉnh ngôn ngữ và mức độ ưu tiên của giao diện.</p>
@@ -85,8 +85,8 @@ export default function OnboardingPage() {
                       onClick={() => setCustomerType(entry.id)}
                       className={`rounded-sm border px-4 py-4 text-left transition ${
                         customerType === entry.id
-                          ? "border-gold/50 bg-brand-50"
-                          : "border-line bg-[#fafafa] hover:border-gold/30 hover:bg-brand-50/50"
+                          ? "border-brand-300 bg-brand-50"
+                          : "border-line bg-warm-50 hover:border-brand-200 hover:bg-brand-50/50"
                       }`}
                     >
                       <p className="text-sm font-semibold text-ink">{entry.title}</p>
@@ -100,7 +100,7 @@ export default function OnboardingPage() {
             <Card>
               <CardContent className="space-y-5 p-6">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-gold">2</span>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-brand-700">2</span>
                   <div>
                     <h2 className="text-xl font-semibold text-ink">Lĩnh vực ưu tiên</h2>
                     <p className="text-sm text-muted">Chọn các nhóm tài liệu bạn xử lý thường xuyên để cá nhân hóa trải nghiệm ban đầu.</p>
@@ -114,8 +114,8 @@ export default function OnboardingPage() {
                       onClick={() => toggleDomain(domain)}
                       className={`rounded-full border px-4 py-2 text-sm font-semibold transition ${
                         selectedDomains.includes(domain)
-                          ? "border-gold/50 bg-brand-50 text-gold"
-                          : "border-line bg-white text-muted hover:border-gold/40"
+                          ? "border-brand-300 bg-brand-50 text-brand-700"
+                          : "border-line bg-white text-muted hover:border-brand-300"
                       }`}
                     >
                       {domain}
@@ -128,7 +128,7 @@ export default function OnboardingPage() {
             <Card>
               <CardContent className="space-y-5 p-6">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-gold">3</span>
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-50 text-brand-700">3</span>
                   <div>
                     <h2 className="text-xl font-semibold text-ink">Kênh thông báo</h2>
                     <p className="text-sm text-muted">Bật hoặc tắt các kênh nhận cập nhật để phù hợp với quy trình làm việc của bạn.</p>
@@ -141,7 +141,7 @@ export default function OnboardingPage() {
                       type="button"
                       onClick={() => toggleNotification(key)}
                       className={`rounded-sm border px-4 py-4 text-left transition ${
-                        value ? "border-gold/50 bg-brand-50" : "border-line bg-[#fafafa]"
+                        value ? "border-brand-300 bg-brand-50" : "border-line bg-warm-50"
                       }`}
                     >
                       <p className="text-sm font-semibold text-ink">{notificationLabels[key] || key}</p>
@@ -153,7 +153,7 @@ export default function OnboardingPage() {
             </Card>
           </div>
 
-          <Card className="!border-ink !bg-ink !text-white">
+          <Card className="!border-warm-900 !bg-warm-900 !text-white">
             <CardContent className="space-y-5 p-6">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/50">Tóm tắt thiết lập</p>
               <div className="space-y-4">
@@ -185,7 +185,7 @@ export default function OnboardingPage() {
                   </div>
                 </div>
               </div>
-              <Button className="w-full" onClick={() => navigate("/auth?tab=login")}>
+              <Button className="w-full" onClick={() => openAuthModal("login")}>
                 Hoàn tất thiết lập
                 <ChevronRight className="h-4 w-4" />
               </Button>

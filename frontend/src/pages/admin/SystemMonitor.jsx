@@ -78,7 +78,7 @@ export default function SystemMonitor() {
   return (
     <PageFrame segments={[ROLE_LABELS.admin, "Hệ thống"]}>
     <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-brand-50">
+      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-warm-50">
         <CardContent className="space-y-4 p-6">
           <div>
             <h2 className="text-3xl font-semibold text-ink">Theo dõi hệ thống</h2>
@@ -114,7 +114,7 @@ export default function SystemMonitor() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
-              <Spinner className="h-7 w-7 text-gold" />
+              <Spinner className="h-7 w-7 text-brand-700" />
             </div>
           ) : error ? (
             <div className="space-y-3">
@@ -125,7 +125,7 @@ export default function SystemMonitor() {
             </div>
           ) : health ? (
             <div className="space-y-4">
-              <div className="rounded-2xl border border-line bg-slate-50 px-4 py-3 text-sm text-ink">
+              <div className="rounded-2xl border border-line bg-warm-50 px-4 py-3 text-sm text-ink">
                 <p>Dịch vụ: {health.service || "legaldesk-fastapi"}</p>
                 <p>Trạng thái: {formatHealthStatus(health.status)}</p>
                 <p>Môi trường: {health.environment || "-"}</p>

@@ -3,10 +3,9 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
 import PageFrame from "../../components/layout/PageFrame.jsx";
-import Card, { CardContent } from "../../components/ui/Card.jsx";
+import Card from "../../components/ui/Card.jsx";
 import DataTable from "../../components/ui/DataTable.jsx";
 import EmptyState from "../../components/ui/EmptyState.jsx";
-import KpiCard from "../../components/ui/KpiCard.jsx";
 import RiskBadge from "../../components/ui/RiskBadge.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import StatusBadge from "../../components/ui/StatusBadge.jsx";
@@ -93,7 +92,7 @@ export default function ClientDashboard() {
       render: (row) => (
         <Link
           to={`/client/cases/${row.id}`}
-          className="inline-flex items-center justify-end gap-2 rounded-sm border border-line px-3 py-2 text-sm font-semibold text-ink transition hover:border-gold/40 hover:bg-brand-50 hover:text-gold"
+          className="inline-flex items-center justify-end gap-2 rounded border border-line px-3 py-2 text-sm font-semibold text-ink transition hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700"
         >
           Mở hồ sơ
           <ArrowRight className="h-4 w-4" />
@@ -106,98 +105,114 @@ export default function ClientDashboard() {
     return (
       <PageFrame segments={[ROLE_LABELS.client, "Tổng quan"]}>
         <div className="flex items-center justify-center py-16">
-          <Spinner className="h-8 w-8 text-gold" />
+          <Spinner className="h-8 w-8 text-brand-700" />
         </div>
       </PageFrame>
     );
   }
 
+  const stats = [
+    { label: "Tổng hồ sơ", value: cases.length, tone: "neutral" },
+    { label: "Đang xử lý", value: processingCount, tone: "brand" },
+    { label: "Đã công bố", value: completedCount, tone: "positive" },
+    { label: "Cần chú ý", value: needsAttentionCount, tone: "warning" },
+  ];
+
+  const statToneClasses = {
+    neutral: "bg-surface text-ink",
+    brand: "bg-brand-50 text-brand-700",
+    positive: "bg-wise-mint/70 text-wise-positive",
+    warning: "bg-yellow-50 text-amber-950",
+  };
+
   return (
     <PageFrame segments={[ROLE_LABELS.client, "Tổng quan"]}>
-    <div className="space-y-5">
-      {error ? (
-        <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
-          {error}
-        </div>
-      ) : null}
-      <Card>
-        <CardContent className="space-y-4 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h2 className="text-2xl font-semibold text-ink">Hồ sơ của tôi</h2>
-              <p className="mt-2 text-sm text-muted">Theo dõi trạng thái xử lý, mức rủi ro và mở nhanh từng hồ sơ từ một bảng tổng hợp duy nhất.</p>
-            </div>
-            <Link
-              to="/client/cases/new"
-              className="inline-flex items-center gap-2 rounded-sm bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-ink/90"
-            >
-              <FilePlus2 className="h-4 w-4" />
-              Tạo hồ sơ mới
-            </Link>
+      <div className="space-y-6">
+        {error ? (
+          <div className="rounded-card border border-wise-danger/30 bg-red-50 px-4 py-3 text-sm text-wise-danger">
+            {error}
           </div>
-        </CardContent>
-      </Card>
+        ) : null}
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Tổng hồ sơ" value={cases.length} variant="total" />
-        <KpiCard label="Đang xử lý" value={processingCount} variant="processing" />
-        <KpiCard label="Đã công bố" value={completedCount} variant="published" />
-        <KpiCard label="Cần chú ý" value={needsAttentionCount} variant="attention" />
-      </div>
-
-      <Card>
-        <CardContent className="space-y-5 p-6">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h3 className="text-xl font-semibold text-ink">Danh sách hồ sơ</h3>
-              <p className="text-sm text-muted">Lọc nhanh theo mức độ ưu tiên xử lý và mở ngay hồ sơ cần theo dõi.</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {filters.map((filter) => (
-                <button
-                  key={filter.value}
-                  type="button"
-                  onClick={() => setActiveFilter(filter.value)}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                    activeFilter === filter.value
-                      ? "!bg-ink text-white shadow-sm"
-                      : "border border-line bg-white text-muted hover:border-gold/40 hover:text-gold"
-                  }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
+        <section className="flex flex-wrap items-center justify-between gap-4 px-1">
+          <div>
+            <h2 className="text-2xl font-semibold text-ink">Hồ sơ của tôi</h2>
+            <p className="mt-2 text-sm text-muted">Theo dõi trạng thái xử lý, mức rủi ro và mở nhanh từng hồ sơ từ một bảng tổng hợp duy nhất.</p>
           </div>
+          <Link
+            to="/client/cases/new"
+            className="motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:scale-105 motion-safe:active:scale-95 inline-flex items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-base font-semibold text-brand-foreground shadow-ring"
+          >
+            <FilePlus2 className="h-4 w-4" />
+            Tạo hồ sơ mới
+          </Link>
+        </section>
 
-          {cases.length ? (
-            <DataTable
-              columns={columns}
-              rows={filteredCases}
-              searchKeys={["id", "title", "documentName", "status", "riskLevel"]}
-              emptyTitle="Không có hồ sơ khớp bộ lọc"
-              emptyDescription="Thử đổi bộ lọc hoặc tạo hồ sơ mới để tiếp tục theo dõi xử lý."
-            />
-          ) : (
-            <div className="space-y-4">
-              <EmptyState
-                title="Chưa có hồ sơ nào"
-                description="Bắt đầu tạo hồ sơ đầu tiên, sau đó quay lại đây để theo dõi trạng thái và mức rủi ro."
-              />
-              <div className="flex justify-center">
-                <Link
-                  to="/client/cases/new"
-                  className="inline-flex items-center gap-2 rounded-sm bg-ink px-5 py-3 text-sm font-semibold text-white transition hover:bg-ink/90"
-                >
-                  <FilePlus2 className="h-4 w-4" />
-                  Tạo hồ sơ mới
-                </Link>
+        <Card className="p-6">
+          <div className="space-y-6">
+            <div className="overflow-hidden rounded-card border border-line bg-white shadow-ring">
+              <div className="grid gap-px bg-line md:grid-cols-2 xl:grid-cols-4">
+                {stats.map((stat) => (
+                  <div key={stat.label} className={`min-h-[120px] px-5 py-5 ${statToneClasses[stat.tone]}`}>
+                    <p className="text-sm font-semibold">{stat.label}</p>
+                    <p className="mt-4 text-4xl font-semibold tracking-tight tabular-nums">{stat.value}</p>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h3 className="text-xl font-semibold text-ink">Danh sách hồ sơ</h3>
+                <p className="text-sm text-muted">Lọc nhanh theo mức độ ưu tiên xử lý và mở ngay hồ sơ cần theo dõi.</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {filters.map((filter) => (
+                  <button
+                    key={filter.value}
+                    type="button"
+                    onClick={() => setActiveFilter(filter.value)}
+                    className={`motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:scale-105 rounded-full px-4 py-2 text-base font-semibold transition ${
+                      activeFilter === filter.value
+                        ? "!bg-brand-500 text-brand-foreground shadow-ring"
+                        : "border border-line bg-white text-muted hover:border-brand-500/40 hover:bg-brand-200/50 hover:text-ink"
+                    }`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {cases.length ? (
+              <DataTable
+                columns={columns}
+                flat
+                rows={filteredCases}
+                searchKeys={["id", "title", "documentName", "status", "riskLevel"]}
+                emptyTitle="Không có hồ sơ khớp bộ lọc"
+                emptyDescription="Thử đổi bộ lọc hoặc tạo hồ sơ mới để tiếp tục theo dõi xử lý."
+              />
+            ) : (
+              <div className="space-y-4">
+                <EmptyState
+                  title="Chưa có hồ sơ nào"
+                  description="Bắt đầu tạo hồ sơ đầu tiên, sau đó quay lại đây để theo dõi trạng thái và mức rủi ro."
+                />
+                <div className="flex justify-center">
+                  <Link
+                    to="/client/cases/new"
+                    className="motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:scale-105 motion-safe:active:scale-95 inline-flex items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-base font-semibold text-brand-foreground shadow-ring"
+                  >
+                    <FilePlus2 className="h-4 w-4" />
+                    Tạo hồ sơ mới
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      </div>
     </PageFrame>
   );
 }

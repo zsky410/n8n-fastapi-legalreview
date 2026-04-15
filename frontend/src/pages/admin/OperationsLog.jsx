@@ -33,10 +33,10 @@ function getExecutionBadgeClass(status) {
   }
 
   if (status === "running") {
-    return "border-brand-100 bg-brand-50 text-gold";
+    return "border-brand-100 bg-brand-50 text-brand-700";
   }
 
-  return "border-line bg-[#f4f4f5] text-ink";
+  return "border-line bg-warm-50 text-ink";
 }
 
 export default function OperationsLog() {
@@ -177,7 +177,7 @@ export default function OperationsLog() {
   return (
     <PageFrame segments={[ROLE_LABELS.admin, "Nhật ký vận hành"]}>
     <div className="space-y-5">
-      <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_52%,#f8fafc_100%)]">
+      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-warm-50">
         <CardContent className="space-y-4 p-6">
           <div>
             <h2 className="text-3xl font-semibold text-ink">Nhật ký hoạt động và tiến trình xử lý tự động.</h2>
@@ -190,7 +190,7 @@ export default function OperationsLog() {
 
       <div className="flex items-center justify-between gap-3">
         <Tabs tabs={tabs} value={activeTab} onChange={setActiveTab} />
-        <Badge className="border-line bg-[#f4f4f5] text-ink">Dữ liệu vận hành gần nhất</Badge>
+        <Badge className="border-line bg-warm-50 text-ink">Dữ liệu vận hành gần nhất</Badge>
       </div>
 
       <TabPanel activeValue={activeTab} value="audit">
@@ -214,7 +214,7 @@ export default function OperationsLog() {
             </div>
             {isLoading ? (
               <div className="flex items-center justify-center py-14">
-                <Spinner className="h-7 w-7 text-gold" />
+                <Spinner className="h-7 w-7 text-brand-700" />
               </div>
             ) : loadError ? (
               <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
@@ -273,7 +273,7 @@ export default function OperationsLog() {
               </div>
               {isLoading ? (
                 <div className="flex items-center justify-center py-14">
-                  <Spinner className="h-7 w-7 text-gold" />
+                <Spinner className="h-7 w-7 text-brand-700" />
                 </div>
               ) : loadError ? (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
@@ -289,7 +289,7 @@ export default function OperationsLog() {
             </CardContent>
           </Card>
 
-          <Card className="!bg-ink !text-white">
+          <Card className="!bg-warm-900 !text-white">
             <CardContent className="space-y-5 p-6">
               <div className="flex items-center gap-3">
                 <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white">

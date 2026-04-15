@@ -1,206 +1,341 @@
-import { ArrowRight, Gavel, Landmark, Mail, Scale, ShieldCheck, Trophy, Users } from "lucide-react";
+import {
+  ArrowRight,
+  BadgeCheck,
+  Building2,
+  CheckCircle2,
+  Clock3,
+  FileCheck2,
+  Fingerprint,
+  Gavel,
+  Mail,
+  MapPin,
+  MessageSquare,
+  Scale,
+  ShieldCheck,
+  Sparkles,
+  UserCheck,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 
 import Button from "../components/ui/Button.jsx";
-import Input from "../components/ui/Input.jsx";
-import { APP_NAME, HOME_HERO_IMAGE_URL } from "../lib/constants.js";
+import { useAuth } from "../hooks/useAuth.js";
+import { useAuthModal } from "../hooks/useAuthModal.js";
+import { APP_NAME, HOME_HERO_IMAGE_URL, ROLE_LABELS } from "../lib/constants.js";
+
+const navItems = [
+  { label: "Dịch vụ", href: "#dich-vu" },
+  { label: "Quy trình", href: "#quy-trinh" },
+  { label: "Kết quả", href: "#ket-qua" },
+  { label: "Đội ngũ", href: "#doi-ngu" },
+];
 
 const practiceAreas = [
   {
-    title: "Corporate & Commercial",
-    description: "Tư vấn cấu trúc giao dịch, rà soát hợp đồng và quy trình pháp lý cho doanh nghiệp tăng trưởng.",
-    icon: Landmark,
+    title: "Tư vấn doanh nghiệp",
+    description: "Cấu trúc giao dịch, điều lệ, nghị quyết và quyết định quản trị được rà soát theo mục tiêu kinh doanh.",
+    icon: Building2,
+    accent: "Hồ sơ nội bộ",
   },
   {
-    title: "Dispute Resolution",
-    description: "Đại diện tố tụng và thương lượng theo chiến lược ưu tiên kết quả và kiểm soát rủi ro.",
+    title: "Rà soát hợp đồng",
+    description: "Bóc tách nghĩa vụ, rủi ro phạt, cơ chế chấm dứt và điểm cần thương lượng trước khi ký.",
+    icon: FileCheck2,
+    accent: "Điều khoản trọng yếu",
+  },
+  {
+    title: "Tranh tụng thương mại",
+    description: "Chuẩn bị luận cứ, chứng cứ và phương án đàm phán để bảo vệ vị thế trong từng giai đoạn.",
     icon: Scale,
+    accent: "Tranh chấp",
   },
   {
-    title: "Compliance & Governance",
-    description: "Thiết lập khung kiểm soát nội bộ, chuẩn hóa vận hành và cơ chế cảnh báo sớm.",
+    title: "Tuân thủ vận hành",
+    description: "Thiết lập luồng phê duyệt, phân quyền dữ liệu và cảnh báo rủi ro cho đội ngũ điều hành.",
     icon: ShieldCheck,
-  },
-  {
-    title: "Employment Advisory",
-    description: "Tư vấn chính sách nhân sự, kỷ luật lao động và xử lý tranh chấp nhạy cảm.",
-    icon: Gavel,
+    accent: "Kiểm soát",
   },
 ];
 
 const trustStats = [
-  { value: "18+", label: "Năm kinh nghiệm trung bình đội ngũ" },
-  { value: "450+", label: "Khách hàng doanh nghiệp" },
-  { value: "97%", label: "Vụ việc đạt mục tiêu đề ra" },
-  { value: "24h", label: "Phản hồi tư vấn ban đầu" },
+  { value: "24h", label: "Phản hồi hồ sơ đầu tiên" },
+  { value: "450+", label: "Doanh nghiệp đã đồng hành" },
+  { value: "97%", label: "Vụ việc đạt mục tiêu xử lý" },
+  { value: "18+", label: "Năm kinh nghiệm trung bình" },
+];
+
+const workflowSteps = [
+  {
+    title: "Tiếp nhận hồ sơ",
+    description: "Tài liệu được phân loại theo loại việc, mức độ khẩn và người phụ trách ngay từ đầu.",
+    icon: Fingerprint,
+  },
+  {
+    title: "Lập bản đồ rủi ro",
+    description: "Luật sư tóm tắt nghĩa vụ, điểm bất lợi và ưu tiên xử lý bằng ngôn ngữ dễ ra quyết định.",
+    icon: BadgeCheck,
+  },
+  {
+    title: "Soạn chiến lược",
+    description: "Mỗi hồ sơ có hướng xử lý, mốc thời gian, tài liệu cần bổ sung và phương án dự phòng.",
+    icon: Gavel,
+  },
+  {
+    title: "Theo dõi thực thi",
+    description: "Tiến độ, trao đổi và kết luận được lưu trong một không gian làm việc bảo mật.",
+    icon: MessageSquare,
+  },
 ];
 
 const caseResults = [
   {
-    title: "Tranh chấp hợp đồng cung ứng xuyên biên giới",
+    title: "Tranh chấp hợp đồng cung ứng",
     result: "Giảm 58% nghĩa vụ bồi thường dự kiến",
-    detail: "Tái cấu trúc điều khoản và thương lượng theo lộ trình pháp lý, tránh kiện tụng kéo dài.",
+    detail: "Tái cấu trúc luận điểm và đàm phán theo từng nhóm chứng cứ, giúp khách hàng tránh kiện tụng kéo dài.",
   },
   {
-    title: "Thương vụ M&A lĩnh vực logistics",
-    result: "Hoàn tất due diligence trong 8 tuần",
-    detail: "Chuẩn hóa checklist hồ sơ và xử lý đồng bộ hơn 120 tài liệu trước ngày ký.",
+    title: "Thương vụ mua bán doanh nghiệp",
+    result: "Hoàn tất thẩm định trong 8 tuần",
+    detail: "Chuẩn hóa danh mục pháp lý, rà soát hơn 120 tài liệu và khoanh vùng các điều kiện tiên quyết.",
   },
   {
-    title: "Kiểm tra tuân thủ tập đoàn đa ngành",
-    result: "Khôi phục hệ thống kiểm soát trong 30 ngày",
-    detail: "Ma trận trách nhiệm và cơ chế theo dõi rủi ro cho các đơn vị vận hành.",
+    title: "Kiểm tra tuân thủ tập đoàn",
+    result: "Khôi phục kiểm soát trong 30 ngày",
+    detail: "Thiết kế ma trận trách nhiệm và lịch báo cáo rủi ro cho các đơn vị đang vận hành song song.",
   },
 ];
 
 const attorneys = [
   {
     name: "Trần Minh Khôi",
-    role: "Managing Partner",
-    speciality: "M&A và chiến lược doanh nghiệp",
+    role: "Luật sư điều hành",
+    speciality: "Mua bán doanh nghiệp, cấu trúc đầu tư và chiến lược hội đồng quản trị.",
   },
   {
     name: "Nguyễn Hà Linh",
-    role: "Partner, Dispute Practice",
-    speciality: "Tranh chấp thương mại và trọng tài",
+    role: "Luật sư thành viên, tranh tụng",
+    speciality: "Tranh chấp thương mại, trọng tài và thương lượng trong giai đoạn khẩn.",
   },
   {
     name: "Phạm Đức An",
-    role: "Counsel, Compliance",
-    speciality: "Tuân thủ, quản trị và kiểm soát nội bộ",
+    role: "Cố vấn tuân thủ",
+    speciality: "Quản trị nội bộ, dữ liệu, lao động và hệ thống kiểm soát vận hành.",
   },
 ];
 
 const trustPillars = [
-  { title: "Bảo mật", copy: "Hồ sơ xử lý theo chuẩn phân quyền và bảo mật rõ ràng." },
-  { title: "Minh bạch", copy: "Tiến độ và rủi ro được báo cáo ngắn gọn, dễ ra quyết định." },
-  { title: "Kết quả", copy: "Chiến lược bám mục tiêu kinh doanh, không chỉ lý thuyết pháp lý." },
+  { title: "Bảo mật theo vai trò", copy: "Hồ sơ, trao đổi và tài liệu nhạy cảm được phân quyền rõ ràng." },
+  { title: "Ngôn ngữ dễ quyết định", copy: "Rủi ro pháp lý được chuyển thành việc cần làm, hạn xử lý và mức ưu tiên." },
+  { title: "Theo sát kết quả", copy: "Luật sư bám mục tiêu kinh doanh, không dừng ở nhận định pháp lý." },
 ];
+
+const deskSignals = [
+  { label: "Rà soát hợp đồng", value: "Đang ưu tiên" },
+  { label: "Biên bản họp", value: "Đã đối chiếu" },
+  { label: "Cảnh báo rủi ro", value: "3 điểm cần ký nháy" },
+];
+
+function getUserInitials(nameOrEmail) {
+  const rawValue = String(nameOrEmail || "").trim();
+
+  if (!rawValue) {
+    return "LD";
+  }
+
+  const words = rawValue
+    .replace(/@.*$/, "")
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (!words.length) {
+    return rawValue.slice(0, 2).toUpperCase();
+  }
+
+  return words
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { getRedirectPathForRole, isHydrated, user } = useAuth();
+  const { openAuthModal } = useAuthModal();
+  const accountPath = user ? getRedirectPathForRole(user.role) : null;
+  const accountName = user?.name || user?.email || "Tài khoản";
+  const accountMeta = user?.company || ROLE_LABELS[user?.role] || "Khách hàng";
 
-  function handleConsultationSubmit(event) {
-    event.preventDefault();
-    navigate("/onboarding");
+  function handlePrimaryAction() {
+    if (user && accountPath) {
+      navigate(accountPath);
+      return;
+    }
+
+    openAuthModal("login");
   }
 
   return (
-    <main className="min-h-screen bg-[#fafafa] text-ink antialiased">
-      <header className="sticky top-0 z-50 border-b border-line/80 bg-[#fafafa]/85 backdrop-blur-md">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-10">
-          <Link to="/" className="group flex cursor-pointer items-center gap-3">
-            <span className="flex h-9 w-9 items-center justify-center border border-ink/10 bg-white">
-              <Scale className="h-4 w-4 text-ink" aria-hidden />
+    <main className="legal-page min-h-screen bg-[#fbfaf6] text-[#17130f] antialiased">
+      <header className="sticky top-0 z-50 border-b border-[#17130f]/10 bg-[#fffefa]/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-5 py-4 sm:px-8 lg:px-10">
+          <Link to="/" className="group flex min-w-0 items-center gap-3">
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-[#7a1f2b]/25 bg-[#fffefa] shadow-[0_10px_30px_rgba(122,31,43,0.08)]">
+              <Scale className="h-4 w-4 text-[#7a1f2b]" aria-hidden />
             </span>
-            <div>
-              <p className="font-sans text-xl tracking-tight text-ink">{APP_NAME}</p>
-              <p className="text-[10px] font-medium uppercase tracking-[0.28em] text-muted">Legal</p>
-            </div>
+            <span className="min-w-0">
+              <span className="block truncate text-lg font-bold tracking-normal text-[#17130f]">{APP_NAME}</span>
+              <span className="block text-[10px] font-bold uppercase tracking-[0.28em] text-[#7a1f2b]">Bàn pháp lý số</span>
+            </span>
           </Link>
-          <nav className="flex flex-wrap items-center gap-2 sm:gap-3" aria-label="Chính">
-            <button
-              type="button"
-              className="cursor-pointer px-3 py-2 text-sm font-medium text-muted transition-colors duration-200 hover:text-ink"
-              onClick={() => navigate("/auth?tab=login")}
-            >
-              Đăng nhập
-            </button>
-            <Button
-              className="rounded-sm bg-ink px-5 text-sm text-white hover:bg-ink/90"
-              onClick={() => navigate("/onboarding")}
-            >
-              Đặt lịch tư vấn
-            </Button>
+
+          <nav className="hidden items-center gap-7 lg:flex" aria-label="Điều hướng chính">
+            {navItems.map((item) => (
+              <a
+                key={item.href}
+                href={item.href}
+                className="text-sm font-semibold text-[#4a463e] transition-colors hover:text-[#7a1f2b]"
+              >
+                {item.label}
+              </a>
+            ))}
           </nav>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            {!isHydrated ? (
+              <div className="h-11 w-36 rounded-full bg-[#eee9dd]" aria-hidden />
+            ) : user ? (
+              <>
+                <Link
+                  to={accountPath}
+                  className="hidden items-center gap-3 rounded-full border border-[#17130f]/10 bg-white/80 px-2 py-2 pr-4 shadow-[0_14px_40px_rgba(23,19,15,0.08)] sm:flex"
+                >
+                  <span className="grid h-9 w-9 place-items-center rounded-full bg-[#7a1f2b] text-sm font-bold text-white">
+                    {getUserInitials(accountName)}
+                  </span>
+                  <span className="min-w-0 text-left">
+                    <span className="block max-w-[150px] truncate text-sm font-bold text-[#17130f]">{accountName}</span>
+                    <span className="block max-w-[170px] truncate text-[10px] font-bold uppercase tracking-[0.2em] text-[#7a1f2b]">
+                      {accountMeta}
+                    </span>
+                  </span>
+                </Link>
+                <Button
+                  className="!bg-[#7a1f2b] !px-5 !text-sm !text-white hover:!bg-[#641923]"
+                  onClick={handlePrimaryAction}
+                >
+                  {user.role === "admin" ? "Mở quản trị" : "Mở hồ sơ"}
+                  <ArrowRight className="h-4 w-4" />
+                </Button>
+              </>
+            ) : (
+              <Button
+                className="!bg-[#7a1f2b] !px-5 !text-sm !text-white hover:!bg-[#641923]"
+                onClick={() => openAuthModal("login")}
+              >
+                Đăng nhập
+              </Button>
+            )}
+          </div>
         </div>
       </header>
 
-      <section className="border-b border-line px-5 pt-16 pb-20 sm:px-8 lg:px-10 lg:pt-24 lg:pb-28">
-        <div className="mx-auto max-w-6xl">
-          <div className="grid items-center gap-12 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-14">
-            <div className="home-reveal" style={{ animationDelay: "40ms" }}>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.35em] text-gold">Tư vấn pháp lý</p>
-              <div className="mt-6 h-px w-12 bg-gold/90" aria-hidden />
-              <h1 className="mt-8 font-sans text-[2.65rem] font-medium leading-[1.08] tracking-tight text-balance text-ink sm:text-5xl lg:text-[3.15rem]">
-                Quyết định quan trọng cần luật sư rõ ràng, kín đáo và đúng hướng.
-              </h1>
-              <p className="mt-8 max-w-xl text-[17px] leading-[1.75] text-muted">
-                Chúng tôi đồng hành cùng doanh nghiệp trong tư vấn, tranh tụng và tuân thủ — giảm rủi ro pháp lý và giữ nhịp vận hành ổn định.
-              </p>
-              <div className="mt-10 flex flex-wrap gap-3">
-                <Button
-                  className="rounded-sm bg-ink px-6 text-white hover:bg-ink/90"
-                  onClick={() => navigate("/onboarding")}
-                >
-                  Yêu cầu tư vấn
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="secondary"
-                  className="rounded-sm border border-line bg-white px-6 text-ink ring-0 hover:bg-[#f4f4f5]"
-                  onClick={() => navigate("/auth?tab=login")}
-                >
-                  Khu vực khách hàng
-                </Button>
-              </div>
+      <section
+        className="legal-hero-bg relative isolate overflow-hidden border-b border-[#17130f]/10 px-5 pt-14 pb-10 sm:px-8 lg:px-10"
+        style={{ "--hero-image": `url(${HOME_HERO_IMAGE_URL})` }}
+      >
+        <div className="mx-auto grid min-h-[76svh] max-w-7xl content-end pb-8 pt-16 sm:pt-24 lg:min-h-[78svh]">
+          <div className="max-w-4xl">
+            <div className="legal-reveal inline-flex items-center gap-2 rounded-full border border-[#7a1f2b]/20 bg-[#fffefa]/78 px-4 py-2 text-[11px] font-bold uppercase tracking-[0.28em] text-[#7a1f2b] shadow-[0_18px_50px_rgba(23,19,15,0.09)] backdrop-blur">
+              <Sparkles className="h-3.5 w-3.5" aria-hidden />
+              Bàn pháp lý số cho doanh nghiệp Việt Nam
             </div>
 
-            <figure
-              className="home-reveal relative border border-line bg-white p-2 shadow-[0_24px_60px_-28px_rgba(12,15,20,0.35)]"
-              style={{ animationDelay: "90ms" }}
-            >
-              <div className="pointer-events-none absolute -right-2 -top-2 h-16 w-16 border border-gold/40 bg-[#fafafa]/90" aria-hidden />
-              <div className="relative aspect-[4/3] w-full overflow-hidden bg-line">
-                <img
-                  src={HOME_HERO_IMAGE_URL}
-                  alt="Kệ sách và tài liệu pháp lý trong môi trường văn phòng luật chuyên nghiệp"
-                  className="h-full w-full object-cover object-center"
-                  loading="eager"
-                  decoding="async"
-                  fetchPriority="high"
-                  sizes="(max-width: 1024px) 100vw, 42vw"
-                />
-              </div>
-              <figcaption className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-3 py-2.5 text-xs text-muted">
-                <span className="font-medium text-ink">Hình minh họa pháp lý</span>
-                <span className="text-muted/90">Ảnh: Unsplash</span>
-              </figcaption>
-            </figure>
+            <h1 className="legal-display legal-reveal mt-6 max-w-4xl text-6xl text-[#17130f] sm:text-7xl lg:text-[8.5rem]" style={{ animationDelay: "70ms" }}>
+              {APP_NAME}
+            </h1>
+
+            <p className="legal-reveal mt-6 max-w-2xl text-lg font-semibold leading-8 text-[#2f2a24] sm:text-xl" style={{ animationDelay: "120ms" }}>
+              Không gian làm việc pháp lý sáng rõ, kín đáo và có kỷ luật: tiếp nhận hồ sơ, rà soát rủi ro, theo dõi tiến độ và ra quyết định trong cùng một bàn làm việc.
+            </p>
+
+            <div className="legal-reveal mt-9 flex flex-wrap items-center gap-3" style={{ animationDelay: "170ms" }}>
+              <Button
+                className="!h-12 !bg-[#7a1f2b] !px-6 !text-base !text-white shadow-[0_18px_45px_rgba(122,31,43,0.22)] hover:!bg-[#641923]"
+                onClick={handlePrimaryAction}
+              >
+                {user ? "Mở khu vực làm việc" : "Đăng nhập để bắt đầu"}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+              <a
+                href="#dich-vu"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-[#17130f]/15 bg-[#fffefa]/75 px-6 text-base font-bold text-[#17130f] shadow-[0_18px_45px_rgba(23,19,15,0.08)] backdrop-blur transition hover:border-[#7a1f2b]/35 hover:text-[#7a1f2b]"
+              >
+                Xem năng lực pháp lý
+              </a>
+            </div>
           </div>
 
-          <div className="home-reveal mt-16 grid gap-px bg-line sm:grid-cols-2 lg:grid-cols-4 lg:mt-20" style={{ animationDelay: "120ms" }}>
+          <div className="legal-reveal mt-12 grid overflow-hidden rounded-[28px] border border-[#17130f]/10 bg-[#fffefa]/82 shadow-[0_24px_70px_rgba(23,19,15,0.11)] backdrop-blur sm:grid-cols-2 lg:grid-cols-4" style={{ animationDelay: "220ms" }}>
             {trustStats.map((stat) => (
-              <div key={stat.label} className="bg-[#fafafa] px-4 py-8 sm:px-6">
-                <p className="font-sans text-4xl tabular-nums text-ink">{stat.value}</p>
-                <p className="mt-3 text-xs font-medium uppercase tracking-[0.12em] text-muted">{stat.label}</p>
+              <div key={stat.label} className="border-b border-[#17130f]/10 px-5 py-5 last:border-b-0 sm:border-r sm:last:border-r-0 lg:border-b-0">
+                <p className="legal-display text-4xl text-[#7a1f2b]">{stat.value}</p>
+                <p className="mt-2 text-xs font-bold uppercase tracking-[0.16em] text-[#4a463e]">{stat.label}</p>
               </div>
             ))}
           </div>
         </div>
+
+        <aside className="legal-docket-slip legal-reveal pointer-events-none absolute bottom-24 right-[max(2.5rem,calc((100vw-80rem)/2))] hidden w-80 rounded-[26px] border border-[#17130f]/10 bg-[#fffefa]/86 p-5 shadow-[0_28px_80px_rgba(23,19,15,0.16)] backdrop-blur-xl xl:block" style={{ animationDelay: "260ms" }} aria-hidden>
+          <div className="flex items-center justify-between border-b border-[#17130f]/10 pb-4">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#7a1f2b]">Hồ sơ hôm nay</p>
+              <p className="mt-1 text-lg font-bold text-[#17130f]">Bàn rà soát</p>
+            </div>
+            <Clock3 className="h-5 w-5 text-[#b38a2e]" />
+          </div>
+          <div className="mt-4 space-y-3">
+            {deskSignals.map((signal) => (
+              <div key={signal.label} className="flex items-center justify-between gap-4 rounded-2xl bg-[#f4efe4]/80 px-4 py-3">
+                <span className="text-sm font-semibold text-[#4a463e]">{signal.label}</span>
+                <span className="text-right text-xs font-bold text-[#7a1f2b]">{signal.value}</span>
+              </div>
+            ))}
+          </div>
+        </aside>
       </section>
 
-      <section className="border-b border-line bg-white px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-2xl">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold">Lĩnh vực</p>
-            <h2 className="mt-4 font-sans text-4xl font-normal tracking-tight text-ink lg:text-[2.75rem]">
-              Trọng tâm hành nghề
-            </h2>
-            <p className="mt-4 text-base leading-relaxed text-muted">
-              Bốn nhóm dịch vụ cốt lõi, triển khai theo quy trình rõ ràng và có thể đo lường.
+      <section id="dich-vu" className="border-b border-[#17130f]/10 bg-[#fbfaf6] px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-10 lg:grid-cols-[0.72fr_1.28fr] lg:items-end">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7a1f2b]">Năng lực hành nghề</p>
+              <h2 className="legal-display mt-4 text-5xl text-[#17130f] sm:text-6xl lg:text-7xl">Pháp lý đặt ngay trên bàn điều hành.</h2>
+            </div>
+            <p className="max-w-2xl text-base font-medium leading-8 text-[#5c554c] lg:justify-self-end">
+              LegalDesk AI kết hợp kỷ luật của văn phòng luật với nhịp vận hành số, giúp doanh nghiệp nhìn thấy rủi ro, phân công trách nhiệm và chốt phương án xử lý nhanh hơn.
             </p>
           </div>
 
-          <div className="mt-16 grid gap-0 divide-y divide-line border border-line sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4 lg:divide-x">
-            {practiceAreas.map((item) => {
+          <div className="mt-14 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {practiceAreas.map((item, index) => {
               const Icon = item.icon;
               return (
-                <article key={item.title} className="group flex flex-col bg-white p-8 transition-colors duration-200 hover:bg-[#fafafa]">
-                  <Icon className="h-5 w-5 text-gold" strokeWidth={1.25} aria-hidden />
-                  <h3 className="mt-6 font-sans text-xl text-ink">{item.title}</h3>
-                  <p className="mt-3 flex-1 text-sm leading-relaxed text-muted">{item.description}</p>
-                  <span className="mt-8 inline-block h-px w-8 bg-gold/40 transition-all duration-200 group-hover:w-12 group-hover:bg-gold" aria-hidden />
+                <article
+                  key={item.title}
+                  className="legal-service-card group relative overflow-hidden rounded-[24px] border border-[#17130f]/10 bg-[#fffefa] p-6 shadow-[0_20px_60px_rgba(23,19,15,0.06)] transition duration-300 hover:-translate-y-1 hover:border-[#7a1f2b]/25 hover:shadow-[0_26px_80px_rgba(122,31,43,0.12)]"
+                  style={{ animationDelay: `${index * 70}ms` }}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="grid h-12 w-12 place-items-center rounded-2xl border border-[#7a1f2b]/15 bg-[#fff4ef] text-[#7a1f2b]">
+                      <Icon className="h-5 w-5" strokeWidth={1.7} aria-hidden />
+                    </span>
+                    <span className="rounded-full border border-[#b38a2e]/25 bg-[#fbf5df] px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#87661d]">
+                      {item.accent}
+                    </span>
+                  </div>
+                  <h3 className="mt-7 text-2xl font-bold text-[#17130f]">{item.title}</h3>
+                  <p className="mt-4 text-sm font-medium leading-7 text-[#5c554c]">{item.description}</p>
+                  <span className="mt-8 block h-px w-full bg-gradient-to-r from-[#7a1f2b]/45 via-[#b38a2e]/40 to-transparent" aria-hidden />
                 </article>
               );
             })}
@@ -208,157 +343,161 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="border-b border-line px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
-        <div className="mx-auto max-w-6xl">
-          <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr] lg:items-start lg:gap-20">
-            <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold">Vì sao chọn chúng tôi</p>
-              <h2 className="mt-4 font-sans text-4xl font-normal tracking-tight text-ink lg:text-[2.65rem]">
-                Tối giản trong cách trình bày, nghiêm ngặt trong cách làm việc.
-              </h2>
+      <section id="quy-trinh" className="border-b border-[#17130f]/10 bg-[#fffefa] px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
+        <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+          <div className="lg:sticky lg:top-28">
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7a1f2b]">Quy trình xử lý</p>
+            <h2 className="legal-display mt-4 text-5xl text-[#17130f] sm:text-6xl">Kín đáo như phòng họp luật sư, rõ ràng như bảng điều hành.</h2>
+            <p className="mt-6 max-w-lg text-base font-medium leading-8 text-[#5c554c]">
+              Mỗi bước đều tạo ra dấu vết xử lý, người chịu trách nhiệm và kết luận có thể tra cứu lại khi cần.
+            </p>
+          </div>
+
+          <div className="relative">
+            <div className="absolute left-6 top-6 hidden h-[calc(100%-3rem)] w-px bg-[#7a1f2b]/18 sm:block" aria-hidden />
+            <div className="space-y-5">
+              {workflowSteps.map((step, index) => {
+                const Icon = step.icon;
+                return (
+                  <article key={step.title} className="relative rounded-[26px] border border-[#17130f]/10 bg-[#fbfaf6] p-6 shadow-[0_18px_60px_rgba(23,19,15,0.05)] sm:ml-16">
+                    <span className="absolute -left-[4.5rem] top-6 hidden h-12 w-12 place-items-center rounded-full border border-[#7a1f2b]/18 bg-[#fffefa] text-[#7a1f2b] shadow-[0_16px_40px_rgba(23,19,15,0.08)] sm:grid">
+                      <Icon className="h-5 w-5" aria-hidden />
+                    </span>
+                    <div className="flex items-start gap-4">
+                      <span className="legal-display text-4xl text-[#b38a2e]">{String(index + 1).padStart(2, "0")}</span>
+                      <div>
+                        <h3 className="text-2xl font-bold text-[#17130f]">{step.title}</h3>
+                        <p className="mt-3 text-sm font-medium leading-7 text-[#5c554c]">{step.description}</p>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
             </div>
-            <ul className="space-y-10">
-              {trustPillars.map((row) => (
-                <li key={row.title} className="border-l-2 border-gold/70 pl-6">
-                  <p className="font-sans text-2xl text-ink">{row.title}</p>
-                  <p className="mt-2 text-sm leading-relaxed text-muted">{row.copy}</p>
-                </li>
-              ))}
-            </ul>
           </div>
         </div>
       </section>
 
-      <section className="border-b border-line bg-white px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold">Luật sư</p>
-          <h2 className="mt-4 font-sans text-4xl font-normal tracking-tight text-ink lg:text-[2.75rem]">
-            Đội ngũ phụ trách
-          </h2>
-          <div className="mt-14 grid gap-px bg-line sm:grid-cols-3">
-            {attorneys.map((item) => (
-              <article key={item.name} className="bg-white p-8">
-                <div className="flex h-12 w-12 items-center justify-center border border-line bg-[#fafafa] font-medium tabular-nums text-ink">
-                  {item.name
-                    .split(" ")
-                    .slice(-2)
-                    .map((part) => part[0])
-                    .join("")}
-                </div>
-                <h3 className="mt-6 font-sans text-2xl text-ink">{item.name}</h3>
-                <p className="mt-1 text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">{item.role}</p>
-                <p className="mt-4 text-sm leading-relaxed text-muted">{item.speciality}</p>
-              </article>
-            ))}
+      <section id="ket-qua" className="border-b border-[#17130f]/10 bg-[#f3f5ef] px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl">
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7a1f2b]">Kết quả tiêu biểu</p>
+              <h2 className="legal-display mt-4 text-5xl text-[#17130f] sm:text-6xl lg:text-7xl">Từng hồ sơ đều có một đường lối xử lý.</h2>
+            </div>
+            <div className="flex max-w-md items-center gap-4 rounded-[24px] border border-[#17130f]/10 bg-[#fffefa] p-5 shadow-[0_18px_60px_rgba(23,19,15,0.06)]">
+              <CheckCircle2 className="h-9 w-9 shrink-0 text-[#7a1f2b]" aria-hidden />
+              <p className="text-sm font-semibold leading-6 text-[#4a463e]">
+                Số liệu là minh họa năng lực triển khai, không phải cam kết kết quả cho mọi vụ việc.
+              </p>
+            </div>
           </div>
-        </div>
-      </section>
 
-      <section className="border-b border-line bg-ink px-5 py-20 text-white sm:px-8 lg:px-10 lg:py-28">
-        <div className="mx-auto max-w-6xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold/90">Kết quả</p>
-          <h2 className="mt-4 font-sans text-4xl font-normal tracking-tight lg:text-[2.75rem]">Tiêu biểu</h2>
-          <div className="mt-14 grid gap-8 lg:grid-cols-3">
+          <div className="mt-14 grid gap-5 lg:grid-cols-3">
             {caseResults.map((item) => (
-              <article key={item.title} className="border-t border-white/15 pt-8">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-white/45">{item.title}</p>
-                <h3 className="mt-4 font-sans text-2xl leading-snug text-white">{item.result}</h3>
-                <p className="mt-4 text-sm leading-relaxed text-white/65">{item.detail}</p>
+              <article key={item.title} className="rounded-[26px] border border-[#17130f]/10 bg-[#fffefa] p-7 shadow-[0_20px_70px_rgba(23,19,15,0.06)]">
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#7a1f2b]">{item.title}</p>
+                <h3 className="mt-5 text-3xl font-bold leading-tight text-[#17130f]">{item.result}</h3>
+                <p className="mt-5 text-sm font-medium leading-7 text-[#5c554c]">{item.detail}</p>
               </article>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
-        <div className="mx-auto grid max-w-6xl gap-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-20">
-          <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.3em] text-gold">Đặt lịch</p>
-            <h2 className="mt-4 font-sans text-4xl font-normal tracking-tight text-ink lg:text-[2.65rem]">
-              Buổi trao đổi đầu tiên trong khoảng 30 phút
-            </h2>
-            <p className="mt-6 max-w-md text-base leading-relaxed text-muted">
-              Xác định mục tiêu pháp lý, phạm vi hồ sơ và lộ trình ưu tiên phù hợp doanh nghiệp của bạn.
-            </p>
-            <ul className="mt-10 space-y-4 text-sm text-ink">
-              <li className="flex items-start gap-3">
-                <Users className="mt-0.5 h-4 w-4 shrink-0 text-gold" aria-hidden />
-                <span>Phiên 1:1 với luật sư phụ trách lĩnh vực</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Trophy className="mt-0.5 h-4 w-4 shrink-0 text-gold" aria-hidden />
-                <span>Kế hoạch hành động rõ ràng sau buổi trao đổi</span>
-              </li>
-              <li className="flex items-start gap-3">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-gold" aria-hidden />
-                <span>Xác nhận lịch trong 24 giờ làm việc</span>
-              </li>
-            </ul>
-          </div>
-
-          <div className="border border-line bg-white p-8 sm:p-10">
-            <h3 className="font-sans text-2xl text-ink">Thông tin liên hệ</h3>
-            <p className="mt-2 text-sm text-muted">Chúng tôi chỉ dùng thông tin để sắp xếp buổi tư vấn.</p>
-            <form onSubmit={handleConsultationSubmit} className="mt-8 grid gap-5 md:grid-cols-2">
-              <Input
-                label="Họ tên"
-                placeholder="Nguyễn Văn A"
-                className="rounded-sm border-line focus:border-gold focus:ring-gold/20"
-              />
-              <Input
-                label="Email"
-                type="email"
-                placeholder="email@company.vn"
-                className="rounded-sm border-line focus:border-gold focus:ring-gold/20"
-              />
-              <Input
-                label="Công ty"
-                placeholder="Tên doanh nghiệp"
-                className="rounded-sm border-line focus:border-gold focus:ring-gold/20"
-              />
-              <Input
-                label="Nhu cầu"
-                placeholder="Tranh chấp, due diligence, tuân thủ…"
-                className="rounded-sm border-line focus:border-gold focus:ring-gold/20"
-              />
-              <div className="flex flex-wrap gap-3 pt-2 md:col-span-2">
-                <Button type="submit" className="rounded-sm bg-ink px-6 text-white hover:bg-ink/90">
-                  Gửi yêu cầu
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  className="rounded-sm border border-line bg-transparent px-6 text-ink ring-0 hover:bg-[#f4f4f5]"
-                  onClick={() => navigate("/auth?tab=login")}
-                >
-                  Đăng nhập
-                </Button>
-              </div>
-            </form>
+      <section id="doi-ngu" className="border-b border-[#17130f]/10 bg-[#fbfaf6] px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7a1f2b]">Đội ngũ phụ trách</p>
+              <h2 className="legal-display mt-4 text-5xl text-[#17130f] sm:text-6xl">Luật sư đọc hồ sơ bằng mắt nghề, hệ thống giữ nhịp bằng dữ liệu.</h2>
+            </div>
+            <div className="grid gap-4">
+              {attorneys.map((item) => (
+                <article key={item.name} className="flex flex-col gap-5 rounded-[26px] border border-[#17130f]/10 bg-[#fffefa] p-6 shadow-[0_18px_60px_rgba(23,19,15,0.05)] sm:flex-row sm:items-center">
+                  <div className="grid h-16 w-16 shrink-0 place-items-center rounded-2xl border border-[#7a1f2b]/18 bg-[#fff4ef] text-lg font-extrabold text-[#7a1f2b]">
+                    {item.name
+                      .split(" ")
+                      .slice(-2)
+                      .map((part) => part[0])
+                      .join("")}
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-[#17130f]">{item.name}</h3>
+                    <p className="mt-1 text-[11px] font-bold uppercase tracking-[0.22em] text-[#7a1f2b]">{item.role}</p>
+                    <p className="mt-3 text-sm font-medium leading-7 text-[#5c554c]">{item.speciality}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      <footer className="border-t border-line bg-white px-5 py-12 sm:px-8 lg:px-10">
-        <div className="mx-auto flex max-w-6xl flex-col gap-10 md:flex-row md:items-start md:justify-between">
+      <section className="border-b border-[#17130f]/10 bg-[#fffefa] px-5 py-20 sm:px-8 lg:px-10 lg:py-28">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_1fr] lg:items-center">
           <div>
-            <p className="font-sans text-2xl text-ink">{APP_NAME}</p>
-            <p className="mt-2 max-w-xs text-sm leading-relaxed text-muted">
-              Dịch vụ pháp lý chuyên nghiệp cho doanh nghiệp hiện đại.
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7a1f2b]">Chuẩn làm việc</p>
+            <h2 className="legal-display mt-4 text-5xl text-[#17130f] sm:text-6xl">Một bàn pháp lý không được ồn ào, nhưng phải luôn có tín hiệu rõ.</h2>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
+            {trustPillars.map((row) => (
+              <article key={row.title} className="rounded-[24px] border border-[#17130f]/10 bg-[#fbfaf6] p-6">
+                <div className="flex items-center gap-3">
+                  <UserCheck className="h-5 w-5 text-[#7a1f2b]" aria-hidden />
+                  <h3 className="text-xl font-bold text-[#17130f]">{row.title}</h3>
+                </div>
+                <p className="mt-3 text-sm font-medium leading-7 text-[#5c554c]">{row.copy}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#f8efe9] px-5 py-20 sm:px-8 lg:px-10 lg:py-24">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+          <div>
+            <p className="text-[11px] font-bold uppercase tracking-[0.28em] text-[#7a1f2b]">Khu vực khách hàng</p>
+            <h2 className="legal-display mt-4 text-5xl text-[#17130f] sm:text-6xl">
+              {user ? `Hồ sơ của ${accountName} đã sẵn sàng.` : "Đưa hồ sơ pháp lý vào một nơi có trật tự."}
+            </h2>
+            <p className="mt-6 max-w-2xl text-base font-medium leading-8 text-[#5c554c]">
+              {user
+                ? `Bạn đang vào hệ thống với vai trò ${ROLE_LABELS[user.role] || "người dùng"}. Tiếp tục xử lý hồ sơ, theo dõi tiến độ và quản lý tài liệu trong khu vực bảo mật.`
+                : "Đăng nhập để tiếp tục làm việc với hợp đồng, tranh chấp, tài liệu tuân thủ và các hồ sơ cần luật sư theo sát."}
             </p>
           </div>
-          <div className="space-y-2 text-sm text-muted">
-            <p className="flex items-center gap-2">
-              <Mail className="h-4 w-4 text-gold" aria-hidden /> support@legaldesk.vn
-            </p>
-            <p className="flex items-center gap-2">
-              <Landmark className="h-4 w-4 text-gold" aria-hidden /> Quận 1, TP. Hồ Chí Minh
+          <div className="flex flex-wrap gap-3 lg:justify-end">
+            <Button
+              className="!h-12 !bg-[#7a1f2b] !px-6 !text-base !text-white shadow-[0_18px_45px_rgba(122,31,43,0.2)] hover:!bg-[#641923]"
+              onClick={handlePrimaryAction}
+            >
+              {user ? "Mở khu vực làm việc" : "Đăng nhập ngay"}
+              <ArrowRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-[#17130f]/10 bg-[#fffefa] px-5 py-12 sm:px-8 lg:px-10">
+        <div className="mx-auto flex max-w-7xl flex-col gap-10 md:flex-row md:items-start md:justify-between">
+          <div>
+            <p className="text-2xl font-extrabold text-[#17130f]">{APP_NAME}</p>
+            <p className="mt-2 max-w-xs text-sm font-medium leading-7 text-[#5c554c]">
+              Bàn làm việc pháp lý cho doanh nghiệp cần sự rõ ràng, bảo mật và tốc độ xử lý.
             </p>
           </div>
-          <div className="text-sm text-muted">
-            <p>Thứ Hai — Thứ Sáu · 08:30 — 18:00</p>
-            <p className="mt-2 text-xs text-muted/80">
+          <div className="space-y-3 text-sm font-semibold text-[#5c554c]">
+            <p className="flex items-center gap-2">
+              <Mail className="h-4 w-4 text-[#7a1f2b]" aria-hidden /> support@legaldesk.vn
+            </p>
+            <p className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-[#7a1f2b]" aria-hidden /> Quận 1, Thành phố Hồ Chí Minh
+            </p>
+          </div>
+          <div className="text-sm font-semibold text-[#5c554c]">
+            <p>Thứ Hai đến Thứ Sáu, 08:30 đến 18:00</p>
+            <p className="mt-2 text-xs text-[#7a746a]">
               © {new Date().getFullYear()} {APP_NAME}. Bảo lưu mọi quyền.
             </p>
           </div>

@@ -102,7 +102,7 @@ export default function RoutingRules() {
       key: "active",
       label: "Trạng thái",
       render: (row) => (
-        <Badge className={row.active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-line bg-[#f4f4f5] text-ink"}>
+        <Badge className={row.active ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-line bg-warm-50 text-ink"}>
           {row.active ? "Đang bật" : "Tạm tắt"}
         </Badge>
       ),
@@ -185,7 +185,7 @@ export default function RoutingRules() {
     <Fragment>
     <PageFrame segments={[ROLE_LABELS.admin, "Luật định tuyến"]}>
     <div className="space-y-5">
-      <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.14),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_52%,#f8fafc_100%)]">
+      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-warm-50">
         <CardContent className="space-y-4 p-6">
           <div>
             <h2 className="text-3xl font-semibold text-ink">Quản lý luật định tuyến cho workflow full-auto.</h2>
@@ -217,7 +217,7 @@ export default function RoutingRules() {
 
           {isLoading ? (
             <div className="flex items-center justify-center py-14">
-              <Spinner className="h-7 w-7 text-gold" />
+              <Spinner className="h-7 w-7 text-brand-700" />
             </div>
           ) : loadError ? (
             <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>

@@ -2,17 +2,22 @@ import { cn } from "../../lib/cn.js";
 
 export default function Tabs({ className, tabs = [], value, onChange }) {
   return (
-    <div className={cn("inline-flex max-w-full overflow-x-auto rounded-sm border border-line bg-white p-1 shadow-sm", className)}>
+    <div
+      className={cn(
+        "inline-flex max-w-full overflow-x-auto rounded-full border border-line bg-white p-1 shadow-ring",
+        className,
+      )}
+    >
       {tabs.map((tab) => (
         <button
           key={tab.value}
           type="button"
           onClick={() => onChange(tab.value)}
           className={cn(
-            "whitespace-nowrap rounded-sm px-4 py-2 text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/40",
+            "motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:scale-105 motion-safe:active:scale-95 whitespace-nowrap rounded-full px-4 py-2 text-base font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-wise-forest/30",
             value === tab.value
-              ? "bg-ink text-white shadow-sm"
-              : "text-muted hover:bg-[#f4f4f5] hover:text-ink",
+              ? "bg-brand-500 text-brand-foreground shadow-ring"
+              : "text-muted hover:bg-[rgba(211,242,192,0.4)] hover:text-ink",
           )}
         >
           {tab.label}

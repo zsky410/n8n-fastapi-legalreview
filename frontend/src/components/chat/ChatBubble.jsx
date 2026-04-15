@@ -9,17 +9,17 @@ export default function ChatBubble({ message }) {
     <div className={cn("flex", isAssistant ? "justify-start" : "justify-end")}>
       <div
         className={cn(
-          "max-w-2xl rounded-[24px] px-4 py-4 shadow-sm",
-          isAssistant ? "border border-line bg-white text-ink" : "bg-ink text-white",
+          "max-w-2xl rounded-card-md px-4 py-4 shadow-ring",
+          isAssistant ? "border border-line bg-white text-ink" : "bg-brand-500 text-brand-foreground",
         )}
       >
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]">
           <span>{isAssistant ? "Trợ lý AI" : "Bạn"}</span>
-          <span className={cn(isAssistant ? "text-muted" : "text-white/60")}>{formatDateTime(message.createdAt)}</span>
+          <span className={cn(isAssistant ? "text-muted" : "text-brand-700/70")}>{formatDateTime(message.createdAt)}</span>
         </div>
-        <p className="mt-3 whitespace-pre-wrap text-sm leading-6">{message.content}</p>
+        <p className="mt-3 whitespace-pre-wrap text-lg leading-relaxed">{message.content}</p>
         {message.caution ? (
-          <p className="mt-3 rounded-2xl bg-amber-50 px-3 py-2 text-xs font-medium text-amber-700">
+          <p className="mt-3 rounded-card bg-wise-warning/20 px-3 py-2 text-xs font-semibold text-amber-900">
             {message.caution}
           </p>
         ) : null}

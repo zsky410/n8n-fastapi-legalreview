@@ -10,8 +10,8 @@ export default function AdminLayout() {
 
   if (!isHydrated) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#fafafa]">
-        <Spinner className="h-8 w-8 text-gold" />
+      <div className="flex min-h-screen items-center justify-center bg-white">
+        <Spinner className="h-8 w-8 text-brand-700" />
       </div>
     );
   }

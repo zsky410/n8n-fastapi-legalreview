@@ -1,7 +1,7 @@
 import { cn } from "../../lib/cn.js";
 
 export default function Card({ children, className }) {
-  return <section className={cn("surface-panel", className)}>{children}</section>;
+  return <section className={cn("surface-panel rounded-card-md", className)}>{children}</section>;
 }
 
 export function CardHeader({ children, className }) {
@@ -9,11 +9,13 @@ export function CardHeader({ children, className }) {
 }
 
 export function CardTitle({ children, className }) {
-  return <h2 className={cn("text-lg font-semibold text-ink", className)}>{children}</h2>;
+  return (
+    <h2 className={cn("text-[1.38rem] font-semibold leading-tight tracking-[-0.396px] text-ink", className)}>{children}</h2>
+  );
 }
 
 export function CardDescription({ children, className }) {
-  return <p className={cn("text-sm leading-6 text-muted", className)}>{children}</p>;
+  return <p className={cn("text-lg leading-[1.44] text-muted", className)}>{children}</p>;
 }
 
 export function CardContent({ children, className }) {

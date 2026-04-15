@@ -128,7 +128,7 @@ export default function CaseDetail() {
   return (
     <PageFrame segments={[ROLE_LABELS.client, "Chi tiết hồ sơ"]}>
     <div className="space-y-5">
-      <Card className="overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(14,165,233,0.16),_transparent_36%),linear-gradient(135deg,#ffffff_0%,#eef8ff_50%,#ecfeff_100%)]">
+      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-warm-50">
         <CardContent className="grid gap-5 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-4">
             <div>
@@ -145,7 +145,7 @@ export default function CaseDetail() {
             </div>
           </div>
 
-          <div className="rounded-[28px] border border-line bg-ink p-5 text-white">
+          <div className="rounded-card-md border border-line bg-warm-900 p-5 text-white">
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Tóm tắt nhanh</p>
             <div className="mt-4 grid gap-4">
               <div>
@@ -248,13 +248,13 @@ export default function CaseDetail() {
                     </div>
                   </div>
 
-                  <div className="rounded-[28px] border border-line bg-white px-5 py-5">
+                  <div className="rounded-card-md border border-line bg-white px-5 py-5">
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Tóm tắt hồ sơ</p>
                     <p className="mt-3 text-sm leading-7 text-muted">{review.summary}</p>
                   </div>
 
                   <div className="grid gap-4 lg:grid-cols-2">
-                    <div className="rounded-[28px] border border-line bg-white px-5 py-5">
+                    <div className="rounded-card-md border border-line bg-white px-5 py-5">
                       <div className="flex items-center gap-2">
                         <ShieldAlert className="h-4 w-4 text-amber-500" />
                         <p className="text-sm font-semibold text-ink">Cảnh báo rủi ro</p>
@@ -274,9 +274,9 @@ export default function CaseDetail() {
                       </div>
                     </div>
 
-                    <div className="rounded-[28px] border border-line bg-white px-5 py-5">
+                    <div className="rounded-card-md border border-line bg-white px-5 py-5">
                       <div className="flex items-center gap-2">
-                        <FileSearch className="h-4 w-4 text-gold" />
+                        <FileSearch className="h-4 w-4 text-brand-700" />
                         <p className="text-sm font-semibold text-ink">Trường đã trích xuất</p>
                       </div>
                       <div className="mt-4 space-y-3">
@@ -294,7 +294,7 @@ export default function CaseDetail() {
             </div>
 
             <div className="space-y-5">
-              <Card className="!bg-ink !text-white">
+              <Card className="!bg-warm-900 !text-white">
                 <CardContent className="space-y-4 p-6">
                   <div className="flex items-center gap-3">
                     <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white">
@@ -311,7 +311,7 @@ export default function CaseDetail() {
               <Card>
                 <CardContent className="space-y-4 p-6">
                   <div className="flex items-center gap-2 text-ink">
-                    <TimerReset className="h-4 w-4 text-gold" />
+                    <TimerReset className="h-4 w-4 text-brand-700" />
                     <p className="text-sm font-semibold">Lưu ý và cảnh báo chất lượng</p>
                   </div>
                   {review.qualityWarning ? (
@@ -348,7 +348,7 @@ export default function CaseDetail() {
                 <h3 className="text-xl font-semibold text-ink">Trao đổi theo từng hồ sơ</h3>
                 <p className="text-sm text-muted">Đặt câu hỏi theo đúng hồ sơ để làm rõ điều khoản, cảnh báo và hướng xử lý tiếp theo.</p>
               </div>
-              <Badge className="border-line bg-[#f4f4f5] text-ink">
+              <Badge className="border-line bg-warm-50 text-ink">
                 <Bot className="mr-1 h-3.5 w-3.5" />
                 {messages.length} tin nhắn
               </Badge>
@@ -402,7 +402,7 @@ export default function CaseDetail() {
           <Card>
             <CardContent className="space-y-4 p-6">
               <div className="flex items-center gap-2">
-                <Clock3 className="h-4 w-4 text-gold" />
+                <Clock3 className="h-4 w-4 text-brand-700" />
                 <p className="text-sm font-semibold text-ink">Tiến trình xử lý</p>
               </div>
               <div className="grid gap-3 md:grid-cols-5">
@@ -413,7 +413,7 @@ export default function CaseDetail() {
                       key={stage}
                       className={`rounded-[24px] border px-4 py-4 text-sm font-semibold transition ${
                         isCompleted
-                          ? "border-gold/40 bg-brand-50 text-gold"
+                          ? "border-brand-300 bg-brand-50 text-brand-700"
                           : "border-line bg-slate-50 text-muted"
                       }`}
                     >

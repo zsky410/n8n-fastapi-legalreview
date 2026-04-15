@@ -45,6 +45,8 @@ def test_document_ocr_reads_plain_text_upload() -> None:
     assert payload["provider"] == "local"
     assert payload["source"] == "direct_text"
     assert "giai quyet tranh chap" in payload["extractedText"]
+    assert payload["suggestedTitle"].startswith("Rà soát hợp đồng")
+    assert payload["suggestionSource"] == "heuristic"
 
 
 def test_document_ocr_reads_docx_upload() -> None:
@@ -66,6 +68,7 @@ def test_document_ocr_reads_docx_upload() -> None:
     assert payload["provider"] == "local"
     assert payload["source"] == "docx_xml"
     assert "cham dut" in payload["extractedText"]
+    assert payload["suggestedTitle"].startswith("Rà soát hợp đồng")
 
 
 def test_document_ocr_uses_ocrmypdf_for_pdf_upload() -> None:

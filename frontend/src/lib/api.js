@@ -23,6 +23,93 @@ function normalizeMode(mode) {
   return API_MODE_OPTIONS.includes(mode) ? mode : "mock";
 }
 
+function foldTextForMatching(value = "") {
+  return String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function buildTemporaryCaseTitle({ extractedText = "", fileName = "" } = {}) {
+  const foldedText = foldTextForMatching(`${fileName} ${extractedText}`);
+
+  if (/(bao mat|nda|non disclosure|confidential)/.test(foldedText)) {
+    return "Rà soát thỏa thuận bảo mật";
+  }
+
+  if (/(phan mem|software|saas|license)/.test(foldedText)) {
+    return "Rà soát hợp đồng cung cấp phần mềm";
+  }
+
+  if (/(lao dong|employment|employee|employer|probation|salary)/.test(foldedText)) {
+    return "Rà soát hợp đồng lao động";
+  }
+
+  if (/(thue|lease|tenant|landlord|premises|rent)/.test(foldedText)) {
+    return "Rà soát hợp đồng thuê";
+  }
+
+  if (/(cung cap|supply|vendor|supplier|purchase)/.test(foldedText)) {
+    return "Rà soát hợp đồng cung cấp";
+  }
+
+  if (/(dich vu|service agreement|statement of work|services)/.test(foldedText)) {
+    return "Rà soát hợp đồng dịch vụ";
+  }
+
+  if (/(hop tac|cooperation|joint venture|mou|memorandum)/.test(foldedText)) {
+    return "Rà soát thỏa thuận hợp tác";
+  }
+
+  if (/(uy quyen|power of attorney|authorization)/.test(foldedText)) {
+    return "Rà soát văn bản ủy quyền";
+  }
+
+  if (/(don khoi kien|petition|plaintiff|defendant|court filing)/.test(foldedText)) {
+    return "Phân tích đơn khởi kiện";
+  }
+
+  if (foldedText.includes("hop dong")) {
+    return "Rà soát hợp đồng";
+  }
+
+  if (foldedText.includes("thoa thuan")) {
+    return "Rà soát thỏa thuận";
+  }
+
+  if (foldedText.includes("bien ban")) {
+    return "Rà soát biên bản";
+  }
+
+  if (foldedText.includes("giai quyet tranh chap") || foldedText.includes("ho so tranh chap")) {
+    return "Phân tích hồ sơ tranh chấp";
+  }
+
+  return "Rà soát tài liệu pháp lý";
+}
+
+function normalizeDocumentOcrPayload(payload = {}, fallbackFile = null) {
+  const extractedText = String(payload?.extractedText || "").trim();
+  const fileName = payload?.fileName || fallbackFile?.name || "uploaded-document";
+  const suggestedTitle = String(payload?.suggestedTitle || "").trim() || buildTemporaryCaseTitle({ fileName, extractedText });
+
+  return {
+    fileName,
+    mimeType: payload?.mimeType || fallbackFile?.type || null,
+    extractedText,
+    provider: payload?.provider || "unknown",
+    source: payload?.source || "unknown",
+    textLength: Number(payload?.textLength ?? extractedText.length),
+    suggestedTitle,
+    suggestionSource: payload?.suggestionSource || "heuristic",
+    truncated: Boolean(payload?.truncated),
+    warning: payload?.warning || null,
+  };
+}
+
 function wait(ms = 320) {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
@@ -467,18 +554,20 @@ export async function extractDocumentText(file, language = "vi") {
       }
 
       const extractedText = String(await file.text()).trim();
-      return {
+      return normalizeDocumentOcrPayload({
         fileName: file.name,
         mimeType: file.type || null,
         extractedText,
         provider: "browser",
         source: "direct_text",
         textLength: extractedText.length,
+        suggestedTitle: buildTemporaryCaseTitle({ fileName: file.name, extractedText }),
+        suggestionSource: "heuristic",
         truncated: false,
         warning: "OCR thật chỉ hoạt động khi frontend đang dùng API thật.",
-      };
+      }, file);
     },
-    realHandler: () => postFormData("/v1/legal/ocr", formData),
+    realHandler: () => postFormData("/v1/legal/ocr", formData).then((payload) => normalizeDocumentOcrPayload(payload, file)),
   });
 }
 

@@ -31,16 +31,16 @@ export default function ChatPanel({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-4 rounded-sm border border-line bg-[#fafafa] p-4">
+      <div className="space-y-4 rounded-card-md border border-line bg-surface p-4 shadow-ring">
         {messages.length ? (
           messages.map((message) => <ChatBubble key={message.id} message={message} />)
         ) : (
-          <div className="rounded-sm border border-dashed border-line bg-white px-4 py-8 text-center text-sm text-muted">
+          <div className="rounded-card border border-dashed border-line bg-white px-4 py-8 text-center text-lg text-muted">
             Chưa có hội đáp nào cho hồ sơ này.
           </div>
         )}
         {isSending ? (
-          <div className="flex items-center gap-3 rounded-sm border border-line bg-white px-4 py-3 text-sm text-muted">
+          <div className="flex items-center gap-3 rounded-card border border-line bg-white px-4 py-3 text-lg text-muted shadow-ring">
             <Spinner />
             Đang chuẩn bị câu trả lời...
           </div>
@@ -55,7 +55,7 @@ export default function ChatPanel({
           placeholder={placeholder}
           hint={hint}
         />
-        {error ? <p className="text-sm text-rose-600">{error}</p> : null}
+        {error ? <p className="text-sm text-wise-danger">{error}</p> : null}
         <div className="flex justify-end">
           <Button type="submit" disabled={disabled || isSending || !draft.trim()}>
             <SendHorizonal className="h-4 w-4" />

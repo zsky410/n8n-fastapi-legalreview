@@ -1,145 +1,43 @@
-import { ShieldCheck, UserRound } from "lucide-react";
+import { ShieldCheck } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
-import Button from "../components/ui/Button.jsx";
 import Card, { CardContent } from "../components/ui/Card.jsx";
-import Input from "../components/ui/Input.jsx";
+import AuthFormPanel from "../components/auth/AuthFormPanel.jsx";
 import { DEMO_ACCOUNTS } from "../lib/constants.js";
 import { formatRoleLabel } from "../lib/formatters.js";
 import { useAuth } from "../hooks/useAuth.js";
-
-const EMPTY_FIELD_ERRORS = {
-  name: "",
-  company: "",
-  email: "",
-  password: "",
-};
-
-function getValidationMessage(detail) {
-  const field = String(detail?.field || "").split(".").pop();
-  const code = detail?.code;
-
-  if (field === "email") {
-    if (code === "string_pattern_mismatch") {
-      return "Email chưa đúng định dạng.";
-    }
-    return "Vui lòng nhập email hợp lệ.";
-  }
-
-  if (field === "password") {
-    if (code === "string_too_short") {
-      return "Mật khẩu cần ít nhất 8 ký tự.";
-    }
-    return "Mật khẩu hiện chưa hợp lệ.";
-  }
-
-  if (field === "name") {
-    if (code === "string_too_short") {
-      return "Tên hiển thị cần ít nhất 2 ký tự.";
-    }
-    return "Tên hiển thị hiện chưa hợp lệ.";
-  }
-
-  if (field === "company") {
-    return "Tên công ty hiện chưa hợp lệ.";
-  }
-
-  return detail?.message || "Thông tin nhập vào chưa hợp lệ.";
-}
 
 export default function AuthPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get("tab") === "register" ? "register" : "login";
-  const { login, register, getRedirectPathForRole } = useAuth();
+  const { login, getRedirectPathForRole } = useAuth();
   const adminDemoAccounts = DEMO_ACCOUNTS.filter((account) => account.role === "admin");
-  const [name, setName] = useState("");
-  const [company, setCompany] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState("");
-  const [fieldErrors, setFieldErrors] = useState(EMPTY_FIELD_ERRORS);
-  const [isLoading, setIsLoading] = useState(false);
-
-  function resetErrors() {
-    setError("");
-    setFieldErrors(EMPTY_FIELD_ERRORS);
-  }
-
-  function handleAuthError(authError) {
-    const nextFieldErrors = { ...EMPTY_FIELD_ERRORS };
-    const details = Array.isArray(authError?.details) ? authError.details : [];
-
-    details.forEach((detail) => {
-      const field = String(detail?.field || "").split(".").pop();
-      if (field in nextFieldErrors) {
-        nextFieldErrors[field] = getValidationMessage(detail);
-      }
-    });
-
-    setFieldErrors(nextFieldErrors);
-
-    const normalizedMessage = String(authError?.message || "").toLowerCase();
-    if (!details.length && (authError?.status === 409 || (authError?.status === 400 && normalizedMessage.includes("email")))) {
-      setFieldErrors((current) => ({
-        ...current,
-        email: authError.message || "Email này hiện chưa dùng được.",
-      }));
-      setError("");
-      return;
-    }
-
-    const hasFieldErrors = Object.values(nextFieldErrors).some(Boolean);
-    if (hasFieldErrors && authError?.code === "validation_error") {
-      setError("Vui lòng kiểm tra lại các trường đang báo lỗi.");
-      return;
-    }
-
-    setError(authError?.message || "Không thể xác thực lúc này.");
-  }
-
-  async function handleSubmit(event) {
-    event.preventDefault();
-
-    setIsLoading(true);
-    resetErrors();
-
-    try {
-      const sessionUser =
-        activeTab === "register"
-          ? await register({ email, password, name, company })
-          : await login({ email, password });
-      navigate(getRedirectPathForRole(sessionUser.role));
-    } catch (authError) {
-      handleAuthError(authError);
-    } finally {
-      setIsLoading(false);
-    }
-  }
+  const [isQuickLoginLoading, setIsQuickLoginLoading] = useState(false);
+  const [quickLoginError, setQuickLoginError] = useState("");
 
   async function handleQuickLogin(nextEmail) {
-    setEmail(nextEmail);
-    setIsLoading(true);
-    resetErrors();
+    setIsQuickLoginLoading(true);
+    setQuickLoginError("");
 
     try {
       const sessionUser = await login({ email: nextEmail });
       navigate(getRedirectPathForRole(sessionUser.role));
-    } catch (authError) {
-      handleAuthError(authError);
+    } catch (error) {
+      setQuickLoginError(error?.message || "Không thể mở tài khoản demo lúc này.");
     } finally {
-      setIsLoading(false);
+      setIsQuickLoginLoading(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-[#fafafa] px-4 py-5 lg:px-6">
+    <main className="min-h-screen bg-white px-4 py-5 lg:px-6">
       <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[minmax(0,1fr)_480px]">
-        <Card className="overflow-hidden border-0 bg-gradient-to-br from-ink via-brand-800 to-brand-900 text-white shadow-sm">
+        <Card className="overflow-hidden border-0 bg-gradient-to-br from-warm-900 via-[#373634] to-[#2c2b2a] text-white shadow-ring">
           <CardContent className="flex h-full flex-col justify-between gap-8 p-8 lg:p-10">
             <div className="space-y-6">
-              <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-gold/90 hover:text-gold">
+              <Link to="/" className="inline-flex items-center gap-2 text-sm font-semibold text-brand-200 hover:text-brand-100">
                 <ShieldCheck className="h-4 w-4" />
                 Về landing page
               </Link>
@@ -159,6 +57,7 @@ export default function AuthPage() {
                   key={account.email}
                   type="button"
                   onClick={() => handleQuickLogin(account.email)}
+                  disabled={isQuickLoginLoading}
                   className="flex items-center justify-between rounded-sm border border-white/10 bg-white/10 px-4 py-4 text-left transition hover:bg-white/15"
                 >
                   <div>
@@ -170,111 +69,20 @@ export default function AuthPage() {
                   </span>
                 </button>
               ))}
+              {quickLoginError ? <p className="rounded-sm bg-rose-500/15 px-4 py-3 text-sm text-rose-100">{quickLoginError}</p> : null}
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardContent className="space-y-6 p-8">
-            <div className="inline-flex rounded-sm border border-line bg-[#fafafa] p-1">
-              {[
-                { label: "Đăng nhập", value: "login" },
-                { label: "Đăng ký", value: "register" },
-              ].map((tab) => (
-                <button
-                  key={tab.value}
-                  type="button"
-                  onClick={() => {
-                    setSearchParams({ tab: tab.value });
-                    resetErrors();
-                  }}
-                  className={
-                    activeTab === tab.value
-                      ? "rounded-sm bg-white px-4 py-2 text-sm font-semibold text-ink shadow-sm"
-                      : "rounded-sm px-4 py-2 text-sm font-semibold text-muted"
-                  }
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div>
-              <h2 className="text-3xl font-semibold text-ink">
-                {activeTab === "login" ? "Đăng nhập khách hàng" : "Tạo tài khoản khách hàng"}
-              </h2>
-              <p className="mt-2 text-sm leading-6 text-muted">
-                {activeTab === "login"
-                  ? "Dùng email và mật khẩu đã tạo để vào cổng khách hàng. Tài khoản admin demo vẫn có thể mở nhanh ở khung bên trái."
-                  : "Điền thông tin thật để tạo tài khoản khách hàng đầu tiên trên hệ thống."}
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              {activeTab === "register" ? (
-                <>
-                  <Input
-                    label="Tên hiển thị"
-                    value={name}
-                    onChange={(event) => {
-                      setName(event.target.value);
-                      setFieldErrors((current) => ({ ...current, name: "" }));
-                    }}
-                    placeholder="Nguyễn Minh An"
-                    autoComplete="name"
-                    error={fieldErrors.name}
-                  />
-                  <Input
-                    label="Công ty"
-                    value={company}
-                    onChange={(event) => {
-                      setCompany(event.target.value);
-                      setFieldErrors((current) => ({ ...current, company: "" }));
-                    }}
-                    placeholder="Công ty ABC"
-                    autoComplete="organization"
-                    error={fieldErrors.company}
-                  />
-                </>
-              ) : null}
-              <Input
-                label="Email"
-                type="email"
-                value={email}
-                onChange={(event) => {
-                  setEmail(event.target.value);
-                  setFieldErrors((current) => ({ ...current, email: "" }));
-                }}
-                placeholder="ban@congty.vn"
-                autoComplete="email"
-                error={fieldErrors.email}
-              />
-              <Input
-                label="Mật khẩu"
-                type="password"
-                value={password}
-                onChange={(event) => {
-                  setPassword(event.target.value);
-                  setFieldErrors((current) => ({ ...current, password: "" }));
-                }}
-                placeholder="Tối thiểu 8 ký tự"
-                autoComplete={activeTab === "login" ? "current-password" : "new-password"}
-                hint={activeTab === "register" ? "Chọn mật khẩu đủ mạnh để dùng lại cho các lần đăng nhập sau." : undefined}
-                error={fieldErrors.password}
-              />
-              {error ? <p className="rounded-sm bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
-              <Button type="submit" className="w-full" isLoading={isLoading}>
-                <UserRound className="h-4 w-4" />
-                {activeTab === "login" ? "Vào cổng khách hàng" : "Tạo tài khoản và bắt đầu"}
-              </Button>
-            </form>
-
-            <div className="rounded-sm border border-line bg-[#fafafa] px-4 py-4 text-sm leading-6 text-muted">
-              Luồng khách hàng đã dùng xác thực thật. Tài khoản `admin@demo.vn` vẫn được giữ riêng cho demo quản trị.
-            </div>
+            <AuthFormPanel
+              initialTab={activeTab}
+              onTabChange={(nextTab) => setSearchParams({ tab: nextTab })}
+            />
 
             <div className="flex items-center justify-between gap-3 text-sm text-muted">
-              <Link to="/onboarding" className="font-semibold text-gold hover:text-gold/90">
+              <Link to="/onboarding" className="font-semibold text-brand-700 hover:text-brand-700">
                 Xem thiết lập ban đầu
               </Link>
               <Link to="/" className="font-semibold text-ink">

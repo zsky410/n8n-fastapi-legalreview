@@ -11,6 +11,7 @@ from fastapi import HTTPException, UploadFile, status
 from app.core.config import Settings, get_settings
 from app.schemas.common import LanguageEnum
 from app.schemas.document_ocr import DocumentOcrResponse
+from app.services.document_title_service import DocumentTitleSuggestionService
 
 try:
     import ocrmypdf
@@ -43,6 +44,7 @@ class DocumentOcrService:
     def __init__(self, settings: Settings | None = None) -> None:
         self.settings = settings or get_settings()
         self.logger = logging.getLogger(__name__)
+        self.title_service = DocumentTitleSuggestionService(self.settings)
 
     async def extract(self, file: UploadFile, language: LanguageEnum = LanguageEnum.VI) -> DocumentOcrResponse:
         file_name = (file.filename or "uploaded-document").strip() or "uploaded-document"
@@ -97,6 +99,12 @@ class DocumentOcrService:
         elif provider in {"ocrmypdf", "tesseract"}:
             warning = "Kết quả OCR nên được đối chiếu nhanh với bản gốc trước khi dùng cho quyết định pháp lý."
 
+        suggested_title, suggestion_source = self.title_service.suggest_title(
+            file_name=file_name,
+            extracted_text=normalized_text,
+            language=language,
+        )
+
         return DocumentOcrResponse(
             fileName=file_name,
             mimeType=content_type,
@@ -104,6 +112,8 @@ class DocumentOcrService:
             provider=provider,
             source=source,
             textLength=len(normalized_text),
+            suggestedTitle=suggested_title,
+            suggestionSource=suggestion_source,
             truncated=truncated,
             warning=warning,
         )

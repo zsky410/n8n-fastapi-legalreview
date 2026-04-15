@@ -1,5 +1,5 @@
 import { CheckCircle2 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import PageFrame from "../../components/layout/PageFrame.jsx";
@@ -38,6 +38,9 @@ export default function CreateCase() {
   const navigate = useNavigate();
   const { createCase } = useCases();
   const [title, setTitle] = useState("");
+  const [titleMode, setTitleMode] = useState("empty");
+  const [suggestedTitle, setSuggestedTitle] = useState("");
+  const [titleSuggestionSource, setTitleSuggestionSource] = useState("");
   const [summary, setSummary] = useState("");
   const [domain, setDomain] = useState(LEGAL_DOMAINS[0]);
   const [priority, setPriority] = useState("medium");
@@ -47,6 +50,41 @@ export default function CreateCase() {
   const [fileImportHint, setFileImportHint] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOcrRunning, setIsOcrRunning] = useState(false);
+  const titleModeRef = useRef("empty");
+
+  function updateTitleManually(nextTitle) {
+    const normalizedTitle = nextTitle;
+    const nextMode = normalizedTitle.trim() ? "manual" : "empty";
+    titleModeRef.current = nextMode;
+    setTitle(normalizedTitle);
+    setTitleMode(nextMode);
+  }
+
+  function resetTitleSuggestionState() {
+    titleModeRef.current = "empty";
+    setTitle("");
+    setTitleMode("empty");
+    setSuggestedTitle("");
+    setTitleSuggestionSource("");
+  }
+
+  function getTitleHint() {
+    if (isOcrRunning) {
+      return "Sau khi OCR xong, hệ thống sẽ tự điền tên vụ việc tạm thời. Bạn có thể sửa lại ngay sau đó nếu muốn.";
+    }
+
+    if (suggestedTitle && titleMode === "auto") {
+      return `${
+        titleSuggestionSource === "ai" ? "AI" : "Hệ thống"
+      } vừa tự điền tên tạm từ nội dung tài liệu. Bạn có thể sửa lại bất cứ lúc nào.`;
+    }
+
+    if (suggestedTitle && titleMode === "manual") {
+      return `Tên hiện tại là bản bạn đã sửa. Gợi ý gần nhất của hệ thống là "${suggestedTitle}".`;
+    }
+
+    return "Sau khi tải file và trích xuất xong, hệ thống sẽ tự điền tên tạm để bạn chỉnh lại nếu muốn.";
+  }
 
   async function populateExtractedTextFromFile(primaryFile) {
     if (!primaryFile) {
@@ -65,9 +103,29 @@ export default function CreateCase() {
     try {
       const response = await extractDocumentText(primaryFile, "vi");
       const nextText = normalizeImportedText(response.extractedText).slice(0, 30000);
+      const nextSuggestedTitle = normalizeImportedText(response.suggestedTitle || "").slice(0, 120);
 
       setExtractedText(nextText);
-      setFileImportHint("Nội dung từ tài liệu đã được nạp vào ô bên trên. Bạn có thể kiểm tra và chỉnh lại trước khi gửi.");
+      setSuggestedTitle(nextSuggestedTitle);
+      setTitleSuggestionSource(response.suggestionSource || "");
+
+      if (nextSuggestedTitle) {
+        titleModeRef.current = "auto";
+        setTitle(nextSuggestedTitle);
+        setTitleMode("auto");
+      }
+
+      setFileImportHint(
+        [
+          "Nội dung từ tài liệu đã được nạp vào ô bên trên.",
+          nextSuggestedTitle
+            ? `${response.suggestionSource === "ai" ? "AI" : "Hệ thống"} đã tự điền lại tên vụ việc tạm thời theo nội dung tài liệu. Bạn có thể sửa lại nếu muốn.`
+            : "",
+          response.warning || "",
+        ]
+          .filter(Boolean)
+          .join(" "),
+      );
     } catch (ocrError) {
       setError(ocrError.message || "Không thể đọc nội dung tài liệu lúc này.");
       setFileImportHint("Chưa đọc được nội dung từ tài liệu này. Bạn vẫn có thể nhập nội dung thủ công.");
@@ -84,6 +142,13 @@ export default function CreateCase() {
     const primaryFile = nextFiles[0];
 
     if (!primaryFile) {
+      setExtractedText("");
+      setFileImportHint("");
+      setSuggestedTitle("");
+      setTitleSuggestionSource("");
+      if (titleModeRef.current === "auto") {
+        resetTitleSuggestionState();
+      }
       return;
     }
 
@@ -141,8 +206,9 @@ export default function CreateCase() {
                 <Input
                   label="Tên vụ việc"
                   value={title}
-                  onChange={(event) => setTitle(event.target.value)}
+                  onChange={(event) => updateTitleManually(event.target.value)}
                   placeholder="Ví dụ: Review hợp đồng cung cấp phần mềm"
+                  hint={getTitleHint()}
                   error={error && !title.trim() ? error : ""}
                 />
                 <Select
@@ -191,6 +257,10 @@ export default function CreateCase() {
                   variant="secondary"
                   onClick={() => {
                     setTitle("");
+                    titleModeRef.current = "empty";
+                    setTitleMode("empty");
+                    setSuggestedTitle("");
+                    setTitleSuggestionSource("");
                     setSummary("");
                     setPriority("medium");
                     setExtractedText("");
@@ -211,12 +281,26 @@ export default function CreateCase() {
         </form>
 
         <div className="space-y-5">
-          <Card className="!bg-ink !text-white">
+          <Card className="!bg-warm-900 !text-white">
             <CardContent className="space-y-4 p-6">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-white/50">Tóm tắt xem trước</p>
               <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
-                <p className="text-sm text-white/70">Tên vụ việc</p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-sm text-white/70">Tên vụ việc</p>
+                  {suggestedTitle ? (
+                    <span className="rounded-full border border-white/10 bg-white/10 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/75">
+                      {titleMode === "manual"
+                        ? "Đã chỉnh tay"
+                        : titleSuggestionSource === "ai"
+                          ? "AI đặt tạm"
+                          : "Gợi ý tạm"}
+                    </span>
+                  ) : null}
+                </div>
                 <p className="mt-2 text-lg font-semibold text-white">{title || "Chưa điền"}</p>
+                {suggestedTitle && titleMode === "manual" ? (
+                  <p className="mt-2 text-xs leading-5 text-white/60">Tên AI gợi ý gần nhất: {suggestedTitle}</p>
+                ) : null}
               </div>
               <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
                 <p className="text-sm text-white/70">Lĩnh vực</p>

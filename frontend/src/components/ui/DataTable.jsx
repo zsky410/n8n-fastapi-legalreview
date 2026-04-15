@@ -6,6 +6,7 @@ import EmptyState from "./EmptyState.jsx";
 
 export default function DataTable({
   columns = [],
+  flat = false,
   emptyDescription,
   emptyTitle = "Chưa có dữ liệu",
   rows = [],
@@ -64,14 +65,14 @@ export default function DataTable({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Tìm trong bảng"
-            className="h-11 w-full rounded-sm border border-line bg-white pl-11 pr-4 text-sm text-ink outline-none transition focus:border-gold focus:ring-4 focus:ring-gold/15"
+            className="h-11 w-full rounded-[10px] border border-line bg-white pl-11 pr-4 text-lg text-ink outline-none transition placeholder:text-muted focus-visible:border-muted-strong focus-visible:shadow-[inset_0_0_0_1px_rgb(134,134,133)]"
           />
         </label>
       ) : null}
-      <div className="overflow-hidden rounded-sm border border-line bg-white shadow-sm">
+      <div className={cn("overflow-hidden bg-white", flat ? "" : "rounded-card-lg border border-line shadow-ring")}>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[720px] table-fixed border-collapse divide-y divide-line">
-            <thead className="bg-[#fafafa]">
+          <table className={cn("w-full min-w-[720px] table-fixed border-collapse divide-y divide-line", flat ? "border-t border-line" : "")}>
+            <thead className={cn(flat ? "bg-surface/70" : "bg-surface")}>
               <tr>
                 {columns.map((column) => (
                   <th
@@ -87,7 +88,7 @@ export default function DataTable({
                         type="button"
                         onClick={() => toggleSort(column.key)}
                         className={cn(
-                          "inline-flex items-center gap-2",
+                          "motion-safe:transition-transform motion-safe:hover:scale-105 motion-safe:active:scale-95 inline-flex items-center gap-2 rounded-full",
                           column.className?.includes("text-right")
                             ? "ml-auto w-full justify-end text-right"
                             : "text-left",
@@ -112,7 +113,7 @@ export default function DataTable({
             <tbody className="divide-y divide-line">
               {visibleRows.length ? (
                 visibleRows.map((row) => (
-                  <tr key={row[rowKey]} className="align-top text-sm text-ink transition hover:bg-[#fafafa]">
+                  <tr key={row[rowKey]} className="align-top text-lg text-ink transition hover:bg-surface">
                     {columns.map((column) => (
                       <td
                         key={`${row[rowKey]}-${column.key}`}
@@ -126,7 +127,11 @@ export default function DataTable({
               ) : (
                 <tr>
                   <td colSpan={columns.length} className="px-4 py-10">
-                    <EmptyState title="Không tìm thấy bản ghi phù hợp" description="Thử đổi từ khóa tìm kiếm hoặc xóa bộ lọc." compact />
+                    <EmptyState
+                      title="Không tìm thấy bản ghi phù hợp"
+                      description="Thử đổi từ khóa tìm kiếm hoặc xóa bộ lọc."
+                      compact
+                    />
                   </td>
                 </tr>
               )}

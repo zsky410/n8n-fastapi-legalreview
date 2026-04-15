@@ -84,38 +84,38 @@ export const ADMIN_NAV_ITEMS = [
 export const STATUS_META = {
   uploaded: {
     label: "Đã tải lên",
-    className: "border-slate-200 bg-slate-100 text-slate-700",
+    className: "border-line bg-surface text-muted-strong",
   },
   extracting: {
     label: "Đang OCR",
-    className: "border-amber-200 bg-amber-50 text-amber-700",
+    className: "border-wise-warning/35 bg-yellow-50 text-amber-900",
   },
   ai_analyzing: {
     label: "AI đang phân tích",
-    className: "border-blue-200 bg-blue-50 text-blue-700",
+    className: "border-brand-500/35 bg-brand-50 text-brand-700",
   },
   auto_published: {
     label: "Đã công bố",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    className: "border-wise-positive/30 bg-wise-mint/80 text-wise-positive",
   },
   finalized: {
     label: "Hoàn tất",
-    className: "border-gold/30 bg-brand-50 text-ink",
+    className: "border-brand-500/40 bg-brand-50 text-brand-700",
   },
 };
 
 export const RISK_META = {
   low: {
     label: "Thấp",
-    className: "border-emerald-200 bg-emerald-50 text-emerald-700",
+    className: "border-wise-positive/30 bg-wise-mint/80 text-wise-positive",
   },
   medium: {
     label: "Trung bình",
-    className: "border-amber-200 bg-amber-50 text-amber-700",
+    className: "border-wise-warning/40 bg-yellow-50 text-amber-900",
   },
   high: {
     label: "Cao",
-    className: "border-rose-200 bg-rose-50 text-rose-700",
+    className: "border-wise-danger/35 bg-red-50 text-wise-danger",
   },
 };
 

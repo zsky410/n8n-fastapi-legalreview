@@ -83,7 +83,7 @@ export default function AdminDashboard() {
   return (
     <PageFrame segments={[ROLE_LABELS.admin, "Bảng điều khiển"]}>
     <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-brand-50">
+      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-warm-50">
         <CardContent className="space-y-4 p-6">
           <div>
             <h2 className="text-3xl font-semibold text-ink">Bảng điều hành vận hành</h2>
@@ -115,16 +115,16 @@ export default function AdminDashboard() {
             {totals.total ? (
               <div className="space-y-4">
                 {[
-                  { label: "Thấp", value: riskDistribution.low, color: "bg-emerald-500" },
-                  { label: "Trung bình", value: riskDistribution.medium, color: "bg-amber-500" },
-                  { label: "Cao", value: riskDistribution.high, color: "bg-rose-500" },
+                  { label: "Thấp", value: riskDistribution.low, color: "bg-wise-positive" },
+                  { label: "Trung bình", value: riskDistribution.medium, color: "bg-wise-warning" },
+                  { label: "Cao", value: riskDistribution.high, color: "bg-wise-danger" },
                 ].map((item) => (
                   <div key={item.label} className="space-y-2">
                     <div className="flex items-center justify-between text-sm text-muted">
                       <span>{item.label}</span>
                       <span>{item.value}</span>
                     </div>
-                    <div className="h-3 rounded-full bg-[#f4f4f5]">
+                    <div className="h-3 rounded-full bg-warm-50">
                       <div className={`h-3 rounded-full ${item.color}`} style={{ width: `${toPercent(item.value)}%` }} />
                     </div>
                   </div>
@@ -144,8 +144,8 @@ export default function AdminDashboard() {
                 {statusDistribution.map((item) => (
                   <div key={item.key} className="grid grid-cols-[150px_minmax(0,1fr)_40px] items-center gap-3 text-sm">
                     <span className="text-muted">{item.label}</span>
-                    <div className="h-3 rounded-full bg-[#f4f4f5]">
-                      <div className="h-3 rounded-full bg-sky-500" style={{ width: `${toPercent(item.count)}%` }} />
+                    <div className="h-3 rounded-full bg-warm-50">
+                      <div className="h-3 rounded-full bg-brand-500" style={{ width: `${toPercent(item.count)}%` }} />
                     </div>
                     <span className="text-right text-muted">{item.count}</span>
                   </div>

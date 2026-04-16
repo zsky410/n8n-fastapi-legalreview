@@ -177,10 +177,10 @@ export default function OperationsLog() {
   return (
     <PageFrame segments={[ROLE_LABELS.admin, "Nhật ký vận hành"]}>
     <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-warm-50">
+      <Card className="overflow-hidden bg-gradient-to-br from-[#fffefa] via-[#fffefa] to-warm-50">
         <CardContent className="space-y-4 p-6">
           <div>
-            <h2 className="text-3xl font-semibold text-ink">Nhật ký hoạt động và tiến trình xử lý tự động.</h2>
+            <h2 className="legal-display text-3xl font-semibold text-ink">Nhật ký hoạt động và tiến trình xử lý tự động.</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
               Theo dõi lịch sử thao tác, lần chạy tự động và từng bước xử lý để nắm rõ luồng vận hành của hệ thống.
             </p>
@@ -197,7 +197,7 @@ export default function OperationsLog() {
         <Card>
           <CardContent className="space-y-4 p-6">
             <div>
-              <h3 className="text-xl font-semibold text-ink">Nhật ký kiểm toán</h3>
+              <h3 className="legal-display text-xl font-semibold text-ink">Nhật ký kiểm toán</h3>
               <p className="text-sm text-muted">Lọc theo loại sự kiện, mã hồ sơ hoặc người dùng để xem lịch sử xử lý.</p>
             </div>
             <div className="grid gap-3 md:grid-cols-5">
@@ -247,7 +247,7 @@ export default function OperationsLog() {
           <Card>
             <CardContent className="space-y-4 p-6">
               <div>
-                <h3 className="text-xl font-semibold text-ink">Lượt chạy tự động</h3>
+                <h3 className="legal-display text-xl font-semibold text-ink">Lượt chạy tự động</h3>
                 <p className="text-sm text-muted">Chọn một lượt chạy để xem trạng thái, thời lượng và tiến độ từng bước.</p>
               </div>
               <div className="grid gap-3 md:grid-cols-4">

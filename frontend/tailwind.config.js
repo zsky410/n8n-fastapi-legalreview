@@ -4,19 +4,19 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: "#0e0f0c",
-        muted: "#868685",
+        ink: "#17130f",
+        muted: "#5c554c",
         "muted-strong": "#454745",
-        line: "rgba(14, 15, 12, 0.12)",
+        line: "rgba(23, 19, 15, 0.12)",
         surface: "#e8ebe6",
         brand: {
-          50: "#e2f6d5",
-          100: "#cdffad",
-          200: "rgba(22, 51, 0, 0.08)",
-          500: "#9fe870",
-          600: "#9fe870",
-          700: "#163300",
-          foreground: "#163300",
+          50: "#fff4ef",
+          100: "#ffe8dd",
+          200: "rgba(122, 31, 43, 0.08)",
+          500: "#7a1f2b",
+          600: "#641923",
+          700: "#7a1f2b",
+          foreground: "#fffefa",
         },
         wise: {
           lime: "#9fe870",
@@ -33,7 +33,7 @@ export default {
           300: "#868685",
           900: "#0e0f0c",
         },
-        gold: "#9fe870",
+        gold: "#b38a2e",
       },
       fontFamily: {
         sans: ["Inter", "Helvetica", "Arial", "sans-serif"],

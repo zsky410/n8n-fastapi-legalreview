@@ -185,10 +185,10 @@ export default function RoutingRules() {
     <Fragment>
     <PageFrame segments={[ROLE_LABELS.admin, "Luật định tuyến"]}>
     <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-warm-50">
+      <Card className="overflow-hidden bg-gradient-to-br from-[#fffefa] via-[#fffefa] to-warm-50">
         <CardContent className="space-y-4 p-6">
           <div>
-            <h2 className="text-3xl font-semibold text-ink">Quản lý luật định tuyến cho workflow full-auto.</h2>
+            <h2 className="legal-display text-3xl font-semibold text-ink">Quản lý luật định tuyến cho workflow full-auto.</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
               Thêm, sửa hoặc tạm tắt các luật tự động để phân luồng hồ sơ theo mức độ rủi ro và chất lượng dữ liệu.
             </p>
@@ -200,7 +200,7 @@ export default function RoutingRules() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-ink">Luật định tuyến</h3>
+              <h3 className="legal-display text-xl font-semibold text-ink">Luật định tuyến</h3>
               <p className="text-sm text-muted">Các thay đổi được giữ lại trên trình duyệt hiện tại để bạn kiểm tra nhanh nhiều kịch bản xử lý.</p>
             </div>
             <Button

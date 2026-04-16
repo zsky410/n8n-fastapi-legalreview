@@ -9,7 +9,7 @@ export default function Select({ className, label, options = [], ...props }) {
       <span className="relative">
         <select
           className={cn(
-            "min-h-11 w-full appearance-none rounded-[10px] border border-line bg-white px-3 py-2 pr-11 text-lg text-ink outline-none transition focus-visible:border-muted-strong focus-visible:shadow-[inset_0_0_0_1px_rgb(134,134,133)]",
+            "min-h-11 w-full appearance-none rounded-[10px] border border-line bg-[#fffefa] px-3 py-2 pr-11 text-lg text-ink outline-none transition focus-visible:border-muted-strong focus-visible:shadow-[inset_0_0_0_1px_rgb(134,134,133)]",
             className,
           )}
           {...props}

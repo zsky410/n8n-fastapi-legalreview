@@ -136,7 +136,7 @@ export default function ClientDashboard() {
 
         <section className="flex flex-wrap items-center justify-between gap-4 px-1">
           <div>
-            <h2 className="text-2xl font-semibold text-ink">Hồ sơ của tôi</h2>
+            <h2 className="legal-display text-2xl font-semibold text-ink">Hồ sơ của tôi</h2>
             <p className="mt-2 text-sm text-muted">Theo dõi trạng thái xử lý, mức rủi ro và mở nhanh từng hồ sơ từ một bảng tổng hợp duy nhất.</p>
           </div>
           <Link
@@ -150,7 +150,7 @@ export default function ClientDashboard() {
 
         <Card className="p-6">
           <div className="space-y-6">
-            <div className="overflow-hidden rounded-card border border-line bg-white shadow-ring">
+            <div className="overflow-hidden rounded-card border border-line bg-[#fffefa] shadow-ring">
               <div className="grid gap-px bg-line md:grid-cols-2 xl:grid-cols-4">
                 {stats.map((stat) => (
                   <div key={stat.label} className={`min-h-[120px] px-5 py-5 ${statToneClasses[stat.tone]}`}>
@@ -163,7 +163,7 @@ export default function ClientDashboard() {
 
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h3 className="text-xl font-semibold text-ink">Danh sách hồ sơ</h3>
+                <h3 className="legal-display text-xl font-semibold text-ink">Danh sách hồ sơ</h3>
                 <p className="text-sm text-muted">Lọc nhanh theo mức độ ưu tiên xử lý và mở ngay hồ sơ cần theo dõi.</p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -175,7 +175,7 @@ export default function ClientDashboard() {
                     className={`motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:scale-105 rounded-full px-4 py-2 text-base font-semibold transition ${
                       activeFilter === filter.value
                         ? "!bg-brand-500 text-brand-foreground shadow-ring"
-                        : "border border-line bg-white text-muted hover:border-brand-500/40 hover:bg-brand-200/50 hover:text-ink"
+                        : "border border-line bg-[#fffefa] text-muted hover:border-brand-500/40 hover:bg-brand-200/50 hover:text-ink"
                     }`}
                   >
                     {filter.label}

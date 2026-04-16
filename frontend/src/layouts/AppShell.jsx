@@ -32,7 +32,7 @@ function SidebarNav({ collapsed, items, onNavigate }) {
               cn(
                 "group flex items-center rounded-full text-lg font-semibold transition",
                 collapsed ? "h-11 w-11 justify-center px-0 py-0" : "gap-3 px-4 py-3",
-                isActive ? "bg-brand-50 text-brand-700 shadow-ring" : "text-muted hover:bg-[rgba(211,242,192,0.4)] hover:text-ink",
+                isActive ? "bg-brand-50 text-brand-700 shadow-ring" : "text-muted hover:bg-[rgba(122,31,43,0.08)] hover:text-ink",
               )
             }
             title={collapsed ? item.label : undefined}
@@ -121,7 +121,7 @@ export default function AppShell({ children, role }) {
   }
 
   return (
-    <div className="min-h-screen bg-white px-3 py-3 lg:px-6 lg:py-5">
+    <div className="min-h-screen bg-[#fbfaf6] px-3 py-3 text-ink legal-page lg:px-6 lg:py-5">
       <div className="mb-4 flex items-center justify-between">
         <Button
           variant="secondary"
@@ -160,7 +160,7 @@ export default function AppShell({ children, role }) {
                   variant="ghost"
                   size="sm"
                   aria-label="Đóng sidebar"
-                  className="absolute right-4 top-4 h-9 w-9 rounded-full bg-white px-0"
+                  className="absolute right-4 top-4 h-9 w-9 rounded-full bg-[#fffefa] px-0"
                   onClick={() => setIsMobileSidebarOpen(false)}
                 >
                   <X className="h-4 w-4" />

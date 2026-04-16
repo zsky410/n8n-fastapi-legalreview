@@ -205,7 +205,7 @@ export default function CreateCase() {
         <form onSubmit={handleSubmit}>
           <Card>
             <CardContent className="space-y-5 p-6">
-              <h3 className="text-lg font-semibold text-ink">Bước 1: Thông tin cơ bản</h3>
+              <h3 className="legal-display text-lg font-semibold text-ink">Bước 1: Thông tin cơ bản</h3>
               <div className="grid gap-4 lg:grid-cols-2">
                 <Input
                   label="Tên vụ việc"
@@ -249,7 +249,7 @@ export default function CreateCase() {
                 placeholder={isOcrRunning ? "Hệ thống đang đọc nội dung từ tài liệu..." : "Nội dung từ tài liệu sẽ xuất hiện tại đây để bạn kiểm tra lại trước khi gửi."}
               />
 
-              <h3 className="text-lg font-semibold text-ink">Bước 2: Upload tài liệu</h3>
+              <h3 className="legal-display text-lg font-semibold text-ink">Bước 2: Upload tài liệu</h3>
               <FileUpload files={files} onFilesChange={handleFilesChange} label="Tài liệu đính kèm" />
               {fileImportHint ? <p className="text-sm text-muted">{fileImportHint}</p> : null}
 

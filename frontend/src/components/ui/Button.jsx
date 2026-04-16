@@ -3,10 +3,10 @@ import Spinner from "./Spinner.jsx";
 
 const variantClasses = {
   primary:
-    "bg-brand-500 text-brand-foreground shadow-ring hover:bg-brand-500 focus-visible:ring-2 focus-visible:ring-wise-forest/40 focus-visible:ring-offset-2",
+    "bg-brand-500 text-brand-foreground shadow-ring hover:bg-brand-600 focus-visible:ring-2 focus-visible:ring-brand-700/30 focus-visible:ring-offset-2",
   secondary:
-    "bg-brand-200 text-ink shadow-ring hover:bg-[rgba(22,51,0,0.12)] focus-visible:ring-2 focus-visible:ring-wise-forest/25 focus-visible:ring-offset-2",
-  ghost: "bg-transparent text-ink shadow-none hover:bg-brand-200/80 focus-visible:ring-2 focus-visible:ring-wise-forest/25 focus-visible:ring-offset-2",
+    "bg-brand-200 text-ink shadow-ring hover:bg-brand-200 focus-visible:ring-2 focus-visible:ring-brand-700/25 focus-visible:ring-offset-2",
+  ghost: "bg-transparent text-ink shadow-none hover:bg-brand-200/80 focus-visible:ring-2 focus-visible:ring-brand-700/25 focus-visible:ring-offset-2",
   dark: "bg-warm-900 text-white shadow-ring hover:bg-warm-900 focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2",
 };
 

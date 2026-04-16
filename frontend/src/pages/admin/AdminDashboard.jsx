@@ -83,10 +83,10 @@ export default function AdminDashboard() {
   return (
     <PageFrame segments={[ROLE_LABELS.admin, "Bảng điều khiển"]}>
     <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-warm-50">
+      <Card className="overflow-hidden bg-gradient-to-br from-[#fffefa] via-[#fffefa] to-warm-50">
         <CardContent className="space-y-4 p-6">
           <div>
-            <h2 className="text-3xl font-semibold text-ink">Bảng điều hành vận hành</h2>
+            <h2 className="legal-display text-3xl font-semibold text-ink">Bảng điều hành vận hành</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
               Theo dõi nhanh các chỉ số chính, phân bố rủi ro và danh sách hồ sơ mới nhất trong hệ thống.
             </p>
@@ -161,7 +161,7 @@ export default function AdminDashboard() {
       <Card>
         <CardContent className="space-y-4 p-6">
           <div>
-            <h3 className="text-xl font-semibold text-ink">Hồ sơ mới cập nhật</h3>
+            <h3 className="legal-display text-xl font-semibold text-ink">Hồ sơ mới cập nhật</h3>
             <p className="text-sm text-muted">Bảng theo dõi nhanh mã hồ sơ, mức rủi ro, SLA và trạng thái xử lý.</p>
           </div>
           <DataTable

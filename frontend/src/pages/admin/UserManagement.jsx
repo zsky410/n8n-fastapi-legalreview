@@ -193,10 +193,10 @@ export default function UserManagement() {
     <Fragment>
     <PageFrame segments={[ROLE_LABELS.admin, "Người dùng"]}>
     <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-warm-50">
+      <Card className="overflow-hidden bg-gradient-to-br from-[#fffefa] via-[#fffefa] to-warm-50">
         <CardContent className="space-y-4 p-6">
           <div>
-            <h2 className="text-3xl font-semibold text-ink">Quản lý người dùng của khách hàng và quản trị viên.</h2>
+            <h2 className="legal-display text-3xl font-semibold text-ink">Quản lý người dùng của khách hàng và quản trị viên.</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
               Thêm hoặc cập nhật tài khoản vận hành, kiểm soát trạng thái truy cập và theo dõi lần hoạt động gần nhất của từng người dùng.
             </p>
@@ -208,7 +208,7 @@ export default function UserManagement() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-ink">Danh sách người dùng</h3>
+              <h3 className="legal-display text-xl font-semibold text-ink">Danh sách người dùng</h3>
               <p className="text-sm text-muted">Các thay đổi được giữ lại trên trình duyệt hiện tại để thuận tiện kiểm tra nhanh trong cùng phiên làm việc.</p>
             </div>
             <Button

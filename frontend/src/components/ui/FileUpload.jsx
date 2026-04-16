@@ -53,7 +53,7 @@ export default function FileUpload({
           "flex cursor-pointer flex-col items-center justify-center rounded-xl border border-dashed px-6 py-10 text-center transition",
           isDragging
             ? "border-brand-500 bg-brand-50"
-            : "border-line bg-white hover:border-brand-500 hover:bg-brand-50/60",
+            : "border-line bg-[#fffefa] hover:border-brand-500 hover:bg-brand-50/60",
         )}
       >
         <UploadCloud className="h-10 w-10 text-brand-700" />
@@ -75,7 +75,7 @@ export default function FileUpload({
           {files.map((file) => (
             <div
               key={`${file.name}-${file.size}`}
-              className="flex items-center justify-between rounded-xl border border-line bg-white px-4 py-3"
+              className="flex items-center justify-between rounded-xl border border-line bg-[#fffefa] px-4 py-3"
             >
               <div className="flex items-center gap-3">
                 <span className="rounded-full bg-brand-50 p-2 text-brand-700">

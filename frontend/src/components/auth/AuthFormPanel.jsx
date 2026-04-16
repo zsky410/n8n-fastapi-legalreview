@@ -142,7 +142,7 @@ export default function AuthFormPanel({
   return (
     <div className="space-y-6">
       <Tabs
-        className="bg-warm-50 shadow-none"
+        className="bg-slate-50 shadow-none"
         value={activeTab}
         onChange={handleTabValueChange}
         tabs={[
@@ -152,11 +152,12 @@ export default function AuthFormPanel({
       />
 
       {showHeading ? (
-        <div>
-          <h2 className="text-3xl font-semibold text-ink">
+        <div className="space-y-3">
+          <div className="portal-kicker">Client Access</div>
+          <h2 className="font-serif text-[2.2rem] leading-tight tracking-[-0.04em] text-ink">
             {activeTab === "login" ? "Đăng nhập khách hàng" : "Tạo tài khoản khách hàng"}
           </h2>
-          <p className="mt-2 text-sm leading-6 text-muted">
+          <p className="max-w-xl text-sm leading-6 text-muted">
             {activeTab === "login"
               ? "Dùng email và mật khẩu đã tạo để vào cổng khách hàng."
               : "Điền thông tin thật để tạo tài khoản khách hàng đầu tiên trên hệ thống."}
@@ -218,7 +219,7 @@ export default function AuthFormPanel({
           error={fieldErrors.password}
         />
 
-        {error ? <p className="rounded-sm bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
+        {error ? <p className="rounded-[18px] border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</p> : null}
 
         <Button type="submit" className="w-full" isLoading={isLoading}>
           <UserRound className="h-4 w-4" />
@@ -227,7 +228,7 @@ export default function AuthFormPanel({
       </form>
 
       {showInfoNote ? (
-        <div className="rounded-sm border border-line bg-warm-50 px-4 py-4 text-sm leading-6 text-muted">
+        <div className="rounded-[22px] border border-slate-200/80 bg-[#f8fafc] px-4 py-4 text-sm leading-6 text-muted">
           Luồng khách hàng đã dùng xác thực thật. Tài khoản `admin@demo.vn` vẫn được giữ riêng cho demo quản trị.
         </div>
       ) : null}

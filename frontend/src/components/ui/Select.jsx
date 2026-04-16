@@ -4,12 +4,12 @@ import { cn } from "../../lib/cn.js";
 
 export default function Select({ className, label, options = [], ...props }) {
   return (
-    <label className="flex w-full flex-col gap-2">
-      {label ? <span className="text-sm font-semibold text-ink">{label}</span> : null}
+    <label className="flex w-full flex-col gap-2.5">
+      {label ? <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-muted">{label}</span> : null}
       <span className="relative">
         <select
           className={cn(
-            "min-h-11 w-full appearance-none rounded-[10px] border border-line bg-white px-3 py-2 pr-11 text-lg text-ink outline-none transition focus-visible:border-muted-strong focus-visible:shadow-[inset_0_0_0_1px_rgb(134,134,133)]",
+            "min-h-[52px] w-full appearance-none rounded-[18px] border border-slate-200/80 bg-[#f8fafc] px-4 py-3 pr-12 text-[15px] leading-6 text-ink outline-none shadow-[inset_0_1px_0_rgba(255,255,255,0.75)] transition duration-200 focus-visible:border-brand-500/30 focus-visible:bg-white focus-visible:shadow-[0_0_0_4px_rgba(30,58,138,0.08)]",
             className,
           )}
           {...props}

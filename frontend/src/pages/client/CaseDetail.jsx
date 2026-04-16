@@ -132,14 +132,14 @@ export default function CaseDetail() {
         <CardContent className="grid gap-5 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div className="space-y-4">
             <div>
-              <h2 className="text-3xl font-semibold text-ink">{currentCase.title}</h2>
+              <h2 className="legal-display text-3xl font-semibold text-ink">{currentCase.title}</h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{currentCase.description}</p>
             </div>
             <div className="flex flex-wrap gap-3">
               <StatusBadge status={currentCase.status} />
               <RiskBadge level={currentCase.riskLevel} />
-              <Badge className="border-line bg-white/80 text-ink">{currentCase.documentName}</Badge>
-              <Badge className="border-line bg-white/80 text-ink">Ưu tiên {formatPriorityLabel(currentCase.priority)}</Badge>
+              <Badge className="border-line bg-[#fffefa]/80 text-ink">{currentCase.documentName}</Badge>
+              <Badge className="border-line bg-[#fffefa]/80 text-ink">Ưu tiên {formatPriorityLabel(currentCase.priority)}</Badge>
               {review?.needsAttention ? <Badge className="border-rose-200 bg-rose-50 text-rose-700">Cần chú ý</Badge> : null}
               {review?.qualityWarning ? <Badge className="border-amber-200 bg-amber-50 text-amber-700">Cảnh báo chất lượng</Badge> : null}
             </div>
@@ -205,7 +205,7 @@ export default function CaseDetail() {
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="text-xl font-semibold text-ink">Không thể chạy phân tích lúc này</h3>
+                <h3 className="legal-display text-xl font-semibold text-ink">Không thể chạy phân tích lúc này</h3>
                 <p className="mt-2 text-sm leading-6 text-muted">{reviewError}</p>
               </div>
               <Button onClick={handleRequestReview}>
@@ -222,7 +222,7 @@ export default function CaseDetail() {
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Kết quả phân tích</p>
-                      <h3 className="mt-2 text-2xl font-semibold text-ink">{review.docType}</h3>
+                      <h3 className="legal-display mt-2 text-2xl font-semibold text-ink">{review.docType}</h3>
                     </div>
                     <Button variant="secondary" onClick={handleRequestReview}>
                       <RefreshCcw className="h-4 w-4" />
@@ -248,13 +248,13 @@ export default function CaseDetail() {
                     </div>
                   </div>
 
-                  <div className="rounded-card-md border border-line bg-white px-5 py-5">
+                  <div className="rounded-card-md border border-line bg-[#fffefa] px-5 py-5">
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Tóm tắt hồ sơ</p>
                     <p className="mt-3 text-sm leading-7 text-muted">{review.summary}</p>
                   </div>
 
                   <div className="grid gap-4 lg:grid-cols-2">
-                    <div className="rounded-card-md border border-line bg-white px-5 py-5">
+                    <div className="rounded-card-md border border-line bg-[#fffefa] px-5 py-5">
                       <div className="flex items-center gap-2">
                         <ShieldAlert className="h-4 w-4 text-amber-500" />
                         <p className="text-sm font-semibold text-ink">Cảnh báo rủi ro</p>
@@ -274,7 +274,7 @@ export default function CaseDetail() {
                       </div>
                     </div>
 
-                    <div className="rounded-card-md border border-line bg-white px-5 py-5">
+                    <div className="rounded-card-md border border-line bg-[#fffefa] px-5 py-5">
                       <div className="flex items-center gap-2">
                         <FileSearch className="h-4 w-4 text-brand-700" />
                         <p className="text-sm font-semibold text-ink">Trường đã trích xuất</p>
@@ -345,7 +345,7 @@ export default function CaseDetail() {
           <CardContent className="space-y-4 p-6">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <h3 className="text-xl font-semibold text-ink">Trao đổi theo từng hồ sơ</h3>
+                <h3 className="legal-display text-xl font-semibold text-ink">Trao đổi theo từng hồ sơ</h3>
                 <p className="text-sm text-muted">Đặt câu hỏi theo đúng hồ sơ để làm rõ điều khoản, cảnh báo và hướng xử lý tiếp theo.</p>
               </div>
               <Badge className="border-line bg-warm-50 text-ink">

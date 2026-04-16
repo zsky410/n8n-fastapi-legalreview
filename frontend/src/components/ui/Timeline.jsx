@@ -13,7 +13,7 @@ export default function Timeline({ items = [] }) {
             </span>
             {index !== items.length - 1 ? <span className="mt-2 h-full w-px bg-line" /> : null}
           </div>
-          <div className="flex-1 rounded-card border border-line bg-white px-4 py-4 shadow-ring">
+          <div className="flex-1 rounded-card border border-line bg-[#fffefa] px-4 py-4 shadow-ring">
             <div className="flex flex-wrap items-center gap-3">
               <h3 className="text-sm font-semibold text-ink">{item.title}</h3>
               <span className="rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-muted shadow-ring">

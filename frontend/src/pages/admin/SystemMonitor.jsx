@@ -78,10 +78,10 @@ export default function SystemMonitor() {
   return (
     <PageFrame segments={[ROLE_LABELS.admin, "Hệ thống"]}>
     <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-warm-50">
+      <Card className="overflow-hidden bg-gradient-to-br from-[#fffefa] via-[#fffefa] to-warm-50">
         <CardContent className="space-y-4 p-6">
           <div>
-            <h2 className="text-3xl font-semibold text-ink">Theo dõi hệ thống</h2>
+            <h2 className="legal-display text-3xl font-semibold text-ink">Theo dõi hệ thống</h2>
             <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
               Theo dõi nhanh tình trạng dịch vụ, kết nối phụ thuộc và một số chỉ số vận hành quan trọng trong cùng một màn hình.
             </p>
@@ -104,7 +104,7 @@ export default function SystemMonitor() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-ink">Tình trạng dịch vụ</h3>
+              <h3 className="legal-display text-xl font-semibold text-ink">Tình trạng dịch vụ</h3>
               <p className="text-sm text-muted">Nguồn dữ liệu: `GET /health` từ FastAPI.</p>
             </div>
             <Button variant="secondary" onClick={loadHealth} disabled={isLoading}>
@@ -149,7 +149,7 @@ export default function SystemMonitor() {
         <CardContent className="space-y-4 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="text-xl font-semibold text-ink">Chỉ số vận hành và endpoint</h3>
+              <h3 className="legal-display text-xl font-semibold text-ink">Chỉ số vận hành và endpoint</h3>
               <p className="text-sm text-muted">Tổng hợp một số số liệu hữu ích để theo dõi khả năng phản hồi của hệ thống.</p>
             </div>
             <Badge className="border-amber-200 bg-amber-50 text-amber-700">Dữ liệu tham khảo</Badge>

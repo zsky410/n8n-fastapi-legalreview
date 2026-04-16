@@ -13,7 +13,7 @@ export default function EmptyState({
       className={
         compact
           ? "text-center"
-          : "flex flex-col items-center rounded-card border border-dashed border-line bg-white px-6 py-12 text-center shadow-ring"
+          : "flex flex-col items-center rounded-card border border-dashed border-line bg-[#fffefa] px-6 py-12 text-center shadow-ring"
       }
     >
       <span className="inline-flex h-14 w-14 items-center justify-center rounded-full border border-brand-500/25 bg-brand-50 text-brand-700 shadow-ring">

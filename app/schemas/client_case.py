@@ -17,7 +17,7 @@ class ClientCaseCreateRequest(ApiBaseModel):
     description: str = Field(default="", max_length=4000)
     domain: str = Field(default="", max_length=120)
     priority: PriorityEnum = PriorityEnum.MEDIUM
-    extractedText: str = Field(min_length=1, max_length=50000)
+    extractedText: str = Field(min_length=1, max_length=120000)
     attachments: list[ClientCaseAttachment] = Field(default_factory=list)
     slaDueAt: str | None = None
 

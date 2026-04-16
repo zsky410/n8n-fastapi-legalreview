@@ -17,6 +17,7 @@ const DEFAULT_BASE_URL = "http://localhost:8080";
 const DEFAULT_N8N_BASE_URL = "http://localhost:5678";
 const DEFAULT_DISCLAIMER = "Kết quả AI chỉ có giá trị tham khảo, không thay thế tư vấn pháp lý chuyên nghiệp.";
 const REVIEW_MIN_TEXT_LENGTH = 50;
+const OCR_TEXT_LIMIT = 120000;
 const REVIEW_TRANSPORT_OPTIONS = ["api", "n8n"];
 
 function normalizeMode(mode) {
@@ -95,6 +96,14 @@ function normalizeDocumentOcrPayload(payload = {}, fallbackFile = null) {
   const extractedText = String(payload?.extractedText || "").trim();
   const fileName = payload?.fileName || fallbackFile?.name || "uploaded-document";
   const suggestedTitle = String(payload?.suggestedTitle || "").trim() || buildTemporaryCaseTitle({ fileName, extractedText });
+  const normalizeOptionalNumber = (value) => {
+    if (value === null || value === undefined || value === "") {
+      return null;
+    }
+
+    const numericValue = Number(value);
+    return Number.isFinite(numericValue) ? numericValue : null;
+  };
 
   return {
     fileName,
@@ -103,6 +112,10 @@ function normalizeDocumentOcrPayload(payload = {}, fallbackFile = null) {
     provider: payload?.provider || "unknown",
     source: payload?.source || "unknown",
     textLength: Number(payload?.textLength ?? extractedText.length),
+    pageCount: normalizeOptionalNumber(payload?.pageCount),
+    extractedPageCount: normalizeOptionalNumber(payload?.extractedPageCount),
+    emptyPageCount: normalizeOptionalNumber(payload?.emptyPageCount),
+    pageDetails: Array.isArray(payload?.pageDetails) ? payload.pageDetails : [],
     suggestedTitle,
     suggestionSource: payload?.suggestionSource || "heuristic",
     truncated: Boolean(payload?.truncated),
@@ -553,7 +566,7 @@ export async function extractDocumentText(file, language = "vi") {
         throw new Error("OCR thật cho PDF hoặc ảnh chỉ hoạt động khi frontend đang dùng API thật.");
       }
 
-      const extractedText = String(await file.text()).trim();
+      const extractedText = String(await file.text()).trim().slice(0, OCR_TEXT_LIMIT);
       return normalizeDocumentOcrPayload({
         fileName: file.name,
         mimeType: file.type || null,

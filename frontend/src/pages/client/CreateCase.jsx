@@ -15,6 +15,7 @@ import { formatPriorityLabel } from "../../lib/formatters.js";
 
 const TEXT_FILE_EXTENSIONS = new Set(["txt", "md", "markdown", "csv", "json", "xml", "html", "htm"]);
 const OCR_FILE_EXTENSIONS = new Set(["pdf", "docx", "png", "jpg", "jpeg", "webp", ...TEXT_FILE_EXTENSIONS]);
+const OCR_TEXT_LIMIT = 120000;
 
 function getFileExtension(fileName = "") {
   const parts = String(fileName).toLowerCase().split(".");
@@ -102,7 +103,7 @@ export default function CreateCase() {
 
     try {
       const response = await extractDocumentText(primaryFile, "vi");
-      const nextText = normalizeImportedText(response.extractedText).slice(0, 30000);
+      const nextText = normalizeImportedText(response.extractedText).slice(0, OCR_TEXT_LIMIT);
       const nextSuggestedTitle = normalizeImportedText(response.suggestedTitle || "").slice(0, 120);
 
       setExtractedText(nextText);
@@ -122,6 +123,9 @@ export default function CreateCase() {
             ? `${response.suggestionSource === "ai" ? "AI" : "Hệ thống"} đã tự điền lại tên vụ việc tạm thời theo nội dung tài liệu. Bạn có thể sửa lại nếu muốn.`
             : "",
           response.warning || "",
+          response.pageCount
+            ? `Đã nhận diện ${response.extractedPageCount || 0}/${response.pageCount} trang có nội dung OCR.`
+            : "",
         ]
           .filter(Boolean)
           .join(" "),

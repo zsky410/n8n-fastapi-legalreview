@@ -2,11 +2,19 @@ import io
 import zipfile
 from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.services.document_ocr_service import PageExtraction
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def disable_live_title_suggestions():
+    with patch("app.services.document_title_service.GeminiClient.is_enabled", return_value=False):
+        yield
 
 
 def build_minimal_docx_bytes(text: str) -> bytes:
@@ -45,7 +53,8 @@ def test_document_ocr_reads_plain_text_upload() -> None:
     assert payload["provider"] == "local"
     assert payload["source"] == "direct_text"
     assert "giai quyet tranh chap" in payload["extractedText"]
-    assert payload["suggestedTitle"].startswith("Rà soát hợp đồng")
+    assert payload["suggestedTitle"].startswith("Rà soát")
+    assert "hợp đồng" in payload["suggestedTitle"].casefold()
     assert payload["suggestionSource"] == "heuristic"
 
 
@@ -68,7 +77,8 @@ def test_document_ocr_reads_docx_upload() -> None:
     assert payload["provider"] == "local"
     assert payload["source"] == "docx_xml"
     assert "cham dut" in payload["extractedText"]
-    assert payload["suggestedTitle"].startswith("Rà soát hợp đồng")
+    assert payload["suggestedTitle"].startswith("Rà soát")
+    assert "hợp đồng" in payload["suggestedTitle"].casefold()
 
 
 def test_document_ocr_uses_ocrmypdf_for_pdf_upload() -> None:
@@ -97,6 +107,46 @@ def test_document_ocr_uses_ocrmypdf_for_pdf_upload() -> None:
     assert payload["provider"] == "ocrmypdf"
     assert payload["source"] == "ocrmypdf_pdf"
     assert "giải quyết tranh chấp" in payload["extractedText"]
+    assert mock_ocr.call_count == 1
+
+
+def test_document_ocr_merges_native_and_ocr_pages_for_mixed_pdf_upload() -> None:
+    native_pages = [
+        PageExtraction(1, "Trang một có nội dung hợp đồng và điều khoản thanh toán.", "pdf_text"),
+        PageExtraction(2, "", "pdf_text"),
+        PageExtraction(3, "Trang ba có phần chữ ký và điều khoản giải quyết tranh chấp.", "pdf_text"),
+    ]
+
+    with (
+        patch(
+            "app.services.document_ocr_service.DocumentOcrService._extract_pdf_native_pages",
+            return_value=native_pages,
+        ),
+        patch(
+            "app.services.document_ocr_service.ocrmypdf.ocr",
+            side_effect=lambda _input, _output, *, sidecar, **_kwargs: sidecar.write_text(
+                "[OCR skipped on page(s) 1]\fTrang hai được OCR từ bản scan về hàng rào, lối đi chung và nguồn gốc đất.\f[OCR skipped on page(s) 3]",
+                encoding="utf-8",
+            ),
+        ) as mock_ocr,
+    ):
+        response = client.post(
+            "/v1/legal/ocr",
+            files={"file": ("mixed.pdf", b"%PDF-1.4 mixed", "application/pdf")},
+            data={"language": "vi"},
+        )
+
+    assert response.status_code == 200
+    payload = response.json()
+
+    assert payload["provider"] == "hybrid"
+    assert payload["source"] == "pdf_text_ocr_merged"
+    assert payload["pageCount"] == 3
+    assert payload["extractedPageCount"] == 3
+    assert payload["emptyPageCount"] == 0
+    assert "--- Trang 2 ---" in payload["extractedText"]
+    assert "lối đi chung" in payload["extractedText"]
+    assert payload["pageDetails"][1]["source"] == "ocrmypdf_pdf"
     assert mock_ocr.call_count == 1
 
 

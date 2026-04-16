@@ -50,9 +50,9 @@ export default {
         deep: "rgba(14, 15, 12, 0.12) 0px 0px 0px 1px",
       },
       borderRadius: {
-        card: "16px",
-        "card-md": "30px",
-        "card-lg": "40px",
+        card: "14px",
+        "card-md": "20px",
+        "card-lg": "28px",
       },
       keyframes: {
         shimmer: {

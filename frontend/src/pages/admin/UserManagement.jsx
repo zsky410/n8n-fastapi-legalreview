@@ -11,7 +11,6 @@ import Modal from "../../components/ui/Modal.jsx";
 import Select from "../../components/ui/Select.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import { getUsers } from "../../lib/api.js";
-import { ROLE_LABELS } from "../../lib/constants.js";
 import { formatDateTime, formatRoleLabel } from "../../lib/formatters.js";
 import { mockUsers } from "../../lib/mockData.js";
 
@@ -191,24 +190,12 @@ export default function UserManagement() {
 
   return (
     <Fragment>
-    <PageFrame segments={[ROLE_LABELS.admin, "Người dùng"]}>
-    <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-[#fffefa] via-[#fffefa] to-warm-50">
-        <CardContent className="space-y-4 p-6">
-          <div>
-            <h2 className="legal-display text-3xl font-semibold text-ink">Quản lý người dùng của khách hàng và quản trị viên.</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-              Thêm hoặc cập nhật tài khoản vận hành, kiểm soát trạng thái truy cập và theo dõi lần hoạt động gần nhất của từng người dùng.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
+    <PageFrame title="Quản lý người dùng" description="Thêm hoặc cập nhật tài khoản, kiểm soát trạng thái truy cập và theo dõi hoạt động gần nhất.">
       <Card>
-        <CardContent className="space-y-4 p-6">
+        <CardContent className="space-y-5 p-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h3 className="legal-display text-xl font-semibold text-ink">Danh sách người dùng</h3>
+              <h3 className="text-lg font-semibold text-ink">Danh sách người dùng</h3>
               <p className="text-sm text-muted">Các thay đổi được giữ lại trên trình duyệt hiện tại để thuận tiện kiểm tra nhanh trong cùng phiên làm việc.</p>
             </div>
             <Button
@@ -238,21 +225,22 @@ export default function UserManagement() {
               emptyDescription="Admin có thể thêm client hoặc admin đầu tiên trực tiếp từ modal."
             />
           )}
-        </CardContent>
-      </Card>
 
-      <Card className="!bg-warm-900 !text-white">
-        <CardContent className="flex items-center gap-4 p-6">
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
-            <UserRound className="h-5 w-5" />
-          </span>
-          <div>
-            <p className="text-lg font-semibold">Chỉ quản lý 2 vai trò chính</p>
-            <p className="mt-1 text-sm text-slate-300">Gồm khách hàng và quản trị viên để giữ giao diện gọn và dễ vận hành.</p>
+          <div className="h-px w-full bg-line" aria-hidden />
+
+          <div className="rounded-card border border-white/10 bg-warm-900 px-5 py-4 text-white">
+            <div className="flex items-center gap-4">
+              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white">
+                <UserRound className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-lg font-semibold">Chỉ quản lý 2 vai trò chính</p>
+                <p className="mt-1 text-sm text-slate-300">Gồm khách hàng và quản trị viên để giữ giao diện gọn và dễ vận hành.</p>
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
-    </div>
     </PageFrame>
 
       <Modal

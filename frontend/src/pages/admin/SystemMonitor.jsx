@@ -9,7 +9,6 @@ import EmptyState from "../../components/ui/EmptyState.jsx";
 import KpiCard from "../../components/ui/KpiCard.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import { getHealth } from "../../lib/api.js";
-import { ROLE_LABELS } from "../../lib/constants.js";
 import { formatDateTime, formatHealthStatus } from "../../lib/formatters.js";
 
 const mockOpsMetrics = [
@@ -76,94 +75,85 @@ export default function SystemMonitor() {
   ];
 
   return (
-    <PageFrame segments={[ROLE_LABELS.admin, "Hệ thống"]}>
-    <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-[#fffefa] via-[#fffefa] to-warm-50">
-        <CardContent className="space-y-4 p-6">
-          <div>
-            <h2 className="legal-display text-3xl font-semibold text-ink">Theo dõi hệ thống</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-              Theo dõi nhanh tình trạng dịch vụ, kết nối phụ thuộc và một số chỉ số vận hành quan trọng trong cùng một màn hình.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-        {mockOpsMetrics.map((item, index) => (
-          <KpiCard
-            key={item.label}
-            label={item.label}
-            value={item.value}
-            variant={kpiVariants[index % kpiVariants.length]}
-          />
-        ))}
-      </div>
-
+    <PageFrame title="Theo dõi hệ thống" description="Tình trạng dịch vụ, kết nối phụ thuộc và chỉ số vận hành quan trọng.">
       <Card>
-        <CardContent className="space-y-4 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="legal-display text-xl font-semibold text-ink">Tình trạng dịch vụ</h3>
-              <p className="text-sm text-muted">Nguồn dữ liệu: `GET /health` từ FastAPI.</p>
-            </div>
-            <Button variant="secondary" onClick={loadHealth} disabled={isLoading}>
-              Làm mới trạng thái
-            </Button>
+        <CardContent className="space-y-6 p-6">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {mockOpsMetrics.map((item, index) => (
+              <KpiCard
+                key={item.label}
+                label={item.label}
+                value={item.value}
+                variant={kpiVariants[index % kpiVariants.length]}
+              />
+            ))}
           </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Spinner className="h-7 w-7 text-brand-700" />
-            </div>
-          ) : error ? (
-            <div className="space-y-3">
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
-              <Button variant="secondary" onClick={loadHealth}>
-                Thử lại
+          <div className="h-px w-full bg-line" aria-hidden />
+
+          <section className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-ink">Tình trạng dịch vụ</h3>
+                <p className="text-sm text-muted">Nguồn dữ liệu: `GET /health` từ FastAPI.</p>
+              </div>
+              <Button variant="secondary" onClick={loadHealth} disabled={isLoading}>
+                Làm mới trạng thái
               </Button>
             </div>
-          ) : health ? (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-line bg-warm-50 px-4 py-3 text-sm text-ink">
-                <p>Dịch vụ: {health.service || "legaldesk-fastapi"}</p>
-                <p>Trạng thái: {formatHealthStatus(health.status)}</p>
-                <p>Môi trường: {health.environment || "-"}</p>
-                <p>Thời gian: {formatDateTime(health.timestamp)}</p>
-              </div>
-              <DataTable
-                columns={dependencyColumns}
-                rows={dependencyRows}
-                searchKeys={["service", "status", "detail"]}
-                emptyTitle="Không có trạng thái phụ thuộc"
-                emptyDescription="Dữ liệu health chưa trả về danh sách phụ thuộc."
-              />
-            </div>
-          ) : (
-            <EmptyState title="Không có dữ liệu health" description="Bấm làm mới để tải lại trạng thái hệ thống." />
-          )}
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardContent className="space-y-4 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="legal-display text-xl font-semibold text-ink">Chỉ số vận hành và endpoint</h3>
-              <p className="text-sm text-muted">Tổng hợp một số số liệu hữu ích để theo dõi khả năng phản hồi của hệ thống.</p>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-12">
+                <Spinner className="h-7 w-7 text-brand-700" />
+              </div>
+            ) : error ? (
+              <div className="space-y-3">
+                <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{error}</div>
+                <Button variant="secondary" onClick={loadHealth}>
+                  Thử lại
+                </Button>
+              </div>
+            ) : health ? (
+              <div className="space-y-4">
+                <div className="rounded-card border border-line bg-[#f5f5f3] px-4 py-3 text-sm text-ink">
+                  <p>Dịch vụ: {health.service || "legaldesk-fastapi"}</p>
+                  <p>Trạng thái: {formatHealthStatus(health.status)}</p>
+                  <p>Môi trường: {health.environment || "-"}</p>
+                  <p>Thời gian: {formatDateTime(health.timestamp)}</p>
+                </div>
+                <DataTable
+                  columns={dependencyColumns}
+                  rows={dependencyRows}
+                  searchKeys={["service", "status", "detail"]}
+                  emptyTitle="Không có trạng thái phụ thuộc"
+                  emptyDescription="Dữ liệu health chưa trả về danh sách phụ thuộc."
+                />
+              </div>
+            ) : (
+              <EmptyState title="Không có dữ liệu health" description="Bấm làm mới để tải lại trạng thái hệ thống." />
+            )}
+          </section>
+
+          <div className="h-px w-full bg-line" aria-hidden />
+
+          <section className="space-y-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h3 className="text-lg font-semibold text-ink">Chỉ số vận hành và endpoint</h3>
+                <p className="text-sm text-muted">Tổng hợp một số số liệu hữu ích để theo dõi khả năng phản hồi của hệ thống.</p>
+              </div>
+              <Badge className="border-amber-200 bg-amber-50 text-amber-700">Dữ liệu tham khảo</Badge>
             </div>
-            <Badge className="border-amber-200 bg-amber-50 text-amber-700">Dữ liệu tham khảo</Badge>
-          </div>
-          <DataTable
-            columns={endpointColumns}
-            rows={mockEndpointRows}
-            searchKeys={["endpoint", "status", "latency", "note"]}
-            emptyTitle="Chưa có endpoint status"
-            emptyDescription="Bảng sẽ hiển thị thêm dữ liệu khi hệ thống ghi nhận được nhiều lần gọi hơn."
-          />
+            <DataTable
+              columns={endpointColumns}
+              rows={mockEndpointRows}
+              searchKeys={["endpoint", "status", "latency", "note"]}
+              emptyTitle="Chưa có endpoint status"
+              emptyDescription="Bảng sẽ hiển thị thêm dữ liệu khi hệ thống ghi nhận được nhiều lần gọi hơn."
+            />
+          </section>
         </CardContent>
       </Card>
-    </div>
     </PageFrame>
   );
 }

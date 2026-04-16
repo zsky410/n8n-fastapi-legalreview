@@ -14,7 +14,7 @@ import Tabs, { TabPanel } from "../../components/ui/Tabs.jsx";
 import Timeline from "../../components/ui/Timeline.jsx";
 import { useCases } from "../../hooks/useCases.js";
 import { useChat } from "../../hooks/useChat.js";
-import { PIPELINE_STAGES, ROLE_LABELS } from "../../lib/constants.js";
+import { PIPELINE_STAGES } from "../../lib/constants.js";
 import { formatConfidence, formatDateTime, formatPriorityLabel, formatReviewAction, formatRiskLevelLabel, formatSlaLabel, formatStageLabel } from "../../lib/formatters.js";
 import { reviewLegal } from "../../lib/api.js";
 
@@ -100,7 +100,7 @@ export default function CaseDetail() {
 
   if (!isReady) {
     return (
-      <PageFrame segments={[ROLE_LABELS.client, "Chi tiết hồ sơ"]}>
+      <PageFrame title="Chi tiết hồ sơ">
         <Card>
           <CardContent className="p-6">
             <div className="loading-shimmer h-36 rounded-[24px]" />
@@ -112,7 +112,7 @@ export default function CaseDetail() {
 
   if (!currentCase) {
     return (
-      <PageFrame segments={[ROLE_LABELS.client, "Chi tiết hồ sơ"]}>
+      <PageFrame title="Chi tiết hồ sơ">
         <EmptyState
           title="Không tìm thấy hồ sơ"
           description={
@@ -126,59 +126,56 @@ export default function CaseDetail() {
   }
 
   return (
-    <PageFrame segments={[ROLE_LABELS.client, "Chi tiết hồ sơ"]}>
-    <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-white via-white to-warm-50">
-        <CardContent className="grid gap-5 p-6 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="space-y-4">
-            <div>
-              <h2 className="legal-display text-3xl font-semibold text-ink">{currentCase.title}</h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-muted">{currentCase.description}</p>
+    <PageFrame title={currentCase.title} description={currentCase.description}>
+      <Card>
+        <CardContent className="space-y-6 p-6">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+            <div className="rounded-card border border-line bg-[#f5f5f3] p-4">
+              <div className="flex flex-wrap gap-3">
+                <StatusBadge status={currentCase.status} />
+                <RiskBadge level={currentCase.riskLevel} />
+                <Badge className="border-line bg-white/80 text-ink">{currentCase.documentName}</Badge>
+                <Badge className="border-line bg-white/80 text-ink">Ưu tiên {formatPriorityLabel(currentCase.priority)}</Badge>
+                {review?.needsAttention ? <Badge className="border-rose-200 bg-rose-50 text-rose-700">Cần chú ý</Badge> : null}
+                {review?.qualityWarning ? <Badge className="border-amber-200 bg-amber-50 text-amber-700">Cảnh báo chất lượng</Badge> : null}
+              </div>
             </div>
-            <div className="flex flex-wrap gap-3">
-              <StatusBadge status={currentCase.status} />
-              <RiskBadge level={currentCase.riskLevel} />
-              <Badge className="border-line bg-[#fffefa]/80 text-ink">{currentCase.documentName}</Badge>
-              <Badge className="border-line bg-[#fffefa]/80 text-ink">Ưu tiên {formatPriorityLabel(currentCase.priority)}</Badge>
-              {review?.needsAttention ? <Badge className="border-rose-200 bg-rose-50 text-rose-700">Cần chú ý</Badge> : null}
-              {review?.qualityWarning ? <Badge className="border-amber-200 bg-amber-50 text-amber-700">Cảnh báo chất lượng</Badge> : null}
-            </div>
-          </div>
 
-          <div className="rounded-card-md border border-line bg-warm-900 p-5 text-white">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Tóm tắt nhanh</p>
-            <div className="mt-4 grid gap-4">
-              <div>
-                <p className="text-sm text-white/60">Mã hồ sơ</p>
-                <p className="mt-1 text-lg font-semibold">{currentCase.id}</p>
-              </div>
-              <div>
-                <p className="text-sm text-white/60">Ngày tạo</p>
-                <p className="mt-1 text-sm font-medium text-slate-200">{formatDateTime(currentCase.createdAt)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-white/60">Cập nhật</p>
-                <p className="mt-1 text-sm font-medium text-slate-200">{formatDateTime(currentCase.updatedAt)}</p>
-              </div>
-              <div>
-                <p className="text-sm text-white/60">SLA</p>
-                <p className="mt-1 text-sm font-medium text-slate-200">{formatSlaLabel(currentCase.slaDueAt)}</p>
+            <div className="rounded-card border border-white/10 bg-warm-900 p-5 text-white">
+              <p className="text-xs font-semibold uppercase tracking-[0.2em] text-white/50">Tóm tắt nhanh</p>
+              <div className="mt-4 grid gap-4">
+                <div>
+                  <p className="text-sm text-white/60">Mã hồ sơ</p>
+                  <p className="mt-1 text-lg font-semibold">{currentCase.id}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-white/60">Ngày tạo</p>
+                  <p className="mt-1 text-sm font-medium text-slate-200">{formatDateTime(currentCase.createdAt)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-white/60">Cập nhật</p>
+                  <p className="mt-1 text-sm font-medium text-slate-200">{formatDateTime(currentCase.updatedAt)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-white/60">SLA</p>
+                  <p className="mt-1 text-sm font-medium text-slate-200">{formatSlaLabel(currentCase.slaDueAt)}</p>
+                </div>
               </div>
             </div>
           </div>
-        </CardContent>
-      </Card>
 
-      <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-        Kết quả AI chỉ có giá trị tham khảo, không thay thế tư vấn pháp lý chuyên nghiệp.
-      </div>
+          <div className="rounded-card border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+            Kết quả AI chỉ có giá trị tham khảo, không thay thế tư vấn pháp lý chuyên nghiệp.
+          </div>
 
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Tabs tabs={tabItems} value={activeTab} onChange={setActiveTab} />
-        <p className="text-sm text-muted">Lĩnh vực: {currentCase.domain || "Chưa gắn lĩnh vực"}</p>
-      </div>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Tabs tabs={tabItems} value={activeTab} onChange={setActiveTab} />
+            <p className="text-sm text-muted">Lĩnh vực: {currentCase.domain || "Chưa gắn lĩnh vực"}</p>
+          </div>
 
-      <TabPanel activeValue={activeTab} value="overview">
+          <div className="h-px w-full bg-line" aria-hidden />
+
+          <TabPanel activeValue={activeTab} value="overview">
         {isReviewLoading ? (
           <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
             <Card>
@@ -205,7 +202,7 @@ export default function CaseDetail() {
                 <AlertTriangle className="h-5 w-5" />
               </div>
               <div>
-                <h3 className="legal-display text-xl font-semibold text-ink">Không thể chạy phân tích lúc này</h3>
+                <h3 className="text-lg font-semibold text-ink">Không thể chạy phân tích lúc này</h3>
                 <p className="mt-2 text-sm leading-6 text-muted">{reviewError}</p>
               </div>
               <Button onClick={handleRequestReview}>
@@ -222,7 +219,7 @@ export default function CaseDetail() {
                   <div className="flex flex-wrap items-start justify-between gap-4">
                     <div>
                       <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Kết quả phân tích</p>
-                      <h3 className="legal-display mt-2 text-2xl font-semibold text-ink">{review.docType}</h3>
+                      <h3 className="mt-2 text-xl font-semibold text-ink">{review.docType}</h3>
                     </div>
                     <Button variant="secondary" onClick={handleRequestReview}>
                       <RefreshCcw className="h-4 w-4" />
@@ -248,13 +245,13 @@ export default function CaseDetail() {
                     </div>
                   </div>
 
-                  <div className="rounded-card-md border border-line bg-[#fffefa] px-5 py-5">
+                  <div className="rounded-card-md border border-line bg-white px-5 py-5">
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-muted">Tóm tắt hồ sơ</p>
                     <p className="mt-3 text-sm leading-7 text-muted">{review.summary}</p>
                   </div>
 
                   <div className="grid gap-4 lg:grid-cols-2">
-                    <div className="rounded-card-md border border-line bg-[#fffefa] px-5 py-5">
+                    <div className="rounded-card-md border border-line bg-white px-5 py-5">
                       <div className="flex items-center gap-2">
                         <ShieldAlert className="h-4 w-4 text-amber-500" />
                         <p className="text-sm font-semibold text-ink">Cảnh báo rủi ro</p>
@@ -274,7 +271,7 @@ export default function CaseDetail() {
                       </div>
                     </div>
 
-                    <div className="rounded-card-md border border-line bg-[#fffefa] px-5 py-5">
+                    <div className="rounded-card-md border border-line bg-white px-5 py-5">
                       <div className="flex items-center gap-2">
                         <FileSearch className="h-4 w-4 text-brand-700" />
                         <p className="text-sm font-semibold text-ink">Trường đã trích xuất</p>
@@ -338,112 +335,107 @@ export default function CaseDetail() {
             }}
           />
         )}
-      </TabPanel>
+          </TabPanel>
 
-      <TabPanel activeValue={activeTab} value="chat">
-        <Card>
-          <CardContent className="space-y-4 p-6">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h3 className="legal-display text-xl font-semibold text-ink">Trao đổi theo từng hồ sơ</h3>
-                <p className="text-sm text-muted">Đặt câu hỏi theo đúng hồ sơ để làm rõ điều khoản, cảnh báo và hướng xử lý tiếp theo.</p>
-              </div>
-              <Badge className="border-line bg-warm-50 text-ink">
-                <Bot className="mr-1 h-3.5 w-3.5" />
-                {messages.length} tin nhắn
-              </Badge>
-            </div>
-            <ChatPanel
-              messages={messages}
-              error={chatError}
-              isSending={isSending}
-              onSubmit={sendMessage}
-              placeholder={`Hỏi thêm về ${currentCase.title.toLowerCase()}...`}
-              hint="Mỗi tin nhắn sẽ được lưu theo hồ sơ để bạn dễ theo dõi lại nội dung trao đổi. Câu hỏi nên từ 3 ký tự trở lên."
-            />
-          </CardContent>
-        </Card>
-      </TabPanel>
-
-      <TabPanel activeValue={activeTab} value="timeline">
-        <div className="space-y-5">
-          <div className="grid gap-4 lg:grid-cols-3">
-            <Card>
-              <CardContent className="space-y-2 p-6">
-                <p className="text-sm text-muted">Stage hiện tại</p>
-                <p className="text-2xl font-semibold text-ink">{currentStage}</p>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="space-y-2 p-6">
-                <p className="text-sm text-muted">SLA</p>
-                <p className="text-2xl font-semibold text-ink">{formatSlaLabel(currentCase.slaDueAt)}</p>
-                <Badge
-                  className={
-                    slaStatus === "overdue"
-                      ? "border-rose-200 bg-rose-50 text-rose-700"
-                      : slaStatus === "at_risk"
-                        ? "border-amber-200 bg-amber-50 text-amber-700"
-                        : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  }
-                >
-                  {slaStatus === "overdue" ? "Quá hạn" : slaStatus === "at_risk" ? "Sắp đến hạn" : "Đúng hạn"}
+          <TabPanel activeValue={activeTab} value="chat">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h3 className="text-lg font-semibold text-ink">Trao đổi theo từng hồ sơ</h3>
+                  <p className="text-sm text-muted">Đặt câu hỏi theo đúng hồ sơ để làm rõ điều khoản, cảnh báo và hướng xử lý tiếp theo.</p>
+                </div>
+                <Badge className="border-line bg-[#f5f5f3] text-ink">
+                  <Bot className="mr-1 h-3.5 w-3.5" />
+                  {messages.length} tin nhắn
                 </Badge>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="space-y-2 p-6">
-                <p className="text-sm text-muted">Lần cập nhật cuối</p>
-                <p className="text-lg font-semibold text-ink">{formatDateTime(currentCase.updatedAt)}</p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <Card>
-            <CardContent className="space-y-4 p-6">
-              <div className="flex items-center gap-2">
-                <Clock3 className="h-4 w-4 text-brand-700" />
-                <p className="text-sm font-semibold text-ink">Tiến trình xử lý</p>
               </div>
-              <div className="grid gap-3 md:grid-cols-5">
-                {PIPELINE_STAGES.map((stage, index) => {
-                  const isCompleted = completedStageIndex >= index && completedStageIndex !== -1;
-                  return (
-                    <div
-                      key={stage}
-                      className={`rounded-[24px] border px-4 py-4 text-sm font-semibold transition ${
-                        isCompleted
-                          ? "border-brand-300 bg-brand-50 text-brand-700"
-                          : "border-line bg-slate-50 text-muted"
-                      }`}
-                    >
-                      {stage}
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="space-y-4 p-6">
-              <div>
-                <h3 className="text-xl font-semibold text-ink">Lịch sử xử lý</h3>
-                <p className="text-sm text-muted">Hồ sơ mới sẽ hiển thị trạng thái trống cho đến khi phân tích được chạy và tiến trình được cập nhật.</p>
-              </div>
-              {currentCase.timeline?.length ? (
-                <Timeline items={currentCase.timeline} />
-              ) : (
-                <EmptyState
-                  title="Chưa có mốc xử lý"
-                  description="Đây là trạng thái bình thường của hồ sơ mới. Hãy chạy phân tích AI ở tab Tổng quan để tạo các mốc tiến trình và cập nhật SLA."
+              <div className="rounded-card border border-line bg-[#f5f5f3] p-4">
+                <ChatPanel
+                  messages={messages}
+                  error={chatError}
+                  isSending={isSending}
+                  onSubmit={sendMessage}
+                  placeholder={`Hỏi thêm về ${currentCase.title.toLowerCase()}...`}
+                  hint="Mỗi tin nhắn sẽ được lưu theo hồ sơ để bạn dễ theo dõi lại nội dung trao đổi. Câu hỏi nên từ 3 ký tự trở lên."
                 />
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </TabPanel>
-    </div>
+              </div>
+            </div>
+          </TabPanel>
+
+          <TabPanel activeValue={activeTab} value="timeline">
+            <div className="space-y-5">
+              <div className="grid gap-4 lg:grid-cols-3">
+                <div className="rounded-card border border-line bg-[#f5f5f3] px-4 py-4">
+                  <p className="text-sm text-muted">Stage hiện tại</p>
+                  <p className="mt-2 text-2xl font-semibold text-ink">{currentStage}</p>
+                </div>
+
+                <div className="rounded-card border border-line bg-[#f5f5f3] px-4 py-4">
+                  <p className="text-sm text-muted">SLA</p>
+                  <p className="mt-2 text-2xl font-semibold text-ink">{formatSlaLabel(currentCase.slaDueAt)}</p>
+                  <div className="mt-3">
+                    <Badge
+                      className={
+                        slaStatus === "overdue"
+                          ? "border-rose-200 bg-rose-50 text-rose-700"
+                          : slaStatus === "at_risk"
+                            ? "border-amber-200 bg-amber-50 text-amber-700"
+                            : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                      }
+                    >
+                      {slaStatus === "overdue" ? "Quá hạn" : slaStatus === "at_risk" ? "Sắp đến hạn" : "Đúng hạn"}
+                    </Badge>
+                  </div>
+                </div>
+
+                <div className="rounded-card border border-line bg-[#f5f5f3] px-4 py-4">
+                  <p className="text-sm text-muted">Lần cập nhật cuối</p>
+                  <p className="mt-2 text-lg font-semibold text-ink">{formatDateTime(currentCase.updatedAt)}</p>
+                </div>
+              </div>
+
+              <div className="rounded-card border border-line bg-[#f5f5f3] p-5">
+                <div className="flex items-center gap-2">
+                  <Clock3 className="h-4 w-4 text-brand-700" />
+                  <p className="text-sm font-semibold text-ink">Tiến trình xử lý</p>
+                </div>
+                <div className="mt-4 grid gap-3 md:grid-cols-5">
+                  {PIPELINE_STAGES.map((stage, index) => {
+                    const isCompleted = completedStageIndex >= index && completedStageIndex !== -1;
+                    return (
+                      <div
+                        key={stage}
+                        className={`rounded-card border px-4 py-4 text-sm font-semibold ${
+                          isCompleted ? "border-brand-300 bg-brand-50 text-brand-700" : "border-line bg-white text-muted"
+                        }`}
+                      >
+                        {stage}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="rounded-card border border-line bg-[#f5f5f3] p-5">
+                <div>
+                  <h3 className="text-lg font-semibold text-ink">Lịch sử xử lý</h3>
+                  <p className="text-sm text-muted">Timeline sẽ dày hơn khi hồ sơ có thêm bước xử lý.</p>
+                </div>
+                <div className="mt-4">
+                  {currentCase.timeline?.length ? (
+                    <Timeline items={currentCase.timeline} />
+                  ) : (
+                    <EmptyState
+                      title="Chưa có mốc xử lý"
+                      description="Đây là trạng thái bình thường của hồ sơ mới. Hãy chạy phân tích AI ở tab Tổng quan để tạo các mốc tiến trình và cập nhật SLA."
+                    />
+                  )}
+                </div>
+              </div>
+            </div>
+          </TabPanel>
+        </CardContent>
+      </Card>
     </PageFrame>
   );
 }

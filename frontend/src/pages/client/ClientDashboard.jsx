@@ -10,7 +10,6 @@ import RiskBadge from "../../components/ui/RiskBadge.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import StatusBadge from "../../components/ui/StatusBadge.jsx";
 import { useCases } from "../../hooks/useCases.js";
-import { ROLE_LABELS } from "../../lib/constants.js";
 import { formatDateTime } from "../../lib/formatters.js";
 
 const filters = [
@@ -103,7 +102,7 @@ export default function ClientDashboard() {
 
   if (!isReady) {
     return (
-      <PageFrame segments={[ROLE_LABELS.client, "Tổng quan"]}>
+      <PageFrame title="Tổng quan">
         <div className="flex items-center justify-center py-16">
           <Spinner className="h-8 w-8 text-brand-700" />
         </div>
@@ -126,7 +125,19 @@ export default function ClientDashboard() {
   };
 
   return (
-    <PageFrame segments={[ROLE_LABELS.client, "Tổng quan"]}>
+    <PageFrame
+      title="Hồ sơ của tôi"
+      description="Theo dõi trạng thái xử lý, mức rủi ro và mở nhanh từng hồ sơ."
+      actions={
+        <Link
+          to="/client/cases/new"
+          className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm transition hover:bg-brand-600"
+        >
+          <FilePlus2 className="h-4 w-4" />
+          Tạo hồ sơ mới
+        </Link>
+      }
+    >
       <div className="space-y-6">
         {error ? (
           <div className="rounded-card border border-wise-danger/30 bg-red-50 px-4 py-3 text-sm text-wise-danger">
@@ -134,23 +145,9 @@ export default function ClientDashboard() {
           </div>
         ) : null}
 
-        <section className="flex flex-wrap items-center justify-between gap-4 px-1">
-          <div>
-            <h2 className="legal-display text-2xl font-semibold text-ink">Hồ sơ của tôi</h2>
-            <p className="mt-2 text-sm text-muted">Theo dõi trạng thái xử lý, mức rủi ro và mở nhanh từng hồ sơ từ một bảng tổng hợp duy nhất.</p>
-          </div>
-          <Link
-            to="/client/cases/new"
-            className="motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:scale-105 motion-safe:active:scale-95 inline-flex items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-base font-semibold text-brand-foreground shadow-ring"
-          >
-            <FilePlus2 className="h-4 w-4" />
-            Tạo hồ sơ mới
-          </Link>
-        </section>
-
         <Card className="p-6">
           <div className="space-y-6">
-            <div className="overflow-hidden rounded-card border border-line bg-[#fffefa] shadow-ring">
+            <div className="overflow-hidden rounded-card border border-line bg-white shadow-ring">
               <div className="grid gap-px bg-line md:grid-cols-2 xl:grid-cols-4">
                 {stats.map((stat) => (
                   <div key={stat.label} className={`min-h-[120px] px-5 py-5 ${statToneClasses[stat.tone]}`}>
@@ -163,7 +160,7 @@ export default function ClientDashboard() {
 
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
-                <h3 className="legal-display text-xl font-semibold text-ink">Danh sách hồ sơ</h3>
+                <h3 className="text-lg font-semibold text-ink">Danh sách hồ sơ</h3>
                 <p className="text-sm text-muted">Lọc nhanh theo mức độ ưu tiên xử lý và mở ngay hồ sơ cần theo dõi.</p>
               </div>
               <div className="flex flex-wrap gap-2">
@@ -172,10 +169,10 @@ export default function ClientDashboard() {
                     key={filter.value}
                     type="button"
                     onClick={() => setActiveFilter(filter.value)}
-                    className={`motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:scale-105 rounded-full px-4 py-2 text-base font-semibold transition ${
+                    className={`rounded-lg px-3.5 py-2 text-[13px] font-medium transition-colors ${
                       activeFilter === filter.value
-                        ? "!bg-brand-500 text-brand-foreground shadow-ring"
-                        : "border border-line bg-[#fffefa] text-muted hover:border-brand-500/40 hover:bg-brand-200/50 hover:text-ink"
+                        ? "bg-brand-500 text-brand-foreground shadow-sm"
+                        : "border border-line bg-white text-muted hover:bg-[#f5f5f3] hover:text-ink"
                     }`}
                   >
                     {filter.label}
@@ -202,7 +199,7 @@ export default function ClientDashboard() {
                 <div className="flex justify-center">
                   <Link
                     to="/client/cases/new"
-                    className="motion-safe:transition-transform motion-safe:duration-200 motion-safe:hover:scale-105 motion-safe:active:scale-95 inline-flex items-center gap-2 rounded-full bg-brand-500 px-5 py-2.5 text-base font-semibold text-brand-foreground shadow-ring"
+                    className="inline-flex items-center gap-2 rounded-lg bg-brand-500 px-4 py-2.5 text-sm font-semibold text-brand-foreground shadow-sm transition hover:bg-brand-600"
                   >
                     <FilePlus2 className="h-4 w-4" />
                     Tạo hồ sơ mới

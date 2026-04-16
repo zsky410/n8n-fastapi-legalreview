@@ -65,11 +65,11 @@ export default function DataTable({
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Tìm trong bảng"
-            className="h-11 w-full rounded-[10px] border border-line bg-[#fffefa] pl-11 pr-4 text-lg text-ink outline-none transition placeholder:text-muted focus-visible:border-muted-strong focus-visible:shadow-[inset_0_0_0_1px_rgb(134,134,133)]"
+            className="h-11 w-full rounded-[10px] border border-line bg-white pl-11 pr-4 text-lg text-ink outline-none transition placeholder:text-muted focus-visible:border-muted-strong focus-visible:shadow-[inset_0_0_0_1px_rgb(134,134,133)]"
           />
         </label>
       ) : null}
-      <div className={cn("overflow-hidden bg-[#fffefa]", flat ? "" : "rounded-card-lg border border-line shadow-ring")}>
+      <div className={cn("overflow-hidden bg-white", flat ? "" : "rounded-card-lg border border-line shadow-ring")}>
         <div className="overflow-x-auto">
           <table className={cn("w-full min-w-[720px] table-fixed border-collapse divide-y divide-line", flat ? "border-t border-line" : "")}>
             <thead className={cn(flat ? "bg-surface/70" : "bg-surface")}>

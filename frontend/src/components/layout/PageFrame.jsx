@@ -1,23 +1,24 @@
-import { Fragment } from "react";
-import { ChevronRight } from "lucide-react";
-
 import { cn } from "../../lib/cn.js";
 
-/** Khung trang: breadcrumb + body. `bodyClassName` ghi đè padding mặc định nếu cần. */
-export default function PageFrame({ segments, children, className, bodyClassName }) {
+export default function PageFrame({ segments, title, description, actions, children, className, bodyClassName }) {
+  const displayTitle = title || (Array.isArray(segments) ? segments.at(-1) : "");
+
   return (
-    <div className={cn("space-y-4", className)}>
-      <div className="px-1 py-1">
-        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted">
-          {segments.map((label, index) => (
-            <Fragment key={`${index}-${label}`}>
-              {index > 0 ? <ChevronRight className="h-3.5 w-3.5 shrink-0" /> : null}
-              <span className={index === segments.length - 1 ? "text-brand-700" : undefined}>{label}</span>
-            </Fragment>
-          ))}
-        </div>
-      </div>
-      <div className={cn("space-y-4", bodyClassName)}>{children}</div>
+    <div className={cn("space-y-6", className)}>
+      {displayTitle ? (
+        <header className="flex flex-wrap items-start justify-between gap-4">
+          <div className="min-w-0 flex-1">
+            <h1 className="text-[1.625rem] font-bold leading-tight tracking-[-0.02em] text-[#1a1614]">
+              {displayTitle}
+            </h1>
+            {description ? (
+              <p className="mt-1.5 max-w-2xl text-sm leading-relaxed text-[#78716c]">{description}</p>
+            ) : null}
+          </div>
+          {actions ? <div className="flex shrink-0 items-center gap-2">{actions}</div> : null}
+        </header>
+      ) : null}
+      <div className={bodyClassName}>{children}</div>
     </div>
   );
 }

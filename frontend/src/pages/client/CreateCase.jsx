@@ -10,7 +10,7 @@ import Input from "../../components/ui/Input.jsx";
 import Select from "../../components/ui/Select.jsx";
 import { useCases } from "../../hooks/useCases.js";
 import { extractDocumentText } from "../../lib/api.js";
-import { LEGAL_DOMAINS, ROLE_LABELS } from "../../lib/constants.js";
+import { LEGAL_DOMAINS } from "../../lib/constants.js";
 import { formatPriorityLabel } from "../../lib/formatters.js";
 
 const TEXT_FILE_EXTENSIONS = new Set(["txt", "md", "markdown", "csv", "json", "xml", "html", "htm"]);
@@ -199,13 +199,13 @@ export default function CreateCase() {
   }
 
   return (
-    <PageFrame segments={[ROLE_LABELS.client, "Tạo hồ sơ"]} bodyClassName="p-0 sm:p-0">
-      <div className="p-4 sm:p-5">
+    <PageFrame title="Tạo hồ sơ mới" description="Điền thông tin và upload tài liệu để bắt đầu phân tích.">
+      <div>
         <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
         <form onSubmit={handleSubmit}>
           <Card>
             <CardContent className="space-y-5 p-6">
-              <h3 className="legal-display text-lg font-semibold text-ink">Bước 1: Thông tin cơ bản</h3>
+              <h3 className="text-base font-semibold text-ink">Bước 1: Thông tin cơ bản</h3>
               <div className="grid gap-4 lg:grid-cols-2">
                 <Input
                   label="Tên vụ việc"
@@ -249,7 +249,7 @@ export default function CreateCase() {
                 placeholder={isOcrRunning ? "Hệ thống đang đọc nội dung từ tài liệu..." : "Nội dung từ tài liệu sẽ xuất hiện tại đây để bạn kiểm tra lại trước khi gửi."}
               />
 
-              <h3 className="legal-display text-lg font-semibold text-ink">Bước 2: Upload tài liệu</h3>
+              <h3 className="text-base font-semibold text-ink">Bước 2: Upload tài liệu</h3>
               <FileUpload files={files} onFilesChange={handleFilesChange} label="Tài liệu đính kèm" />
               {fileImportHint ? <p className="text-sm text-muted">{fileImportHint}</p> : null}
 

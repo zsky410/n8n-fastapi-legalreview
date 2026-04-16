@@ -11,7 +11,6 @@ import Modal from "../../components/ui/Modal.jsx";
 import Select from "../../components/ui/Select.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import { getRoutingRules } from "../../lib/api.js";
-import { ROLE_LABELS } from "../../lib/constants.js";
 import { mockRoutingRules } from "../../lib/mockData.js";
 
 const STORAGE_KEY = "legaldesk-ui-routing-rules";
@@ -183,57 +182,46 @@ export default function RoutingRules() {
 
   return (
     <Fragment>
-    <PageFrame segments={[ROLE_LABELS.admin, "Luật định tuyến"]}>
-    <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-[#fffefa] via-[#fffefa] to-warm-50">
-        <CardContent className="space-y-4 p-6">
-          <div>
-            <h2 className="legal-display text-3xl font-semibold text-ink">Quản lý luật định tuyến cho workflow full-auto.</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-              Thêm, sửa hoặc tạm tắt các luật tự động để phân luồng hồ sơ theo mức độ rủi ro và chất lượng dữ liệu.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="space-y-4 p-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="legal-display text-xl font-semibold text-ink">Luật định tuyến</h3>
-              <p className="text-sm text-muted">Các thay đổi được giữ lại trên trình duyệt hiện tại để bạn kiểm tra nhanh nhiều kịch bản xử lý.</p>
+      <PageFrame
+        title="Luật định tuyến"
+        description="Thêm, sửa hoặc tạm tắt các luật tự động để phân luồng hồ sơ theo mức độ rủi ro và chất lượng dữ liệu."
+        actions={
+          <Button
+            onClick={() => {
+              setFormState(defaultFormState);
+              setError("");
+              setIsModalOpen(true);
+            }}
+          >
+            <Plus className="h-4 w-4" />
+            Thêm luật mới
+          </Button>
+        }
+      >
+        <Card>
+          <CardContent className="space-y-4 p-6">
+            <div className="rounded-card border border-line bg-[#f5f5f3] px-4 py-3 text-sm text-muted">
+              Các thay đổi được lưu trên trình duyệt hiện tại để bạn thử nhiều kịch bản nhanh.
             </div>
-            <Button
-              onClick={() => {
-                setFormState(defaultFormState);
-                setError("");
-                setIsModalOpen(true);
-              }}
-            >
-              <Plus className="h-4 w-4" />
-              Thêm luật mới
-            </Button>
-          </div>
 
-          {isLoading ? (
-            <div className="flex items-center justify-center py-14">
-              <Spinner className="h-7 w-7 text-brand-700" />
-            </div>
-          ) : loadError ? (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
-          ) : (
-            <DataTable
-              columns={columns}
-              rows={rules}
-              searchKeys={["metric", "operator", "action"]}
-              emptyTitle="Chưa có luật định tuyến"
-              emptyDescription="Thêm luật đầu tiên để bắt đầu cấu hình luồng xử lý hồ sơ."
-            />
-          )}
-        </CardContent>
-      </Card>
-    </div>
-    </PageFrame>
+            {isLoading ? (
+              <div className="flex items-center justify-center py-14">
+                <Spinner className="h-7 w-7 text-brand-700" />
+              </div>
+            ) : loadError ? (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
+            ) : (
+              <DataTable
+                columns={columns}
+                rows={rules}
+                searchKeys={["metric", "operator", "action"]}
+                emptyTitle="Chưa có luật định tuyến"
+                emptyDescription="Thêm luật đầu tiên để bắt đầu cấu hình luồng xử lý hồ sơ."
+              />
+            )}
+          </CardContent>
+        </Card>
+      </PageFrame>
 
       <Modal
         open={isModalOpen}

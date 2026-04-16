@@ -8,7 +8,6 @@ import KpiCard from "../../components/ui/KpiCard.jsx";
 import RiskBadge from "../../components/ui/RiskBadge.jsx";
 import StatusBadge from "../../components/ui/StatusBadge.jsx";
 import { useCases } from "../../hooks/useCases.js";
-import { ROLE_LABELS } from "../../lib/constants.js";
 import { formatDateTime, formatSlaLabel } from "../../lib/formatters.js";
 
 export default function AdminDashboard() {
@@ -70,7 +69,7 @@ export default function AdminDashboard() {
 
   if (!isReady) {
     return (
-      <PageFrame segments={[ROLE_LABELS.admin, "Bảng điều khiển"]}>
+      <PageFrame title="Bảng điều khiển">
         <Card>
           <CardContent className="p-6">
             <div className="loading-shimmer h-44 rounded-[24px]" />
@@ -81,99 +80,95 @@ export default function AdminDashboard() {
   }
 
   return (
-    <PageFrame segments={[ROLE_LABELS.admin, "Bảng điều khiển"]}>
-    <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-[#fffefa] via-[#fffefa] to-warm-50">
-        <CardContent className="space-y-4 p-6">
-          <div>
-            <h2 className="legal-display text-3xl font-semibold text-ink">Bảng điều hành vận hành</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-              Theo dõi nhanh các chỉ số chính, phân bố rủi ro và danh sách hồ sơ mới nhất trong hệ thống.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Tỷ lệ đọc dữ liệu" value="96%" trend="+2,1%" variant="published" />
-        <KpiCard label="Tỷ lệ cảnh báo" value="4%" variant="attention" />
-        <KpiCard label="Tự động phân luồng" value="82%" variant="processing" />
-        <KpiCard label="Xử lý trung bình" value="1,2 giây" variant="total" />
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <KpiCard label="Tổng hồ sơ" value={totals.total} variant="total" />
-        <KpiCard label="Đang xử lý" value={totals.processing} variant="processing" />
-        <KpiCard label="Cần chú ý" value={totals.needsAttention} variant="attention" />
-        <KpiCard label="Cảnh báo chất lượng" value={totals.qualityWarning} variant="quality" />
-      </div>
-
-      <div className="grid gap-5 xl:grid-cols-2">
-        <Card>
-          <CardContent className="space-y-4 p-6">
-            <p className="text-sm font-semibold text-ink">Phân bố rủi ro</p>
-            {totals.total ? (
-              <div className="space-y-4">
-                {[
-                  { label: "Thấp", value: riskDistribution.low, color: "bg-wise-positive" },
-                  { label: "Trung bình", value: riskDistribution.medium, color: "bg-wise-warning" },
-                  { label: "Cao", value: riskDistribution.high, color: "bg-wise-danger" },
-                ].map((item) => (
-                  <div key={item.label} className="space-y-2">
-                    <div className="flex items-center justify-between text-sm text-muted">
-                      <span>{item.label}</span>
-                      <span>{item.value}</span>
-                    </div>
-                    <div className="h-3 rounded-full bg-warm-50">
-                      <div className={`h-3 rounded-full ${item.color}`} style={{ width: `${toPercent(item.value)}%` }} />
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState compact title="Chưa có dữ liệu rủi ro" description="Tạo hoặc nạp hồ sơ để hiển thị biểu đồ phân bố rủi ro." />
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="space-y-4 p-6">
-            <p className="text-sm font-semibold text-ink">Hồ sơ theo trạng thái</p>
-            {totals.total ? (
-              <div className="space-y-4">
-                {statusDistribution.map((item) => (
-                  <div key={item.key} className="grid grid-cols-[150px_minmax(0,1fr)_40px] items-center gap-3 text-sm">
-                    <span className="text-muted">{item.label}</span>
-                    <div className="h-3 rounded-full bg-warm-50">
-                      <div className="h-3 rounded-full bg-brand-500" style={{ width: `${toPercent(item.count)}%` }} />
-                    </div>
-                    <span className="text-right text-muted">{item.count}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <EmptyState compact title="Chưa có dữ liệu trạng thái" description="Chart sẽ hiển thị khi có hồ sơ trong hệ thống." />
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
+    <PageFrame
+      title="Bảng điều khiển"
+      description="Theo dõi nhanh các chỉ số chính, phân bố rủi ro và danh sách hồ sơ mới nhất trong hệ thống."
+    >
       <Card>
-        <CardContent className="space-y-4 p-6">
-          <div>
-            <h3 className="legal-display text-xl font-semibold text-ink">Hồ sơ mới cập nhật</h3>
-            <p className="text-sm text-muted">Bảng theo dõi nhanh mã hồ sơ, mức rủi ro, SLA và trạng thái xử lý.</p>
+        <CardContent className="space-y-6 p-6">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <KpiCard label="Tỷ lệ đọc dữ liệu" value="96%" trend="+2,1%" variant="published" />
+            <KpiCard label="Tỷ lệ cảnh báo" value="4%" variant="attention" />
+            <KpiCard label="Tự động phân luồng" value="82%" variant="processing" />
+            <KpiCard label="Xử lý trung bình" value="1,2 giây" variant="total" />
           </div>
-          <DataTable
-            columns={tableColumns}
-            rows={latestCases}
-            searchKeys={["id", "title", "status", "riskLevel"]}
-            emptyTitle="Chưa có hồ sơ gần đây"
-            emptyDescription="Bảng sẽ hiển thị 10 hồ sơ mới nhất khi hệ thống có dữ liệu."
-          />
+
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <KpiCard label="Tổng hồ sơ" value={totals.total} variant="total" />
+            <KpiCard label="Đang xử lý" value={totals.processing} variant="processing" />
+            <KpiCard label="Cần chú ý" value={totals.needsAttention} variant="attention" />
+            <KpiCard label="Cảnh báo chất lượng" value={totals.qualityWarning} variant="quality" />
+          </div>
+
+          <div className="h-px w-full bg-line" aria-hidden />
+
+          <div className="grid gap-4 xl:grid-cols-2">
+            <section className="rounded-card border border-line bg-[#f5f5f3] p-5">
+              <p className="text-sm font-semibold text-ink">Phân bố rủi ro</p>
+              {totals.total ? (
+                <div className="mt-4 space-y-4">
+                  {[
+                    { label: "Thấp", value: riskDistribution.low, color: "bg-wise-positive" },
+                    { label: "Trung bình", value: riskDistribution.medium, color: "bg-wise-warning" },
+                    { label: "Cao", value: riskDistribution.high, color: "bg-wise-danger" },
+                  ].map((item) => (
+                    <div key={item.label} className="space-y-2">
+                      <div className="flex items-center justify-between text-sm text-muted">
+                        <span>{item.label}</span>
+                        <span>{item.value}</span>
+                      </div>
+                      <div className="h-3 rounded-full bg-white">
+                        <div className={`h-3 rounded-full ${item.color}`} style={{ width: `${toPercent(item.value)}%` }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <EmptyState compact title="Chưa có dữ liệu rủi ro" description="Tạo hoặc nạp hồ sơ để hiển thị biểu đồ phân bố rủi ro." />
+                </div>
+              )}
+            </section>
+
+            <section className="rounded-card border border-line bg-[#f5f5f3] p-5">
+              <p className="text-sm font-semibold text-ink">Hồ sơ theo trạng thái</p>
+              {totals.total ? (
+                <div className="mt-4 space-y-4">
+                  {statusDistribution.map((item) => (
+                    <div key={item.key} className="grid grid-cols-[140px_minmax(0,1fr)_44px] items-center gap-3 text-sm">
+                      <span className="text-muted">{item.label}</span>
+                      <div className="h-3 rounded-full bg-white">
+                        <div className="h-3 rounded-full bg-brand-500" style={{ width: `${toPercent(item.count)}%` }} />
+                      </div>
+                      <span className="text-right text-muted">{item.count}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="mt-4">
+                  <EmptyState compact title="Chưa có dữ liệu trạng thái" description="Chart sẽ hiển thị khi có hồ sơ trong hệ thống." />
+                </div>
+              )}
+            </section>
+          </div>
+
+          <div className="h-px w-full bg-line" aria-hidden />
+
+          <section className="space-y-3">
+            <div>
+              <h3 className="text-lg font-semibold text-ink">Hồ sơ mới cập nhật</h3>
+              <p className="text-sm text-muted">Bảng theo dõi nhanh mã hồ sơ, mức rủi ro, SLA và trạng thái xử lý.</p>
+            </div>
+            <DataTable
+              columns={tableColumns}
+              rows={latestCases}
+              searchKeys={["id", "title", "status", "riskLevel"]}
+              emptyTitle="Chưa có hồ sơ gần đây"
+              emptyDescription="Bảng sẽ hiển thị 10 hồ sơ mới nhất khi hệ thống có dữ liệu."
+            />
+          </section>
         </CardContent>
       </Card>
-    </div>
     </PageFrame>
   );
 }

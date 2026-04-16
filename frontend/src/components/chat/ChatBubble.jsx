@@ -10,7 +10,7 @@ export default function ChatBubble({ message }) {
       <div
         className={cn(
           "max-w-2xl rounded-card-md px-4 py-4 shadow-ring",
-          isAssistant ? "border border-line bg-[#fffefa] text-ink" : "bg-brand-500 text-brand-foreground",
+          isAssistant ? "border border-line bg-white text-ink" : "bg-brand-500 text-brand-foreground",
         )}
       >
         <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em]">

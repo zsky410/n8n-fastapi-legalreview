@@ -35,12 +35,12 @@ export default function ChatPanel({
         {messages.length ? (
           messages.map((message) => <ChatBubble key={message.id} message={message} />)
         ) : (
-          <div className="rounded-card border border-dashed border-line bg-[#fffefa] px-4 py-8 text-center text-lg text-muted">
+          <div className="rounded-card border border-dashed border-line bg-white px-4 py-8 text-center text-lg text-muted">
             Chưa có hội đáp nào cho hồ sơ này.
           </div>
         )}
         {isSending ? (
-          <div className="flex items-center gap-3 rounded-card border border-line bg-[#fffefa] px-4 py-3 text-lg text-muted shadow-ring">
+          <div className="flex items-center gap-3 rounded-card border border-line bg-white px-4 py-3 text-lg text-muted shadow-ring">
             <Spinner />
             Đang chuẩn bị câu trả lời...
           </div>

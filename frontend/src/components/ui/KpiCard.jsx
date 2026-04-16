@@ -9,12 +9,12 @@ import Card, { CardContent } from "./Card.jsx";
  */
 const variantStyles = {
   default: {
-    card: "border-line bg-[#fffefa]",
+    card: "border-line bg-white",
     label: "text-muted-strong font-semibold",
     value: "text-ink",
   },
   total: {
-    card: "border-line bg-[#fffefa]",
+    card: "border-line bg-white",
     label: "text-muted-strong font-semibold",
     value: "text-ink",
   },

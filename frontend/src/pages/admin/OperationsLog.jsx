@@ -11,7 +11,6 @@ import Select from "../../components/ui/Select.jsx";
 import Spinner from "../../components/ui/Spinner.jsx";
 import Tabs, { TabPanel } from "../../components/ui/Tabs.jsx";
 import { getAuditLogs, getWorkflowExecutions } from "../../lib/api.js";
-import { ROLE_LABELS } from "../../lib/constants.js";
 import { formatDateTime, formatExecutionStatus, formatWorkflowName, formatWorkflowStepLabel } from "../../lib/formatters.js";
 
 const tabs = [
@@ -175,168 +174,164 @@ export default function OperationsLog() {
   );
 
   return (
-    <PageFrame segments={[ROLE_LABELS.admin, "Nhật ký vận hành"]}>
-    <div className="space-y-5">
-      <Card className="overflow-hidden bg-gradient-to-br from-[#fffefa] via-[#fffefa] to-warm-50">
-        <CardContent className="space-y-4 p-6">
-          <div>
-            <h2 className="legal-display text-3xl font-semibold text-ink">Nhật ký hoạt động và tiến trình xử lý tự động.</h2>
-            <p className="mt-3 max-w-3xl text-sm leading-6 text-muted">
-              Theo dõi lịch sử thao tác, lần chạy tự động và từng bước xử lý để nắm rõ luồng vận hành của hệ thống.
-            </p>
+    <PageFrame title="Nhật ký vận hành" description="Theo dõi lịch sử thao tác, lần chạy tự động và từng bước xử lý để nắm rõ luồng vận hành của hệ thống.">
+      <Card>
+        <CardContent className="space-y-5 p-6">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <Tabs tabs={tabs} value={activeTab} onChange={setActiveTab} />
+            <Badge className="border-line bg-[#f5f5f3] text-ink">Dữ liệu vận hành gần nhất</Badge>
           </div>
-        </CardContent>
-      </Card>
 
-      <div className="flex items-center justify-between gap-3">
-        <Tabs tabs={tabs} value={activeTab} onChange={setActiveTab} />
-        <Badge className="border-line bg-warm-50 text-ink">Dữ liệu vận hành gần nhất</Badge>
-      </div>
+          <div className="h-px w-full bg-line" aria-hidden />
 
-      <TabPanel activeValue={activeTab} value="audit">
-        <Card>
-          <CardContent className="space-y-4 p-6">
-            <div>
-              <h3 className="legal-display text-xl font-semibold text-ink">Nhật ký kiểm toán</h3>
-              <p className="text-sm text-muted">Lọc theo loại sự kiện, mã hồ sơ hoặc người dùng để xem lịch sử xử lý.</p>
-            </div>
-            <div className="grid gap-3 md:grid-cols-5">
-              <Select
-                label="Loại sự kiện"
-                value={eventTypeFilter}
-                onChange={(event) => setEventTypeFilter(event.target.value)}
-                options={eventTypes.map((entry) => ({ label: entry, value: entry }))}
-              />
-              <Input label="Mã hồ sơ" value={caseIdFilter} onChange={(event) => setCaseIdFilter(event.target.value)} placeholder="CASE-2604-001" />
-              <Input label="Người dùng" value={userIdFilter} onChange={(event) => setUserIdFilter(event.target.value)} placeholder="client@demo.vn" />
-              <Input label="Từ thời gian" type="datetime-local" value={auditFrom} onChange={(event) => setAuditFrom(event.target.value)} />
-              <Input label="Đến thời gian" type="datetime-local" value={auditTo} onChange={(event) => setAuditTo(event.target.value)} />
-            </div>
-            {isLoading ? (
-              <div className="flex items-center justify-center py-14">
-                <Spinner className="h-7 w-7 text-brand-700" />
-              </div>
-            ) : loadError ? (
-              <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
-            ) : (
-              <DataTable
-                columns={auditColumns}
-                rows={filteredAuditLogs}
-                searchKeys={["eventType", "caseId", "userId", "description", "details"]}
-                emptyTitle="Không có audit log khớp bộ lọc"
-                emptyDescription="Thử đổi event type hoặc xóa điều kiện lọc."
-              />
-            )}
-            {selectedAudit ? (
-              <div className="rounded-2xl border border-line bg-slate-50 px-4 py-4 text-sm text-ink">
-                <p className="font-semibold text-ink">Chi tiết sự kiện</p>
-                <p className="mt-2">Thời gian: {formatDateTime(selectedAudit.timestamp)}</p>
-                <p>Loại sự kiện: {selectedAudit.eventType}</p>
-                <p>Mã hồ sơ: {selectedAudit.caseId}</p>
-                <p>Người dùng: {selectedAudit.userId}</p>
-                <p className="mt-2">{selectedAudit.description}</p>
-                <p className="mt-1 text-muted">{selectedAudit.details}</p>
-              </div>
-            ) : null}
-          </CardContent>
-        </Card>
-      </TabPanel>
-
-      <TabPanel activeValue={activeTab} value="workflow">
-        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_340px]">
-          <Card>
-            <CardContent className="space-y-4 p-6">
+          <TabPanel activeValue={activeTab} value="audit">
+            <div className="space-y-4">
               <div>
-                <h3 className="legal-display text-xl font-semibold text-ink">Lượt chạy tự động</h3>
-                <p className="text-sm text-muted">Chọn một lượt chạy để xem trạng thái, thời lượng và tiến độ từng bước.</p>
+                <h3 className="text-lg font-semibold text-ink">Nhật ký kiểm toán</h3>
+                <p className="text-sm text-muted">Lọc theo loại sự kiện, mã hồ sơ hoặc người dùng để xem lịch sử xử lý.</p>
               </div>
-              <div className="grid gap-3 md:grid-cols-4">
-                <Select
-                  label="Luồng xử lý"
-                  value={workflowNameFilter}
-                  onChange={(event) => setWorkflowNameFilter(event.target.value)}
-                  options={workflowNames.map((entry) => ({ label: entry === "all" ? "Tất cả" : formatWorkflowName(entry), value: entry }))}
-                />
-                <Select
-                  label="Trạng thái"
-                  value={workflowStatusFilter}
-                  onChange={(event) => setWorkflowStatusFilter(event.target.value)}
-                  options={[
-                    { label: "Tất cả", value: "all" },
-                    { label: "Thành công", value: "success" },
-                    { label: "Thất bại", value: "failed" },
-                    { label: "Thử lại", value: "retry" },
-                  ]}
-                />
-                <Input label="Từ thời gian" type="datetime-local" value={workflowFrom} onChange={(event) => setWorkflowFrom(event.target.value)} />
-                <Input label="Đến thời gian" type="datetime-local" value={workflowTo} onChange={(event) => setWorkflowTo(event.target.value)} />
+
+              <div className="rounded-card border border-line bg-[#f5f5f3] p-4">
+                <div className="grid gap-3 md:grid-cols-5">
+                  <Select
+                    label="Loại sự kiện"
+                    value={eventTypeFilter}
+                    onChange={(event) => setEventTypeFilter(event.target.value)}
+                    options={eventTypes.map((entry) => ({ label: entry, value: entry }))}
+                  />
+                  <Input label="Mã hồ sơ" value={caseIdFilter} onChange={(event) => setCaseIdFilter(event.target.value)} placeholder="CASE-2604-001" />
+                  <Input label="Người dùng" value={userIdFilter} onChange={(event) => setUserIdFilter(event.target.value)} placeholder="client@demo.vn" />
+                  <Input label="Từ thời gian" type="datetime-local" value={auditFrom} onChange={(event) => setAuditFrom(event.target.value)} />
+                  <Input label="Đến thời gian" type="datetime-local" value={auditTo} onChange={(event) => setAuditTo(event.target.value)} />
+                </div>
               </div>
+
               {isLoading ? (
                 <div className="flex items-center justify-center py-14">
-                <Spinner className="h-7 w-7 text-brand-700" />
+                  <Spinner className="h-7 w-7 text-brand-700" />
                 </div>
               ) : loadError ? (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
               ) : (
                 <DataTable
-                  columns={workflowColumns}
-                  rows={filteredWorkflows}
-                  searchKeys={["executionId", "workflowName", "caseId", "status"]}
-                  emptyTitle="Chưa có lượt chạy nào"
-                  emptyDescription="Bảng sẽ hiển thị dữ liệu khi hệ thống ghi nhận thêm lượt chạy."
+                  columns={auditColumns}
+                  rows={filteredAuditLogs}
+                  searchKeys={["eventType", "caseId", "userId", "description", "details"]}
+                  emptyTitle="Không có audit log khớp bộ lọc"
+                  emptyDescription="Thử đổi event type hoặc xóa điều kiện lọc."
                 />
               )}
-            </CardContent>
-          </Card>
 
-          <Card className="!bg-warm-900 !text-white">
-            <CardContent className="space-y-5 p-6">
-              <div className="flex items-center gap-3">
-                <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white">
-                  <Workflow className="h-5 w-5" />
-                </span>
-                <div>
-                  <p className="text-sm text-white/60">Chi tiết lượt chạy</p>
-                  <p className="mt-1 text-lg font-semibold text-white">{selectedWorkflow ? formatWorkflowName(selectedWorkflow.workflowName) : "Chưa chọn lượt chạy"}</p>
-                </div>
-              </div>
-
-              {selectedWorkflow ? (
-                <div className="space-y-4">
-                  <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
-                    <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Tóm tắt nhanh</p>
-                    <div className="mt-3 grid gap-3 text-sm text-slate-200">
-                      <p>Mã chạy: {selectedWorkflow.executionId}</p>
-                      <p>Mã hồ sơ: {selectedWorkflow.caseId}</p>
-                      <p>Trạng thái: {formatExecutionStatus(selectedWorkflow.status)}</p>
-                      <p>Bắt đầu: {formatDateTime(selectedWorkflow.startedAt)}</p>
-                      <p>Số bước: {selectedWorkflow.stepsCompleted}</p>
-                    </div>
-                  </div>
-
-                  <div className="rounded-[24px] border border-white/10 bg-white/5 px-4 py-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-white">
-                      <ScrollText className="h-4 w-4" />
-                      Các bước thực thi
-                    </div>
-                    <div className="mt-4 space-y-3">
-                      {selectedWorkflow.steps.map((step) => (
-                        <div key={`${selectedWorkflow.id}-${step.label}`} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-sm">
-                          <span>{formatWorkflowStepLabel(step.label)}</span>
-                          <Badge className={getExecutionBadgeClass(step.status)}>
-                            {formatExecutionStatus(step.status)}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+              {selectedAudit ? (
+                <div className="rounded-card border border-line bg-[#f5f5f3] px-4 py-4 text-sm text-ink">
+                  <p className="font-semibold text-ink">Chi tiết sự kiện</p>
+                  <p className="mt-2">Thời gian: {formatDateTime(selectedAudit.timestamp)}</p>
+                  <p>Loại sự kiện: {selectedAudit.eventType}</p>
+                  <p>Mã hồ sơ: {selectedAudit.caseId}</p>
+                  <p>Người dùng: {selectedAudit.userId}</p>
+                  <p className="mt-2">{selectedAudit.description}</p>
+                  <p className="mt-1 text-muted">{selectedAudit.details}</p>
                 </div>
               ) : null}
-            </CardContent>
-          </Card>
-        </div>
-      </TabPanel>
-    </div>
+            </div>
+          </TabPanel>
+
+          <TabPanel activeValue={activeTab} value="workflow">
+            <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold text-ink">Lượt chạy tự động</h3>
+                  <p className="text-sm text-muted">Chọn một lượt chạy để xem trạng thái, thời lượng và tiến độ từng bước.</p>
+                </div>
+
+                <div className="rounded-card border border-line bg-[#f5f5f3] p-4">
+                  <div className="grid gap-3 md:grid-cols-4">
+                    <Select
+                      label="Luồng xử lý"
+                      value={workflowNameFilter}
+                      onChange={(event) => setWorkflowNameFilter(event.target.value)}
+                      options={workflowNames.map((entry) => ({ label: entry === "all" ? "Tất cả" : formatWorkflowName(entry), value: entry }))}
+                    />
+                    <Select
+                      label="Trạng thái"
+                      value={workflowStatusFilter}
+                      onChange={(event) => setWorkflowStatusFilter(event.target.value)}
+                      options={[
+                        { label: "Tất cả", value: "all" },
+                        { label: "Thành công", value: "success" },
+                        { label: "Thất bại", value: "failed" },
+                        { label: "Thử lại", value: "retry" },
+                      ]}
+                    />
+                    <Input label="Từ thời gian" type="datetime-local" value={workflowFrom} onChange={(event) => setWorkflowFrom(event.target.value)} />
+                    <Input label="Đến thời gian" type="datetime-local" value={workflowTo} onChange={(event) => setWorkflowTo(event.target.value)} />
+                  </div>
+                </div>
+
+                {isLoading ? (
+                  <div className="flex items-center justify-center py-14">
+                    <Spinner className="h-7 w-7 text-brand-700" />
+                  </div>
+                ) : loadError ? (
+                  <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">{loadError}</div>
+                ) : (
+                  <DataTable
+                    columns={workflowColumns}
+                    rows={filteredWorkflows}
+                    searchKeys={["executionId", "workflowName", "caseId", "status"]}
+                    emptyTitle="Chưa có lượt chạy nào"
+                    emptyDescription="Bảng sẽ hiển thị dữ liệu khi hệ thống ghi nhận thêm lượt chạy."
+                  />
+                )}
+              </div>
+
+              <aside className="rounded-card border border-white/10 bg-warm-900 p-5 text-white">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-white/10 text-white">
+                    <Workflow className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm text-white/60">Chi tiết lượt chạy</p>
+                    <p className="mt-1 truncate text-lg font-semibold text-white">
+                      {selectedWorkflow ? formatWorkflowName(selectedWorkflow.workflowName) : "Chưa chọn lượt chạy"}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedWorkflow ? (
+                  <div className="mt-5 space-y-4">
+                    <div className="rounded-card border border-white/10 bg-white/5 px-4 py-4">
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/45">Tóm tắt nhanh</p>
+                      <div className="mt-3 grid gap-3 text-sm text-slate-200">
+                        <p>Mã chạy: {selectedWorkflow.executionId}</p>
+                        <p>Mã hồ sơ: {selectedWorkflow.caseId}</p>
+                        <p>Trạng thái: {formatExecutionStatus(selectedWorkflow.status)}</p>
+                        <p>Bắt đầu: {formatDateTime(selectedWorkflow.startedAt)}</p>
+                        <p>Số bước: {selectedWorkflow.stepsCompleted}</p>
+                      </div>
+                    </div>
+
+                    <div className="rounded-card border border-white/10 bg-white/5 px-4 py-4">
+                      <div className="flex items-center gap-2 text-sm font-semibold text-white">
+                        <ScrollText className="h-4 w-4" />
+                        Các bước thực thi
+                      </div>
+                      <div className="mt-4 space-y-3">
+                        {selectedWorkflow.steps.map((step) => (
+                          <div key={`${selectedWorkflow.id}-${step.label}`} className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3 text-sm">
+                            <span>{formatWorkflowStepLabel(step.label)}</span>
+                            <Badge className={getExecutionBadgeClass(step.status)}>{formatExecutionStatus(step.status)}</Badge>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ) : null}
+              </aside>
+            </div>
+          </TabPanel>
+        </CardContent>
+      </Card>
     </PageFrame>
   );
 }

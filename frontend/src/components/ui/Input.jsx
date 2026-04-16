@@ -15,7 +15,7 @@ export default function Input({
       {label ? <span className="text-sm font-semibold text-ink">{label}</span> : null}
       <Element
         className={cn(
-          "min-h-11 w-full rounded-[10px] border border-line bg-[#fffefa] px-3 py-2 text-lg text-ink outline-none transition placeholder:text-muted focus-visible:border-muted-strong focus-visible:shadow-[inset_0_0_0_1px_rgb(134,134,133)]",
+          "min-h-11 w-full rounded-[10px] border border-line bg-white px-3 py-2 text-lg text-ink outline-none transition placeholder:text-muted focus-visible:border-muted-strong focus-visible:shadow-[inset_0_0_0_1px_rgb(134,134,133)]",
           multiline && "min-h-32 resize-y",
           error && "border-wise-danger focus-visible:border-wise-danger focus-visible:shadow-none",
           className,

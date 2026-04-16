@@ -58,27 +58,32 @@ export default function DataTable({
   return (
     <div className="space-y-4">
       {searchable && searchKeys.length ? (
-        <label className="relative block">
-          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
-          <input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Tìm trong bảng"
-            className="h-11 w-full rounded-[10px] border border-line bg-white pl-11 pr-4 text-lg text-ink outline-none transition placeholder:text-muted focus-visible:border-muted-strong focus-visible:shadow-[inset_0_0_0_1px_rgb(134,134,133)]"
-          />
-        </label>
+        <div className="flex flex-col gap-3 rounded-[22px] border border-slate-200/80 bg-white/70 p-4 shadow-[0_10px_24px_rgba(15,23,42,0.05)] sm:flex-row sm:items-center sm:justify-between">
+          <label className="relative block w-full sm:max-w-[320px]">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Tìm theo mã, tên tài liệu, trạng thái..."
+              className="min-h-[48px] w-full rounded-[16px] border border-slate-200/80 bg-[#f8fafc] pl-11 pr-4 text-[14px] text-ink outline-none transition placeholder:text-slate-400 focus-visible:border-brand-500/30 focus-visible:bg-white focus-visible:shadow-[0_0_0_4px_rgba(30,58,138,0.08)]"
+            />
+          </label>
+          <div className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+            {visibleRows.length} bản ghi
+          </div>
+        </div>
       ) : null}
-      <div className={cn("overflow-hidden bg-white", flat ? "" : "rounded-card-lg border border-line shadow-ring")}>
+      <div className={cn("overflow-hidden rounded-card-lg border border-slate-200/80 bg-white/92 shadow-[0_18px_40px_rgba(15,23,42,0.06)]", flat ? "" : "")}>
         <div className="overflow-x-auto">
-          <table className={cn("w-full min-w-[720px] table-fixed border-collapse divide-y divide-line", flat ? "border-t border-line" : "")}>
-            <thead className={cn(flat ? "bg-surface/70" : "bg-surface")}>
+          <table className="w-full min-w-[760px] table-fixed border-collapse">
+            <thead className="border-b border-slate-200/80 bg-[#f5f7fb]">
               <tr>
                 {columns.map((column) => (
                   <th
                     key={column.key}
                     className={cn(
-                      "px-4 py-3 text-xs font-semibold uppercase tracking-[0.18em] text-muted",
+                      "px-5 py-4 text-[11px] font-semibold uppercase tracking-[0.2em] text-muted",
                       column.className?.includes("text-right") ? "text-right" : "text-left",
                       column.className,
                     )}
@@ -88,7 +93,7 @@ export default function DataTable({
                         type="button"
                         onClick={() => toggleSort(column.key)}
                         className={cn(
-                          "motion-safe:transition-transform motion-safe:hover:scale-105 motion-safe:active:scale-95 inline-flex items-center gap-2 rounded-full",
+                          "inline-flex items-center gap-2 rounded-full transition-transform motion-safe:hover:scale-[1.02] motion-safe:active:scale-[0.99]",
                           column.className?.includes("text-right")
                             ? "ml-auto w-full justify-end text-right"
                             : "text-left",
@@ -110,14 +115,14 @@ export default function DataTable({
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-line">
+            <tbody className="divide-y divide-slate-200/80">
               {visibleRows.length ? (
                 visibleRows.map((row) => (
-                  <tr key={row[rowKey]} className="align-top text-lg text-ink transition hover:bg-surface">
+                  <tr key={row[rowKey]} className="align-top text-[14px] text-ink transition hover:bg-[#f8faff]">
                     {columns.map((column) => (
                       <td
                         key={`${row[rowKey]}-${column.key}`}
-                        className={cn("px-4 py-4 align-middle", column.className)}
+                        className={cn("px-5 py-4 align-middle", column.className)}
                       >
                         {column.render ? column.render(row) : row[column.key]}
                       </td>

@@ -9,7 +9,7 @@ import ChatBubble from "./ChatBubble.jsx";
 export default function ChatPanel({
   disabled = false,
   error,
-  hint = "Đặt câu hỏi theo hồ sơ này để nhận giải thích ngắn gọn và trích dẫn mẫu.",
+  hint,
   isSending = false,
   messages = [],
   onSubmit,
@@ -31,16 +31,16 @@ export default function ChatPanel({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-4 rounded-card-md border border-line bg-surface p-4 shadow-ring">
+      <div className="space-y-4 rounded-card-md border border-slate-200/80 bg-[#f5f7fb] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]">
         {messages.length ? (
           messages.map((message) => <ChatBubble key={message.id} message={message} />)
         ) : (
-          <div className="rounded-card border border-dashed border-line bg-white px-4 py-8 text-center text-lg text-muted">
+          <div className="rounded-card-md border border-dashed border-slate-300 bg-white px-4 py-8 text-center text-[15px] text-muted">
             Chưa có hội đáp nào cho hồ sơ này.
           </div>
         )}
         {isSending ? (
-          <div className="flex items-center gap-3 rounded-card border border-line bg-white px-4 py-3 text-lg text-muted shadow-ring">
+          <div className="flex items-center gap-3 rounded-card border border-slate-200 bg-white px-4 py-3 text-[15px] text-muted shadow-[0_12px_24px_rgba(15,23,42,0.05)]">
             <Spinner />
             Đang chuẩn bị câu trả lời...
           </div>

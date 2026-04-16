@@ -3,18 +3,18 @@ import Spinner from "./Spinner.jsx";
 
 const variantClasses = {
   primary:
-    "bg-brand-500 text-brand-foreground shadow-sm hover:bg-brand-600 focus-visible:ring-2 focus-visible:ring-brand-700/30 focus-visible:ring-offset-2",
+    "bg-brand-500 text-brand-foreground shadow-[0_16px_36px_rgba(24,49,115,0.22)] hover:bg-brand-600 focus-visible:ring-4 focus-visible:ring-brand-500/15 focus-visible:ring-offset-0",
   secondary:
-    "bg-white text-ink border border-line shadow-sm hover:bg-[#f5f5f3] focus-visible:ring-2 focus-visible:ring-brand-700/20 focus-visible:ring-offset-2",
+    "border border-slate-200/80 bg-white/80 text-ink shadow-[0_10px_26px_rgba(15,23,42,0.06)] hover:bg-white focus-visible:ring-4 focus-visible:ring-brand-500/10 focus-visible:ring-offset-0",
   ghost:
-    "bg-transparent text-ink shadow-none hover:bg-black/[0.04] focus-visible:ring-2 focus-visible:ring-brand-700/20 focus-visible:ring-offset-2",
-  dark: "bg-[#1a1614] text-white shadow-sm hover:bg-[#2a2624] focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-offset-2",
+    "bg-transparent text-ink shadow-none hover:bg-slate-900/[0.04] focus-visible:ring-4 focus-visible:ring-brand-500/10 focus-visible:ring-offset-0",
+  dark: "bg-warm-900 text-white shadow-[0_18px_40px_rgba(15,23,42,0.2)] hover:bg-slate-800 focus-visible:ring-4 focus-visible:ring-white/15 focus-visible:ring-offset-0",
 };
 
 const sizeClasses = {
-  sm: "h-9 min-h-[36px] px-3 text-[13px] font-medium",
-  md: "h-10 min-h-[40px] px-4 text-sm font-medium",
-  lg: "h-11 min-h-[44px] px-5 text-sm font-medium",
+  sm: "min-h-[40px] rounded-[14px] px-3.5 text-[13px] font-semibold",
+  md: "min-h-[44px] rounded-[15px] px-4.5 text-[13px] font-semibold",
+  lg: "min-h-[48px] rounded-[16px] px-5 text-sm font-semibold",
 };
 
 export default function Button({
@@ -30,7 +30,7 @@ export default function Button({
     <button
       type={type}
       className={cn(
-        "inline-flex items-center justify-center gap-2 rounded-lg font-medium transition-colors focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60",
+        "inline-flex items-center justify-center gap-2 whitespace-nowrap tracking-[0.01em] transition-all duration-200 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60",
         variantClasses[variant],
         sizeClasses[size],
         className,

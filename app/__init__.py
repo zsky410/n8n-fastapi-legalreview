@@ -1,2 +1,0 @@
-"""LegalDesk AI microservice package."""
-

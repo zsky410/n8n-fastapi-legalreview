@@ -1,0 +1,693 @@
+{
+  "name": "compliance-monitor-audit",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "8d4f72cd-aa05-48d2-b005-419c7d5ae72f",
+      "name": "Manual Trigger",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -980,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "id": "4b0857bc-cafb-4556-91f8-d68a5bd1ecee",
+      "name": "Daily Expiry Check",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -980,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "id": "e5d71c60-7335-4ef7-9b15-5e210c33d047",
+      "name": "Weekly Audit Check",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -980,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://backend:8000/api/v1/automation/expiring?days=7",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "0a08c93b-a4e5-41c1-babb-7e098c84cfaf",
+      "name": "Get Expiring Documents",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "position": [
+        -700,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const docs = $input.all().flatMap((item) => {\n  if (Array.isArray(item.json)) return item.json;\n  if (Array.isArray(item.json.data)) return item.json.data;\n  return item.json.document_id ? [item.json] : [];\n});\nreturn [{ json: { has_data: docs.length > 0, docs } }];"
+      },
+      "id": "4832af8f-e474-4b34-83be-4dc5814fbaea",
+      "name": "Collect Expiring Docs",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-expiring",
+              "leftValue": "={{ $json.has_data }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "67d16408-44af-4367-a894-bafc7e6cf045",
+      "name": "Has Expiring Documents?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const docs = $json.docs || [];\nreturn docs.map((doc) => ({\n  json: {\n    ...doc,\n    to: doc.user_email,\n    subject: `[LegalReview] Document expiring soon: ${doc.filename}`,\n    body: `Your document is expiring soon.\\n\\nFilename: ${doc.filename}\\nExpiry date: ${doc.expiry_date}\\nDays left: ${doc.days_left}\\nOpen document: ${doc.client_url}`\n  }\n}));"
+      },
+      "id": "07f771e3-f38b-4064-a733-4b4be849d384",
+      "name": "Prepare Expiry Items",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "ed061fbb-9300-4f4d-81ac-a76b91a69f64",
+      "name": "Split Expiry Emails",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        280,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "legalreview@example.com",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "e7e260f9-cfe1-4a4b-b22a-17c8d5606e02",
+      "name": "Send Expiry Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        560,
+        -220
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "mailhog-smtp",
+          "name": "Mailhog SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "seconds"
+      },
+      "id": "37375434-93cd-4273-b5cf-4f920696e94d",
+      "name": "Wait Rate Limit",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        -220
+      ],
+      "webhookId": "expiry-rate-limit"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/webhooks/n8n-events",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ trace_id: `expiry-${Date.now()}`, event_type: 'compliance.expiry_alert.completed', status: 'success', payload: { workflow: 'compliance-monitor-audit', sent_count: $('Prepare Expiry Items').all().length } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "c6438ec9-c90d-49ce-a093-cf038e0de0a5",
+      "name": "Callback Expiry Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        560,
+        -440
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/webhooks/n8n-events",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ trace_id: `expiry-empty-${Date.now()}`, event_type: 'compliance.expiry_alert.no_data', status: 'success', payload: { workflow: 'compliance-monitor-audit', sent_count: 0 } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "fdf90382-bcb4-40cb-b018-94fbf91f8f32",
+      "name": "Callback Expiry No Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        40,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://backend:8000/api/v1/automation/audit-sample?limit=5",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "6d693e51-1429-4b0b-b68b-a8575285af8b",
+      "name": "Get AI Approved Sample",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "alwaysOutputData": true,
+      "position": [
+        -700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const docs = $input.all().flatMap((item) => {\n  if (Array.isArray(item.json)) return item.json;\n  if (Array.isArray(item.json.data)) return item.json.data;\n  return item.json.document_id ? [item.json] : [];\n});\nreturn [{ json: { has_data: docs.length > 0, docs } }];"
+      },
+      "id": "6263a269-ad5e-46bb-9e24-c5f859788049",
+      "name": "Collect Audit Sample",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-audit",
+              "leftValue": "={{ $json.has_data }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "8ce020d4-7ef4-4189-9f54-e6a48b3fb283",
+      "name": "Has Audit Sample?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -220,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const docs = $json.docs || [];\nconst lines = docs.map((doc, index) => `${index + 1}. ${doc.filename} | ${doc.classification || 'unknown'} | risk ${doc.risk_score} | ${doc.admin_url}`);\nreturn [{ json: { sample_count: docs.length, to: 'reviewer@example.com', subject: '[LegalReview] Weekly AI Auto-Approval Audit Sample', body: `Weekly AI auto-approval sample:\\n\\n${lines.join('\\n')}` } }];"
+      },
+      "id": "ac91ca26-d973-42fe-91be-8552f2e93b5d",
+      "name": "Build Audit Digest",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        40,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "legalreview@example.com",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "ae54b6ff-a956-41b8-8e01-3e1d4d1e5b61",
+      "name": "Send Reviewer Audit Digest",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        280,
+        200
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "mailhog-smtp",
+          "name": "Mailhog SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/webhooks/n8n-events",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ trace_id: `audit-${Date.now()}`, event_type: 'compliance.weekly_audit.created', status: 'success', payload: { workflow: 'compliance-monitor-audit', sample_count: $json.sample_count } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "599be78d-b2aa-48cf-a81c-3e372a584e5c",
+      "name": "Callback Audit Created",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/webhooks/n8n-events",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ trace_id: `audit-empty-${Date.now()}`, event_type: 'compliance.weekly_audit.no_data', status: 'success', payload: { workflow: 'compliance-monitor-audit', sample_count: 0 } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "335c4c7e-7d5c-478d-81c0-f9cf31a39c72",
+      "name": "Callback Audit No Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        40,
+        420
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://backend:8000/api/v1/automation/weekly-summary",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "95cf4cd9-3c3a-4bb8-a126-dfe7346c3d5a",
+      "name": "Get Weekly Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -700,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const summary = $json;\nreturn [{ json: { ...summary, to: 'admin@example.com', subject: '[LegalReview] Weekly Summary', body: `Weekly LegalReview summary\\n\\nTotal documents: ${summary.total_documents}\\nAI approved: ${summary.ai_approved}\\nPending admin: ${summary.pending_admin}\\nAdmin approved: ${summary.admin_approved}\\nAdmin rejected: ${summary.admin_rejected}\\nFailed: ${summary.failed}\\nProcessing: ${summary.processing}\\nAgreement rate: ${summary.agreement_rate}%` } }];"
+      },
+      "id": "73857a86-3638-465c-9536-6ea90a35c69a",
+      "name": "Build Weekly Summary Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -460,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "legalreview@example.com",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "844f28f4-986e-4525-871e-f7186c378997",
+      "name": "Send Weekly Summary",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        -220,
+        700
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "mailhog-smtp",
+          "name": "Mailhog SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/webhooks/n8n-events",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ trace_id: `summary-${Date.now()}`, event_type: 'compliance.weekly_summary.sent', status: 'success', payload: { workflow: 'compliance-monitor-audit', total_documents: $json.total_documents, agreement_rate: $json.agreement_rate } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "d0ba7a84-41ec-4a34-9f07-6a11bb6e6e71",
+      "name": "Callback Weekly Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        40,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Workflow B: scheduled/manual compliance operations. Daily branch sends expiry alerts. Weekly branch sends AI audit digest and admin summary. All branches callback FastAPI so n8n_events captures success or no_data.",
+        "height": 220,
+        "width": 360,
+        "color": 4
+      },
+      "id": "5c66ef44-a214-4c70-bc78-88e3d0dcd6a8",
+      "name": "Demo Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -980,
+        -560
+      ]
+    }
+  ],
+  "connections": {
+    "Manual Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get Expiring Documents",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get AI Approved Sample",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Weekly Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Expiry Check": {
+      "main": [
+        [
+          {
+            "node": "Get Expiring Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Weekly Audit Check": {
+      "main": [
+        [
+          {
+            "node": "Get AI Approved Sample",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Get Weekly Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Expiring Documents": {
+      "main": [
+        [
+          {
+            "node": "Collect Expiring Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Expiring Docs": {
+      "main": [
+        [
+          {
+            "node": "Has Expiring Documents?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Expiring Documents?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Expiry Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Callback Expiry No Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Expiry Items": {
+      "main": [
+        [
+          {
+            "node": "Split Expiry Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Expiry Emails": {
+      "main": [
+        [
+          {
+            "node": "Callback Expiry Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Expiry Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Expiry Alert": {
+      "main": [
+        [
+          {
+            "node": "Wait Rate Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Rate Limit": {
+      "main": [
+        [
+          {
+            "node": "Split Expiry Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get AI Approved Sample": {
+      "main": [
+        [
+          {
+            "node": "Collect Audit Sample",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Audit Sample": {
+      "main": [
+        [
+          {
+            "node": "Has Audit Sample?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Audit Sample?": {
+      "main": [
+        [
+          {
+            "node": "Build Audit Digest",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Callback Audit No Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Audit Digest": {
+      "main": [
+        [
+          {
+            "node": "Send Reviewer Audit Digest",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Callback Audit Created",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Weekly Summary": {
+      "main": [
+        [
+          {
+            "node": "Build Weekly Summary Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Weekly Summary Email": {
+      "main": [
+        [
+          {
+            "node": "Send Weekly Summary",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Callback Weekly Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "tags": [],
+  "active": false
+}

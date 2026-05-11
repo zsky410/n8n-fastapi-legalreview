@@ -1,0 +1,602 @@
+{
+  "name": "document-result-router",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "document-reviewed",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "1f42bb73-69fa-4f69-b8e6-c02d418ecf71",
+      "name": "Receive Document Reviewed",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -880,
+        0
+      ],
+      "webhookId": "document-reviewed"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nconst riskScore = Number(body.risk_score ?? 0);\nreturn [{\n  json: {\n    event_type: body.event_type ?? 'document.reviewed',\n    trace_id: body.trace_id ?? null,\n    document_id: body.document_id ?? null,\n    user_email: body.user_email ?? null,\n    filename: body.filename ?? 'Untitled document',\n    review_status: body.review_status ?? null,\n    classification: body.classification ?? 'unknown',\n    risk_score: riskScore,\n    flag_reasons: Array.isArray(body.flag_reasons) ? body.flag_reasons : [],\n    admin_url: body.admin_url ?? '',\n    client_url: body.client_url ?? '',\n    valid: Boolean(body.trace_id && body.document_id && body.user_email && body.review_status),\n    critical: riskScore >= 85\n  }\n}];"
+      },
+      "id": "d9c605a0-3efd-454d-8e2a-688817cb9814",
+      "name": "Normalize Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "valid-payload",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "473b83b2-0874-4b01-8d72-5777ce4021d7",
+      "name": "Validate Required Fields",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/webhooks/n8n-events",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ trace_id: $json.trace_id, event_type: 'notification.invalid_payload', status: 'failed', payload: { workflow: 'document-result-router', reason: 'missing required fields', document_id: $json.document_id } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "fc1777cf-afd3-497e-b5a3-1c942b134eb7",
+      "name": "Callback Invalid Payload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -160,
+        280
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "pending-admin",
+                    "leftValue": "={{ $json.review_status }}",
+                    "rightValue": "pending_admin",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pending_admin"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "ai-approved",
+                    "leftValue": "={{ $json.review_status }}",
+                    "rightValue": "ai_approved",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ai_approved"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "admin-approved",
+                    "leftValue": "={{ $json.review_status }}",
+                    "rightValue": "admin_approved",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "admin_approved"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict"
+                },
+                "conditions": [
+                  {
+                    "id": "admin-rejected",
+                    "leftValue": "={{ $json.review_status }}",
+                    "rightValue": "admin_rejected",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "admin_rejected"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "7bc547db-284e-43b4-8e1c-82177c43bb21",
+      "name": "Route By Review Status",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        -160,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const flags = ($json.flag_reasons || []).join(', ') || 'None';\nreturn [{ json: { ...$json, to: 'reviewer@example.com', subject: `[LegalReview] Document flagged: ${$json.filename}`, body: `A document needs human review.\\n\\nFilename: ${$json.filename}\\nRisk score: ${$json.risk_score}\\nReasons: ${flags}\\nAdmin link: ${$json.admin_url}` } }];"
+      },
+      "id": "9cf9d4a7-05a0-445c-98c1-e134bf7134d3",
+      "name": "Build Pending Admin Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "legalreview@example.com",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "05558f89-41f8-4065-94c1-62277e97da80",
+      "name": "Notify Reviewer",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        360,
+        -360
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "mailhog-smtp",
+          "name": "Mailhog SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "critical-risk",
+              "leftValue": "={{ $json.critical }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f8c40670-ec0a-4550-873f-9208414ea221",
+      "name": "Critical Risk?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        600,
+        -360
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$json, to: 'admin@example.com', subject: `[LegalReview] CRITICAL legal document flagged: ${$json.filename}`, body: `Critical risk document.\\n\\nFilename: ${$json.filename}\\nRisk score: ${$json.risk_score}\\nAdmin link: ${$json.admin_url}` } }];"
+      },
+      "id": "3726d6c5-586d-4ffa-aa6b-76c440f948f2",
+      "name": "Build Critical Admin Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        840,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "legalreview@example.com",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "2ff6b838-3589-45ac-a16b-5be29e7431d3",
+      "name": "Critical Admin Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1080,
+        -480
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "mailhog-smtp",
+          "name": "Mailhog SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...$json, to: $json.user_email, subject: `[LegalReview] Your document was AI approved`, body: `Your document was AI approved.\\n\\nFilename: ${$json.filename}\\nClassification: ${$json.classification}\\nRisk score: ${$json.risk_score}\\nOpen document: ${$json.client_url}` } }];"
+      },
+      "id": "99d08e29-1d64-45f6-8df6-ad3f2decf07a",
+      "name": "Build AI Approved Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "legalreview@example.com",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "f237a9b3-0c57-4a37-830b-4450340587e8",
+      "name": "Notify User Approved",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        360,
+        -80
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "mailhog-smtp",
+          "name": "Mailhog SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const label = $json.review_status === 'admin_approved' ? 'approved' : 'rejected';\nreturn [{ json: { ...$json, to: $json.user_email, subject: `[LegalReview] Final decision: ${label}`, body: `A reviewer has ${label} your document.\\n\\nFilename: ${$json.filename}\\nOpen document: ${$json.client_url}` } }];"
+      },
+      "id": "8c06297f-4bc0-4d60-b38f-36de7ab7a859",
+      "name": "Build Final Decision Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        120,
+        180
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "legalreview@example.com",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "text",
+        "text": "={{ $json.body }}",
+        "options": {}
+      },
+      "id": "60f579d2-4f65-4da0-9e3a-958c46f7c3fc",
+      "name": "Notify User Final Decision",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        360,
+        180
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "mailhog-smtp",
+          "name": "Mailhog SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/webhooks/n8n-events",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ trace_id: $json.trace_id, event_type: 'notification.sent', status: 'success', payload: { workflow: 'document-result-router', channels: ['email'], document_id: $json.document_id, review_status: $json.review_status } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "2414986f-d9f5-4392-89bc-854311140957",
+      "name": "Callback Success",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1320,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/webhooks/n8n-events",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ trace_id: $json.trace_id, event_type: 'notification.unknown_status', status: 'failed', payload: { workflow: 'document-result-router', document_id: $json.document_id, review_status: $json.review_status } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "665efb68-86c7-4050-a7f1-436d1ef56b0e",
+      "name": "Callback Unknown Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        120,
+        440
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Workflow A: receive FastAPI document.reviewed events, route by review_status, send Mailhog emails, and callback FastAPI at /api/v1/webhooks/n8n-events. Create an SMTP credential named \"Mailhog SMTP\" with host mailhog and port 1025 before activating.",
+        "height": 220,
+        "width": 360,
+        "color": 5
+      },
+      "id": "fb4a5d40-ee2a-4942-8f7f-d88e71300cc5",
+      "name": "Demo Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -880,
+        -360
+      ]
+    }
+  ],
+  "connections": {
+    "Receive Document Reviewed": {
+      "main": [
+        [
+          {
+            "node": "Normalize Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Payload": {
+      "main": [
+        [
+          {
+            "node": "Validate Required Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Required Fields": {
+      "main": [
+        [
+          {
+            "node": "Route By Review Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Callback Invalid Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route By Review Status": {
+      "main": [
+        [
+          {
+            "node": "Build Pending Admin Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build AI Approved Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Final Decision Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Final Decision Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Callback Unknown Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Pending Admin Email": {
+      "main": [
+        [
+          {
+            "node": "Notify Reviewer",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Critical Risk?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Callback Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Critical Risk?": {
+      "main": [
+        [
+          {
+            "node": "Build Critical Admin Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Critical Admin Email": {
+      "main": [
+        [
+          {
+            "node": "Critical Admin Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build AI Approved Email": {
+      "main": [
+        [
+          {
+            "node": "Notify User Approved",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Callback Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Final Decision Email": {
+      "main": [
+        [
+          {
+            "node": "Notify User Final Decision",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Callback Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "tags": [],
+  "active": false
+}

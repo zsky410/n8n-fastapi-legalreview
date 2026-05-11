@@ -2,7 +2,7 @@
 
 AI-first, human-on-exception legal document review demo built with FastAPI, Next.js, Postgres, n8n, and Mailhog.
 
-## Day 1 Quickstart
+## Quickstart
 
 ```bash
 cp .env.example .env
@@ -40,3 +40,18 @@ curl http://localhost:8000/api/v1/auth/me \
 
 The backend runs Alembic migrations and seeds demo users on container start.
 
+## Day 2 APIs
+
+The backend now supports:
+
+- `POST /api/v1/documents` for PDF and DOCX upload
+- `GET /api/v1/documents` for a user's document list
+- `GET /api/v1/documents/{id}` for detail, summary, and findings
+- `GET /api/v1/documents/{id}/download` for file download
+
+Day 2 acceptance:
+
+1. Upload one low-risk DOCX or PDF and confirm it becomes `ai_approved`.
+2. Upload one risky DOCX or PDF and confirm it becomes `pending_admin`.
+3. Confirm `GET /api/v1/documents/{id}` includes `risk_findings`, `summary`, `classification`, and `flag_reasons`.
+4. Confirm `n8n_events` records outbound webhook attempts even if no workflow exists yet.

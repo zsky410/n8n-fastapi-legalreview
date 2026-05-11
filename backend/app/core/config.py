@@ -16,7 +16,11 @@ class Settings(BaseSettings):
     backend_cors_origins: str = "http://localhost:3000"
     frontend_base_url: AnyUrl | str = "http://localhost:3000"
     n8n_webhook_url: str = "http://n8n:5678/webhook/document-reviewed"
+    n8n_webhook_timeout_seconds: float = 10.0
+    upload_dir: str = "uploads"
+    max_upload_size_bytes: int = 10 * 1024 * 1024
     openai_api_key: str | None = None
+    openai_review_model: str = "gpt-4o-mini"
 
     @property
     def cors_origins(self) -> list[str]:

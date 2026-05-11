@@ -1,0 +1,2 @@
+"""LegalReview backend package."""
+

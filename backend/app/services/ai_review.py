@@ -55,18 +55,19 @@ def build_mock_review(
 ) -> AIReviewResult:
     reasons = [f"{finding.rule_code}: {finding.suggestion}" for finding in findings[:5]]
     if not reasons:
-        reasons = ["No material risk findings were detected by the rules engine."]
+        reasons = ["Không phát hiện rủi ro trọng yếu từ rules engine."]
 
     if findings:
+        top_issues = ", ".join(_human_label(finding.rule_code) for finding in findings[:3])
         summary = (
-            f"This {classification.document_type} was flagged with a risk score of {risk_score}. "
-            f"Top issues: {', '.join(finding.rule_code for finding in findings[:3])}."
+            f"Tài liệu {_human_label(classification.document_type).lower()} bị gắn cờ với điểm rủi ro {risk_score}. "
+            f"Vấn đề chính: {top_issues}."
         )
         verdict = "needs_review"
     else:
         summary = (
-            f"This {classification.document_type} appears low risk with extracted text quality "
-            f"rated {extraction.quality_label}."
+            f"Tài liệu {_human_label(classification.document_type).lower()} có vẻ rủi ro thấp, chất lượng trích xuất "
+            f"được đánh giá là {_human_label(extraction.quality_label).lower()}."
         )
         verdict = "approve"
 
@@ -120,7 +121,8 @@ def _try_openai_review(
     ]
     prompt = (
         "You are reviewing a legal document for an internal compliance queue. "
-        "Return concise JSON only.\n"
+        "Return concise JSON only. Write summary and reasoning in Vietnamese with accents; "
+        "keep technical terms such as AI, compliance, risk score, MIME, and callback in English when natural.\n"
         f"Classification: {classification.document_type} ({classification.confidence:.2f})\n"
         f"Extraction quality: {extraction.quality_label} ({extraction.quality_score:.2f})\n"
         f"Risk score: {risk_score}\n"
@@ -180,3 +182,26 @@ def normalize_confidence(value: object) -> float:
     if confidence > 1 and confidence <= 100:
         confidence = confidence / 100
     return round(max(0.0, min(1.0, confidence)), 4)
+
+
+def _human_label(value: str) -> str:
+    labels = {
+        "contract": "Hợp đồng",
+        "nda": "NDA",
+        "invoice": "Hóa đơn",
+        "policy": "Chính sách",
+        "unknown": "Chưa rõ",
+        "good": "Tốt",
+        "low": "Thấp",
+        "MISSING_SIGNATURE": "Thiếu chữ ký",
+        "HIGH_VALUE": "Giá trị cao",
+        "EXPIRY_SOON": "Sắp hết hạn",
+        "NO_TERMINATION_CLAUSE": "Thiếu điều khoản chấm dứt",
+        "NO_GOVERNING_LAW": "Thiếu luật điều chỉnh",
+        "BROAD_INDEMNITY": "Bồi thường quá rộng",
+        "AUTO_RENEWAL": "Tự động gia hạn",
+        "LOW_EXTRACTION_QUALITY": "Chất lượng trích xuất thấp",
+        "UNKNOWN_DOC_TYPE": "Loại tài liệu chưa rõ",
+        "CONFIDENCE_LOW": "Độ tin cậy thấp",
+    }
+    return labels.get(value, value)

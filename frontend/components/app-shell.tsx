@@ -7,6 +7,7 @@ import {
   History,
   LogOut,
   Scale,
+  UploadCloud,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -19,11 +20,14 @@ type AppShellProps = {
   area: "client" | "admin";
 };
 
-const clientNav = [{ href: "/documents", label: "Documents", icon: FileText }];
+const clientNav = [
+  { href: "/documents", label: "Tài liệu", icon: FileText },
+  { href: "/documents/upload", label: "Tải lên", icon: UploadCloud },
+];
 const adminNav = [
-  { href: "/admin/queue", label: "Queue", icon: ClipboardList },
-  { href: "/admin/dashboard", label: "Dashboard", icon: Gauge },
-  { href: "/admin/audit-logs", label: "Audit logs", icon: History },
+  { href: "/admin/queue", label: "Hàng chờ", icon: ClipboardList },
+  { href: "/admin/dashboard", label: "Tổng quan", icon: Gauge },
+  { href: "/admin/audit-logs", label: "Nhật ký audit", icon: History },
 ];
 
 export function AppShell({ children, area }: AppShellProps) {
@@ -89,10 +93,13 @@ export function AppShell({ children, area }: AppShellProps) {
           <span>LegalReview</span>
         </Link>
 
-        <nav className="nav-list" aria-label={`${area} navigation`}>
+        <nav className="nav-list" aria-label={area === "admin" ? "Điều hướng admin" : "Điều hướng khách hàng"}>
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href;
+            const isActive =
+              item.href === "/documents"
+                ? pathname === "/documents" || (pathname.startsWith("/documents/") && pathname !== "/documents/upload")
+                : pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link className={isActive ? "nav-item active" : "nav-item"} href={item.href} key={item.href}>
                 <Icon size={18} aria-hidden="true" />
@@ -105,9 +112,9 @@ export function AppShell({ children, area }: AppShellProps) {
         <div className="sidebar-footer">
           <div>
             <p>{user.email}</p>
-            <span>{user.role}</span>
+            <span>{roleLabel(user.role)}</span>
           </div>
-          <button className="icon-button" type="button" onClick={logout} aria-label="Log out" title="Log out">
+          <button className="icon-button" type="button" onClick={logout} aria-label="Đăng xuất" title="Đăng xuất">
             <LogOut size={18} />
           </button>
         </div>
@@ -118,3 +125,10 @@ export function AppShell({ children, area }: AppShellProps) {
   );
 }
 
+function roleLabel(role: string): string {
+  return {
+    admin: "Admin",
+    client: "Khách hàng",
+    reviewer: "Người rà soát",
+  }[role] ?? role;
+}

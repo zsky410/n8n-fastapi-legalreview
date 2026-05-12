@@ -1,0 +1,67 @@
+- generic [ref=e1]:
+  - alert [ref=e26]
+  - generic [ref=e27]:
+    - complementary [ref=e28]:
+      - link "LegalReview" [ref=e29] [cursor=pointer]:
+        - /url: /admin/queue
+        - img [ref=e31]
+        - generic [ref=e35]: LegalReview
+      - navigation "Điều hướng admin" [ref=e36]:
+        - link "Hàng chờ" [ref=e37] [cursor=pointer]:
+          - /url: /admin/queue
+          - img [ref=e38]
+          - generic [ref=e41]: Hàng chờ
+        - link "Tổng quan" [active] [ref=e42] [cursor=pointer]:
+          - /url: /admin/dashboard
+          - img [ref=e43]
+          - generic [ref=e46]: Tổng quan
+        - link "Nhật ký audit" [ref=e47] [cursor=pointer]:
+          - /url: /admin/audit-logs
+          - img [ref=e48]
+          - generic [ref=e52]: Nhật ký audit
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - paragraph [ref=e55]: admin@example.com
+          - generic [ref=e56]: Admin
+        - button "Đăng xuất" [ref=e57] [cursor=pointer]:
+          - img [ref=e58]
+    - main [ref=e61]:
+      - generic [ref=e122]:
+        - generic [ref=e123]:
+          - generic [ref=e124]:
+            - paragraph [ref=e125]: Vận hành
+            - heading "Bảng tổng quan" [level=1] [ref=e126]
+          - button "Làm mới" [ref=e127] [cursor=pointer]:
+            - img [ref=e128]
+            - generic [ref=e133]: Làm mới
+        - generic [ref=e134]:
+          - generic [ref=e135]:
+            - generic [ref=e136]: Tổng tài liệu
+            - strong [ref=e137]: "8"
+            - generic [ref=e138]: Tất cả lượt gửi
+          - generic [ref=e139]:
+            - generic [ref=e140]: AI đã duyệt
+            - strong [ref=e141]: "3"
+            - generic [ref=e142]: Tự động thông qua
+          - generic [ref=e143]:
+            - generic [ref=e144]: Chờ admin
+            - strong [ref=e145]: "4"
+            - generic [ref=e146]: Cần người rà soát xử lý
+          - generic [ref=e147]:
+            - generic [ref=e148]: Đã từ chối
+            - strong [ref=e149]: "0"
+            - generic [ref=e150]: Quyết định thủ công
+          - generic [ref=e151]:
+            - generic [ref=e152]: Tỷ lệ duyệt
+            - strong [ref=e153]: 50%
+            - generic [ref=e154]: Tỷ lệ được thông qua
+        - generic [ref=e155]:
+          - generic [ref=e156]:
+            - generic [ref=e157]: Lý do gắn cờ nhiều nhất
+            - strong [ref=e158]: Thiếu điều khoản chấm dứt
+          - generic [ref=e159]:
+            - generic [ref=e160]: Admin đã duyệt
+            - strong [ref=e161]: "1"
+          - generic [ref=e162]:
+            - generic [ref=e163]: Thất bại
+            - strong [ref=e164]: "0"

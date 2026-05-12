@@ -1,0 +1,23 @@
+- generic [active] [ref=e1]:
+  - main [ref=e2]:
+    - region "LegalReview login" [ref=e3]:
+      - generic [ref=e4]:
+        - img [ref=e6]
+        - generic [ref=e10]:
+          - paragraph [ref=e11]: LegalReview
+          - heading "Review console" [level=1] [ref=e12]
+      - generic [ref=e13]:
+        - generic [ref=e14]:
+          - text: Email
+          - textbox "Email" [ref=e15]: client@example.com
+        - generic [ref=e16]:
+          - text: Password
+          - textbox "Password" [ref=e17]: password123
+        - button "Sign in" [ref=e18] [cursor=pointer]:
+          - generic [ref=e19]: Sign in
+          - img [ref=e20]
+      - generic "Demo accounts" [ref=e22]:
+        - button "Client" [ref=e23] [cursor=pointer]
+        - button "Reviewer" [ref=e24] [cursor=pointer]
+        - button "Admin" [ref=e25] [cursor=pointer]
+  - alert [ref=e26]

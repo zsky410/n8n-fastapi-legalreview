@@ -1,0 +1,91 @@
+- generic [ref=e1]:
+  - alert [ref=e26]
+  - generic [ref=e27]:
+    - complementary [ref=e28]:
+      - link "LegalReview" [ref=e29] [cursor=pointer]:
+        - /url: /admin/queue
+        - img [ref=e31]
+        - generic [ref=e35]: LegalReview
+      - navigation "Điều hướng admin" [ref=e36]:
+        - link "Hàng chờ" [active] [ref=e37] [cursor=pointer]:
+          - /url: /admin/queue
+          - img [ref=e38]
+          - generic [ref=e41]: Hàng chờ
+        - link "Tổng quan" [ref=e42] [cursor=pointer]:
+          - /url: /admin/dashboard
+          - img [ref=e43]
+          - generic [ref=e46]: Tổng quan
+        - link "Nhật ký audit" [ref=e47] [cursor=pointer]:
+          - /url: /admin/audit-logs
+          - img [ref=e48]
+          - generic [ref=e52]: Nhật ký audit
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - paragraph [ref=e55]: admin@example.com
+          - generic [ref=e56]: Admin
+        - button "Đăng xuất" [ref=e57] [cursor=pointer]:
+          - img [ref=e58]
+    - main [ref=e61]:
+      - generic [ref=e388]:
+        - generic [ref=e389]:
+          - generic [ref=e390]:
+            - paragraph [ref=e391]: Khu vực người rà soát
+            - heading "Hàng chờ rà soát" [level=1] [ref=e392]
+          - generic [ref=e393]:
+            - button "Làm mới" [ref=e394] [cursor=pointer]:
+              - img [ref=e395]
+              - generic [ref=e400]: Làm mới
+            - generic [ref=e401]: 4 đang chờ
+        - generic [ref=e402]:
+          - generic [ref=e403]:
+            - generic [ref=e404]: Tài liệu
+            - generic [ref=e405]: Người gửi
+            - generic [ref=e406]: Cờ rủi ro
+            - generic [ref=e407]: Rủi ro
+            - generic [ref=e408]: Thời gian chờ
+          - generic [ref=e409]:
+            - link "risky-contract.docx 18:44 11 thg 5, 2026 client@example.com Thiếu chữ ký Giá trị cao Sắp hết hạn 100 17 giờ trước" [ref=e410] [cursor=pointer]:
+              - /url: /admin/documents/7a6eaf17-ff14-4f15-ac76-6ab2e001b841
+              - generic [ref=e411]:
+                - strong [ref=e412]: risky-contract.docx
+                - text: 18:44 11 thg 5, 2026
+              - generic [ref=e413]: client@example.com
+              - generic [ref=e414]:
+                - generic [ref=e415]: Thiếu chữ ký
+                - generic [ref=e416]: Giá trị cao
+                - generic [ref=e417]: Sắp hết hạn
+              - generic [ref=e418]: "100"
+              - generic [ref=e419]: 17 giờ trước
+            - link "risky-contract.docx 18:52 11 thg 5, 2026 client@example.com Thiếu chữ ký Giá trị cao Sắp hết hạn 100 17 giờ trước" [ref=e420] [cursor=pointer]:
+              - /url: /admin/documents/801a5b76-e5fc-41b9-b5d4-3afd4bd34637
+              - generic [ref=e421]:
+                - strong [ref=e422]: risky-contract.docx
+                - text: 18:52 11 thg 5, 2026
+              - generic [ref=e423]: client@example.com
+              - generic [ref=e424]:
+                - generic [ref=e425]: Thiếu chữ ký
+                - generic [ref=e426]: Giá trị cao
+                - generic [ref=e427]: Sắp hết hạn
+              - generic [ref=e428]: "100"
+              - generic [ref=e429]: 17 giờ trước
+            - link "risky-contract.docx 18:56 11 thg 5, 2026 client@example.com Thiếu chữ ký Giá trị cao Sắp hết hạn 100 17 giờ trước" [ref=e430] [cursor=pointer]:
+              - /url: /admin/documents/66b75773-a303-4d28-b1a3-5f72c682b876
+              - generic [ref=e431]:
+                - strong [ref=e432]: risky-contract.docx
+                - text: 18:56 11 thg 5, 2026
+              - generic [ref=e433]: client@example.com
+              - generic [ref=e434]:
+                - generic [ref=e435]: Thiếu chữ ký
+                - generic [ref=e436]: Giá trị cao
+                - generic [ref=e437]: Sắp hết hạn
+              - generic [ref=e438]: "100"
+              - generic [ref=e439]: 17 giờ trước
+            - link "safe-nda.docx 18:43 11 thg 5, 2026 client@example.com Thiếu điều khoản chấm dứt 25 17 giờ trước" [ref=e440] [cursor=pointer]:
+              - /url: /admin/documents/c116fa20-569a-4ed6-b499-ed19283a9dda
+              - generic [ref=e441]:
+                - strong [ref=e442]: safe-nda.docx
+                - text: 18:43 11 thg 5, 2026
+              - generic [ref=e443]: client@example.com
+              - generic [ref=e445]: Thiếu điều khoản chấm dứt
+              - generic [ref=e446]: "25"
+              - generic [ref=e447]: 17 giờ trước

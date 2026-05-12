@@ -7,8 +7,8 @@ import { useRouter } from "next/navigation";
 import { API_URL, LoginResponse } from "@/lib/api";
 
 const demoAccounts = [
-  { label: "Client", email: "client@example.com" },
-  { label: "Reviewer", email: "reviewer@example.com" },
+  { label: "Khách hàng", email: "client@example.com" },
+  { label: "Người rà soát", email: "reviewer@example.com" },
   { label: "Admin", email: "admin@example.com" },
 ];
 
@@ -32,7 +32,7 @@ export function LoginForm() {
       });
 
       if (!response.ok) {
-        throw new Error("Invalid email or password");
+        throw new Error("Email hoặc mật khẩu không đúng");
       }
 
       const data = (await response.json()) as LoginResponse;
@@ -46,7 +46,7 @@ export function LoginForm() {
 
       router.replace("/documents");
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Login failed");
+      setError(caught instanceof Error ? caught.message : "Đăng nhập thất bại");
     } finally {
       setIsSubmitting(false);
     }
@@ -54,14 +54,14 @@ export function LoginForm() {
 
   return (
     <main className="login-screen">
-      <section className="login-panel" aria-label="LegalReview login">
+      <section className="login-panel" aria-label="Đăng nhập LegalReview">
         <div className="login-brand">
           <div className="brand-mark" aria-hidden="true">
             <Scale size={22} />
           </div>
           <div>
             <p className="eyebrow">LegalReview</p>
-            <h1>Review console</h1>
+            <h1>Bảng điều phối rà soát</h1>
           </div>
         </div>
 
@@ -78,7 +78,7 @@ export function LoginForm() {
           </label>
 
           <label>
-            Password
+            Mật khẩu
             <input
               type="password"
               autoComplete="current-password"
@@ -91,12 +91,12 @@ export function LoginForm() {
           {error ? <p className="form-error">{error}</p> : null}
 
           <button className="primary-button" type="submit" disabled={isSubmitting}>
-            <span>{isSubmitting ? "Signing in" : "Sign in"}</span>
+            <span>{isSubmitting ? "Đang đăng nhập" : "Đăng nhập"}</span>
             <ArrowRight size={18} aria-hidden="true" />
           </button>
         </form>
 
-        <div className="demo-strip" aria-label="Demo accounts">
+        <div className="demo-strip" aria-label="Tài khoản demo">
           {demoAccounts.map((account) => (
             <button
               key={account.email}
@@ -115,4 +115,3 @@ export function LoginForm() {
     </main>
   );
 }
-

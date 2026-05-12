@@ -1,15 +1,78 @@
+"use client";
+
+import { FileUp, UploadCloud } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChangeEvent, FormEvent, useState } from "react";
+
+import { uploadDocument } from "@/lib/api";
+import { formatBytes } from "@/lib/format";
+import { PageError } from "@/components/ui";
+
 export default function UploadPage() {
+  const router = useRouter();
+  const [file, setFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const selectedFile = event.target.files?.[0] ?? null;
+    setFile(selectedFile);
+    setError(null);
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!file) {
+      setError("Vui lòng chọn file PDF hoặc DOCX trước");
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      const uploaded = await uploadDocument(file);
+      router.push(`/documents/${uploaded.id}`);
+    } catch (caught) {
+      setError(caught instanceof Error ? caught.message : "Tải tài liệu thất bại");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
-    <section className="page-stack">
+    <section className="page-stack narrow">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Client workspace</p>
-          <h1>Upload</h1>
+          <p className="eyebrow">Khu vực khách hàng</p>
+          <h1>Tải tài liệu</h1>
         </div>
       </header>
-      <section className="data-panel">
-        <div className="empty-state">No upload session</div>
-      </section>
+
+      {error ? <PageError message={error} /> : null}
+
+      <form className="upload-panel" onSubmit={handleSubmit}>
+        <label className="drop-zone">
+          <FileUp size={34} aria-hidden="true" />
+          <span>{file ? file.name : "Chọn tài liệu pháp lý"}</span>
+          <small>{file ? `Đã chọn ${formatBytes(file.size)}` : "PDF hoặc DOCX, tối đa 10 MB"}</small>
+          <input
+            type="file"
+            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            onChange={handleFileChange}
+          />
+        </label>
+
+        <div className="upload-summary">
+          <div>
+            <strong>Quy trình rà soát</strong>
+            <p>Trích xuất, phân loại, chấm điểm rủi ro và thông báo sẽ chạy ngay sau khi tải lên.</p>
+          </div>
+          <button className="primary-button" type="submit" disabled={isSubmitting}>
+            <UploadCloud size={18} aria-hidden="true" />
+            <span>{isSubmitting ? "Đang tải lên" : "Tải tài liệu"}</span>
+          </button>
+        </div>
+      </form>
     </section>
   );
 }

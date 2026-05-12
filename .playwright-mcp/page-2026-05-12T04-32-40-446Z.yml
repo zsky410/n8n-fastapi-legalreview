@@ -1,0 +1,281 @@
+- generic [ref=e1]:
+  - alert [ref=e26]
+  - generic [ref=e27]:
+    - complementary [ref=e28]:
+      - link "LegalReview" [ref=e29] [cursor=pointer]:
+        - /url: /admin/queue
+        - img [ref=e31]
+        - generic [ref=e35]: LegalReview
+      - navigation "Điều hướng admin" [ref=e36]:
+        - link "Hàng chờ" [ref=e37] [cursor=pointer]:
+          - /url: /admin/queue
+          - img [ref=e38]
+          - generic [ref=e41]: Hàng chờ
+        - link "Tổng quan" [ref=e42] [cursor=pointer]:
+          - /url: /admin/dashboard
+          - img [ref=e43]
+          - generic [ref=e46]: Tổng quan
+        - link "Nhật ký audit" [active] [ref=e47] [cursor=pointer]:
+          - /url: /admin/audit-logs
+          - img [ref=e48]
+          - generic [ref=e52]: Nhật ký audit
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - paragraph [ref=e55]: admin@example.com
+          - generic [ref=e56]: Admin
+        - button "Đăng xuất" [ref=e57] [cursor=pointer]:
+          - img [ref=e58]
+    - main [ref=e61]:
+      - generic [ref=e165]:
+        - generic [ref=e166]:
+          - generic [ref=e167]:
+            - paragraph [ref=e168]: Truy vết
+            - heading "Nhật ký audit" [level=1] [ref=e169]
+          - button "Làm mới" [ref=e170] [cursor=pointer]:
+            - img [ref=e171]
+            - generic [ref=e176]: Làm mới
+        - generic [ref=e177]:
+          - generic [ref=e178]:
+            - generic [ref=e179]: Hành động
+            - generic [ref=e180]: Người thực hiện
+            - generic [ref=e181]: Đối tượng
+            - generic [ref=e182]: Thời gian
+          - generic [ref=e183]:
+            - generic [ref=e184]:
+              - generic [ref=e185]:
+                - strong [ref=e186]: n8n callback received
+                - text: "{\"status\":\"success\",\"trace_id\":\"doc-c3782266-a144-4157-aa23-abea39cc1b2c-1778522325\",\"workflow\":\"document-result-router\""
+              - generic [ref=e187]: Hệ thống
+              - generic [ref=e188]: Sự kiện n8n
+              - generic [ref=e189]: 00:58 12 thg 5, 2026
+            - generic [ref=e190]:
+              - generic [ref=e191]:
+                - strong [ref=e192]: admin decision submitted
+                - text: "{\"comment\":\"Smoke test approval for Day 4 UI flow.\",\"decision\":\"admin_approved\",\"previous_status\":\"pending_admin\"}"
+              - generic [ref=e193]: admin@example.com
+              - generic [ref=e194]: Tài liệu
+              - generic [ref=e195]: 00:58 12 thg 5, 2026
+            - generic [ref=e196]:
+              - generic [ref=e197]:
+                - strong [ref=e198]: n8n callback received
+                - text: "{\"status\":\"success\",\"trace_id\":\"summary-1778502923291\",\"workflow\":\"compliance-monitor-audit\",\"event_type\":\"compliance.we"
+              - generic [ref=e199]: Hệ thống
+              - generic [ref=e200]: Sự kiện n8n
+              - generic [ref=e201]: 19:35 11 thg 5, 2026
+            - generic [ref=e202]:
+              - generic [ref=e203]:
+                - strong [ref=e204]: n8n callback received
+                - text: "{\"status\":\"success\",\"trace_id\":\"audit-1778502923209\",\"workflow\":\"compliance-monitor-audit\",\"event_type\":\"compliance.week"
+              - generic [ref=e205]: Hệ thống
+              - generic [ref=e206]: Sự kiện n8n
+              - generic [ref=e207]: 19:35 11 thg 5, 2026
+            - generic [ref=e208]:
+              - generic [ref=e209]:
+                - strong [ref=e210]: n8n callback received
+                - text: "{\"status\":\"success\",\"trace_id\":\"expiry-empty-1778502923087\",\"workflow\":\"compliance-monitor-audit\",\"event_type\":\"complian"
+              - generic [ref=e211]: Hệ thống
+              - generic [ref=e212]: Sự kiện n8n
+              - generic [ref=e213]: 19:35 11 thg 5, 2026
+            - generic [ref=e214]:
+              - generic [ref=e215]:
+                - strong [ref=e216]: n8n callback received
+                - text: "{\"status\":\"success\",\"trace_id\":\"summary-1778502869788\",\"workflow\":\"compliance-monitor-audit\",\"event_type\":\"compliance.we"
+              - generic [ref=e217]: Hệ thống
+              - generic [ref=e218]: Sự kiện n8n
+              - generic [ref=e219]: 19:34 11 thg 5, 2026
+            - generic [ref=e220]:
+              - generic [ref=e221]:
+                - strong [ref=e222]: n8n callback received
+                - text: "{\"status\":\"success\",\"trace_id\":\"audit-1778502869700\",\"workflow\":\"compliance-monitor-audit\",\"event_type\":\"compliance.week"
+              - generic [ref=e223]: Hệ thống
+              - generic [ref=e224]: Sự kiện n8n
+              - generic [ref=e225]: 19:34 11 thg 5, 2026
+            - generic [ref=e226]:
+              - generic [ref=e227]:
+                - strong [ref=e228]: n8n callback received
+                - text: "{\"status\":\"success\",\"trace_id\":\"manual-n8n-router-test-2\",\"workflow\":\"document-result-router\",\"event_type\":\"notification"
+              - generic [ref=e229]: Hệ thống
+              - generic [ref=e230]: Sự kiện n8n
+              - generic [ref=e231]: 19:33 11 thg 5, 2026
+            - generic [ref=e232]:
+              - generic [ref=e233]:
+                - strong [ref=e234]: n8n callback received
+                - text: "{\"status\":\"success\",\"trace_id\":null,\"workflow\":\"document-result-router\",\"event_type\":\"notification.sent\"}"
+              - generic [ref=e235]: Hệ thống
+              - generic [ref=e236]: Sự kiện n8n
+              - generic [ref=e237]: 19:30 11 thg 5, 2026
+            - generic [ref=e238]:
+              - generic [ref=e239]:
+                - strong [ref=e240]: n8n callback received
+                - text: "{\"status\":\"success\",\"trace_id\":\"manual-day3-live-test\",\"workflow\":\"document-result-router\",\"event_type\":\"notification.se"
+              - generic [ref=e241]: Hệ thống
+              - generic [ref=e242]: Sự kiện n8n
+              - generic [ref=e243]: 19:28 11 thg 5, 2026
+            - generic [ref=e244]:
+              - generic [ref=e245]:
+                - strong [ref=e246]: ai review completed
+                - text: "{\"verdict\":\"needs_review\",\"provider\":\"mock\",\"reasoning\":[\"MISSING_SIGNATURE: Confirm the agreement includes signature an"
+              - generic [ref=e247]: client@example.com
+              - generic [ref=e248]: Tài liệu
+              - generic [ref=e249]: 18:56 11 thg 5, 2026
+            - generic [ref=e250]:
+              - generic [ref=e251]:
+                - strong [ref=e252]: document processing started
+                - text: "{\"filename\":\"risky-contract.docx\"}"
+              - generic [ref=e253]: client@example.com
+              - generic [ref=e254]: Tài liệu
+              - generic [ref=e255]: 18:56 11 thg 5, 2026
+            - generic [ref=e256]:
+              - generic [ref=e257]:
+                - strong [ref=e258]: document uploaded
+                - text: "{\"mime\":\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",\"sha256\":\"4ee1004b98154e3db2c77c6f8d27"
+              - generic [ref=e259]: client@example.com
+              - generic [ref=e260]: Tài liệu
+              - generic [ref=e261]: 18:56 11 thg 5, 2026
+            - generic [ref=e262]:
+              - generic [ref=e263]:
+                - strong [ref=e264]: ai review completed
+                - text: "{\"verdict\":\"approve\",\"provider\":\"mock\",\"reasoning\":[\"No material risk findings were detected by the rules engine.\"],\"con"
+              - generic [ref=e265]: client@example.com
+              - generic [ref=e266]: Tài liệu
+              - generic [ref=e267]: 18:56 11 thg 5, 2026
+            - generic [ref=e268]:
+              - generic [ref=e269]:
+                - strong [ref=e270]: document processing started
+                - text: "{\"filename\":\"safe-nda.docx\"}"
+              - generic [ref=e271]: client@example.com
+              - generic [ref=e272]: Tài liệu
+              - generic [ref=e273]: 18:56 11 thg 5, 2026
+            - generic [ref=e274]:
+              - generic [ref=e275]:
+                - strong [ref=e276]: document uploaded
+                - text: "{\"mime\":\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",\"sha256\":\"117eb7ed167a39c7f63ee065ae47"
+              - generic [ref=e277]: client@example.com
+              - generic [ref=e278]: Tài liệu
+              - generic [ref=e279]: 18:56 11 thg 5, 2026
+            - generic [ref=e280]:
+              - generic [ref=e281]:
+                - strong [ref=e282]: ai review completed
+                - text: "{\"verdict\":\"needs_review\",\"provider\":\"mock\",\"reasoning\":[\"MISSING_SIGNATURE: Confirm the agreement includes signature an"
+              - generic [ref=e283]: client@example.com
+              - generic [ref=e284]: Tài liệu
+              - generic [ref=e285]: 18:52 11 thg 5, 2026
+            - generic [ref=e286]:
+              - generic [ref=e287]:
+                - strong [ref=e288]: document processing started
+                - text: "{\"filename\":\"risky-contract.docx\"}"
+              - generic [ref=e289]: client@example.com
+              - generic [ref=e290]: Tài liệu
+              - generic [ref=e291]: 18:52 11 thg 5, 2026
+            - generic [ref=e292]:
+              - generic [ref=e293]:
+                - strong [ref=e294]: document uploaded
+                - text: "{\"mime\":\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",\"sha256\":\"cc954a2e074f52ae3515d4825d28"
+              - generic [ref=e295]: client@example.com
+              - generic [ref=e296]: Tài liệu
+              - generic [ref=e297]: 18:52 11 thg 5, 2026
+            - generic [ref=e298]:
+              - generic [ref=e299]:
+                - strong [ref=e300]: ai review completed
+                - text: "{\"verdict\":\"approve\",\"provider\":\"mock\",\"reasoning\":[\"No material risk findings were detected by the rules engine.\"],\"con"
+              - generic [ref=e301]: client@example.com
+              - generic [ref=e302]: Tài liệu
+              - generic [ref=e303]: 18:52 11 thg 5, 2026
+            - generic [ref=e304]:
+              - generic [ref=e305]:
+                - strong [ref=e306]: document processing started
+                - text: "{\"filename\":\"safe-nda.docx\"}"
+              - generic [ref=e307]: client@example.com
+              - generic [ref=e308]: Tài liệu
+              - generic [ref=e309]: 18:52 11 thg 5, 2026
+            - generic [ref=e310]:
+              - generic [ref=e311]:
+                - strong [ref=e312]: document uploaded
+                - text: "{\"mime\":\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",\"sha256\":\"35035a23896129ace6823105b5b0"
+              - generic [ref=e313]: client@example.com
+              - generic [ref=e314]: Tài liệu
+              - generic [ref=e315]: 18:52 11 thg 5, 2026
+            - generic [ref=e316]:
+              - generic [ref=e317]:
+                - strong [ref=e318]: ai review completed
+                - text: "{\"verdict\":\"needs_review\",\"provider\":\"mock\",\"reasoning\":[\"MISSING_SIGNATURE: Confirm the agreement includes signature an"
+              - generic [ref=e319]: client@example.com
+              - generic [ref=e320]: Tài liệu
+              - generic [ref=e321]: 18:44 11 thg 5, 2026
+            - generic [ref=e322]:
+              - generic [ref=e323]:
+                - strong [ref=e324]: document processing started
+                - text: "{\"filename\":\"risky-contract.docx\"}"
+              - generic [ref=e325]: client@example.com
+              - generic [ref=e326]: Tài liệu
+              - generic [ref=e327]: 18:44 11 thg 5, 2026
+            - generic [ref=e328]:
+              - generic [ref=e329]:
+                - strong [ref=e330]: document uploaded
+                - text: "{\"mime\":\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",\"sha256\":\"4ff2f4decfa3211884b0c1105337"
+              - generic [ref=e331]: client@example.com
+              - generic [ref=e332]: Tài liệu
+              - generic [ref=e333]: 18:44 11 thg 5, 2026
+            - generic [ref=e334]:
+              - generic [ref=e335]:
+                - strong [ref=e336]: ai review completed
+                - text: "{\"verdict\":\"approve\",\"provider\":\"mock\",\"reasoning\":[\"No material risk findings were detected by the rules engine.\"],\"con"
+              - generic [ref=e337]: client@example.com
+              - generic [ref=e338]: Tài liệu
+              - generic [ref=e339]: 18:44 11 thg 5, 2026
+            - generic [ref=e340]:
+              - generic [ref=e341]:
+                - strong [ref=e342]: document processing started
+                - text: "{\"filename\":\"safe-nda.docx\"}"
+              - generic [ref=e343]: client@example.com
+              - generic [ref=e344]: Tài liệu
+              - generic [ref=e345]: 18:44 11 thg 5, 2026
+            - generic [ref=e346]:
+              - generic [ref=e347]:
+                - strong [ref=e348]: document uploaded
+                - text: "{\"mime\":\"application/vnd.openxmlformats-officedocument.wordprocessingml.document\",\"sha256\":\"d67541d9080400c7fb7f461ee4c7"
+              - generic [ref=e349]: client@example.com
+              - generic [ref=e350]: Tài liệu
+              - generic [ref=e351]: 18:44 11 thg 5, 2026
+            - generic [ref=e352]:
+              - generic [ref=e353]:
+                - strong [ref=e354]: ai review completed
+                - text: "{\"verdict\":\"needs_review\",\"provider\":\"mock\",\"reasoning\":[\"MISSING_SIGNATURE: Confirm the agreement includes signature an"
+              - generic [ref=e355]: client@example.com
+              - generic [ref=e356]: Tài liệu
+              - generic [ref=e357]: 18:43 11 thg 5, 2026
+            - generic [ref=e358]:
+              - generic [ref=e359]:
+                - strong [ref=e360]: document processing started
+                - text: "{\"filename\":\"risky-contract.docx\"}"
+              - generic [ref=e361]: client@example.com
+              - generic [ref=e362]: Tài liệu
+              - generic [ref=e363]: 18:43 11 thg 5, 2026
+            - generic [ref=e364]:
+              - generic [ref=e365]:
+                - strong [ref=e366]: document uploaded
+                - text: "{\"mime\":\"application/octet-stream\",\"sha256\":\"4ff2f4decfa3211884b0c11053374ebe9b78b854112366262f7b5199e20e7623\",\"filename"
+              - generic [ref=e367]: client@example.com
+              - generic [ref=e368]: Tài liệu
+              - generic [ref=e369]: 18:43 11 thg 5, 2026
+            - generic [ref=e370]:
+              - generic [ref=e371]:
+                - strong [ref=e372]: ai review completed
+                - text: "{\"verdict\":\"needs_review\",\"provider\":\"mock\",\"reasoning\":[\"NO_TERMINATION_CLAUSE: Add explicit termination rights and not"
+              - generic [ref=e373]: client@example.com
+              - generic [ref=e374]: Tài liệu
+              - generic [ref=e375]: 18:43 11 thg 5, 2026
+            - generic [ref=e376]:
+              - generic [ref=e377]:
+                - strong [ref=e378]: document processing started
+                - text: "{\"filename\":\"safe-nda.docx\"}"
+              - generic [ref=e379]: client@example.com
+              - generic [ref=e380]: Tài liệu
+              - generic [ref=e381]: 18:43 11 thg 5, 2026
+            - generic [ref=e382]:
+              - generic [ref=e383]:
+                - strong [ref=e384]: document uploaded
+                - text: "{\"mime\":\"application/octet-stream\",\"sha256\":\"d67541d9080400c7fb7f461ee4c7d38992fc3eb1423ad49e9438b9683b1ac14b\",\"filename"
+              - generic [ref=e385]: client@example.com
+              - generic [ref=e386]: Tài liệu
+              - generic [ref=e387]: 18:43 11 thg 5, 2026

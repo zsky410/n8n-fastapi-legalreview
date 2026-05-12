@@ -1,0 +1,171 @@
+- generic [active] [ref=e1]:
+  - alert [ref=e26]
+  - generic [ref=e27]:
+    - complementary [ref=e28]:
+      - link "LegalReview" [ref=e29] [cursor=pointer]:
+        - /url: /admin/queue
+        - img [ref=e31]
+        - generic [ref=e35]: LegalReview
+      - navigation "Điều hướng admin" [ref=e36]:
+        - link "Hàng chờ" [ref=e37] [cursor=pointer]:
+          - /url: /admin/queue
+          - img [ref=e38]
+          - generic [ref=e41]: Hàng chờ
+        - link "Tổng quan" [ref=e42] [cursor=pointer]:
+          - /url: /admin/dashboard
+          - img [ref=e43]
+          - generic [ref=e46]: Tổng quan
+        - link "Nhật ký audit" [ref=e47] [cursor=pointer]:
+          - /url: /admin/audit-logs
+          - img [ref=e48]
+          - generic [ref=e52]: Nhật ký audit
+      - generic [ref=e53]:
+        - generic [ref=e54]:
+          - paragraph [ref=e55]: admin@example.com
+          - generic [ref=e56]: Admin
+        - button "Đăng xuất" [ref=e57] [cursor=pointer]:
+          - img [ref=e58]
+    - main [ref=e61]:
+      - generic [ref=e448]:
+        - generic [ref=e449]:
+          - generic [ref=e450]:
+            - paragraph [ref=e451]: Tài liệu cần duyệt
+            - heading "risky-contract.docx" [level=1] [ref=e452]
+          - generic [ref=e453]:
+            - button "Làm mới" [ref=e454] [cursor=pointer]:
+              - img [ref=e455]
+              - generic [ref=e460]: Làm mới
+            - generic [ref=e461]: Chờ admin duyệt
+        - generic [ref=e462]:
+          - generic [ref=e463]:
+            - generic [ref=e464]: Người gửi
+            - strong [ref=e465]: client@example.com
+          - generic [ref=e466]:
+            - generic [ref=e467]: Điểm rủi ro
+            - strong [ref=e468]: "100"
+          - generic [ref=e469]:
+            - generic [ref=e470]: Phân loại
+            - strong [ref=e471]: Hợp đồng
+          - generic [ref=e472]:
+            - generic [ref=e473]: Độ tin cậy AI
+            - strong [ref=e474]: 40%
+        - generic [ref=e475]:
+          - generic [ref=e476]:
+            - heading "Thông tin tài liệu" [level=2] [ref=e477]
+            - generic [ref=e478]:
+              - generic [ref=e479]:
+                - generic [ref=e480]: Tên file
+                - strong [ref=e481]: risky-contract.docx
+              - generic [ref=e482]:
+                - generic [ref=e483]: Dung lượng
+                - strong [ref=e484]: 35.9 KB
+              - generic [ref=e485]:
+                - generic [ref=e486]: MIME
+                - strong [ref=e487]: application/vnd.openxmlformats-officedocument.wordprocessingml.document
+              - generic [ref=e488]:
+                - generic [ref=e489]: Đã tải lên
+                - strong [ref=e490]: 18:44 11 thg 5, 2026
+              - generic [ref=e491]:
+                - generic [ref=e492]: Đã xử lý
+                - strong [ref=e493]: 18:44 11 thg 5, 2026
+              - generic [ref=e494]:
+                - generic [ref=e495]: SHA-256
+                - strong [ref=e496]: 4ff2f4decfa3211884b0c11053374ebe9b78b854112366262f7b5199e20e7623
+          - generic [ref=e497]:
+            - heading "Biểu mẫu quyết định" [level=2] [ref=e498]
+            - generic [ref=e499]:
+              - generic "Quyết định" [ref=e500]:
+                - button "Duyệt" [ref=e501] [cursor=pointer]:
+                  - img [ref=e502]
+                  - text: Duyệt
+                - button "Từ chối" [ref=e505] [cursor=pointer]:
+                  - img [ref=e506]
+                  - text: Từ chối
+              - generic [ref=e510]:
+                - text: Ghi chú của người rà soát
+                - textbox "Ghi chú của người rà soát" [ref=e511]
+              - button "Gửi quyết định" [ref=e512] [cursor=pointer]
+        - generic [ref=e513]:
+          - heading "Quyết định AI" [level=2] [ref=e514]
+          - article [ref=e515]:
+            - paragraph [ref=e516]: "This contract was flagged with a risk score of 100. Top issues: MISSING_SIGNATURE, HIGH_VALUE, EXPIRY_SOON."
+          - generic [ref=e517]:
+            - generic [ref=e518]:
+              - generic [ref=e519]: Trạng thái rà soát
+              - strong [ref=e520]: Chờ admin duyệt
+            - generic [ref=e521]:
+              - generic [ref=e522]: Xử lý
+              - strong [ref=e523]: Hoàn tất
+            - generic [ref=e524]:
+              - generic [ref=e525]: Độ tin cậy phân loại
+              - strong [ref=e526]: 35%
+            - generic [ref=e527]:
+              - generic [ref=e528]: Độ tin cậy AI
+              - strong [ref=e529]: 40%
+        - generic [ref=e530]:
+          - heading "Lý do bị gắn cờ" [level=2] [ref=e531]
+          - generic [ref=e532]:
+            - generic [ref=e533]: Thiếu chữ ký
+            - generic [ref=e534]: Giá trị cao
+            - generic [ref=e535]: Sắp hết hạn
+            - generic [ref=e536]: Thiếu điều khoản chấm dứt
+            - generic [ref=e537]: Thiếu luật điều chỉnh
+            - generic [ref=e538]: Bồi thường quá rộng
+            - generic [ref=e539]: Độ tin cậy thấp
+        - generic [ref=e540]:
+          - heading "Phát hiện rủi ro" [level=2] [ref=e541]
+          - generic [ref=e542]:
+            - article [ref=e543]:
+              - generic [ref=e544]:
+                - strong [ref=e545]: Thiếu chữ ký
+                - generic [ref=e546]: Cao
+              - paragraph [ref=e547]: Không phát hiện nội dung về chữ ký.
+              - generic [ref=e548]: Kiểm tra tài liệu có đầy đủ phần chữ ký và thông tin ký kết.
+            - article [ref=e549]:
+              - generic [ref=e550]:
+                - strong [ref=e551]: Giá trị cao
+                - generic [ref=e552]: Rất cao
+              - paragraph [ref=e553]: Phát hiện giá trị 250,000.00.
+              - generic [ref=e554]: Chuyển tài liệu giá trị cao sang duyệt thủ công.
+            - article [ref=e555]:
+              - generic [ref=e556]:
+                - strong [ref=e557]: Sắp hết hạn
+                - generic [ref=e558]: Trung bình
+              - paragraph [ref=e559]: Tài liệu có vẻ hết hạn vào 2026-05-21.
+              - generic [ref=e560]: Kiểm tra điều khoản gia hạn hoặc gia hạn trước khi tài liệu hết hiệu lực.
+            - article [ref=e561]:
+              - generic [ref=e562]:
+                - strong [ref=e563]: Thiếu điều khoản chấm dứt
+                - generic [ref=e564]: Cao
+              - paragraph [ref=e565]: Không tìm thấy từ khóa về điều khoản chấm dứt.
+              - generic [ref=e566]: Bổ sung quyền chấm dứt và thời hạn thông báo rõ ràng.
+            - article [ref=e567]:
+              - generic [ref=e568]:
+                - strong [ref=e569]: Thiếu luật điều chỉnh
+                - generic [ref=e570]: Trung bình
+              - paragraph [ref=e571]: Không phát hiện điều khoản luật điều chỉnh hoặc thẩm quyền giải quyết tranh chấp.
+              - generic [ref=e572]: Nêu rõ luật điều chỉnh và địa điểm giải quyết tranh chấp.
+            - article [ref=e573]:
+              - generic [ref=e574]:
+                - strong [ref=e575]: Bồi thường quá rộng
+                - generic [ref=e576]: Cao
+              - paragraph [ref=e577]: Phát hiện nội dung về bồi thường.
+              - generic [ref=e578]: Kiểm tra nghĩa vụ bồi thường có được giới hạn phù hợp hay không.
+            - article [ref=e579]:
+              - generic [ref=e580]:
+                - strong [ref=e581]: Độ tin cậy thấp
+                - generic [ref=e582]: Trung bình
+              - paragraph [ref=e583]: Độ tin cậy phân loại là 0.35.
+              - generic [ref=e584]: Rà soát thủ công trước khi tin vào kết luận tự động.
+        - generic [ref=e585]:
+          - heading "Dòng thời gian audit" [level=2] [ref=e586]
+          - generic [ref=e587]:
+            - generic [ref=e588]:
+              - strong [ref=e589]: ai review completed
+              - generic [ref=e590]: client@example.com · 18:44 11 thg 5, 2026
+            - generic [ref=e591]:
+              - strong [ref=e592]: document processing started
+              - generic [ref=e593]: client@example.com · 18:44 11 thg 5, 2026
+            - generic [ref=e594]:
+              - strong [ref=e595]: document uploaded
+              - generic [ref=e596]: client@example.com · 18:44 11 thg 5, 2026

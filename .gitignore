@@ -8,9 +8,9 @@ __pycache__/
 .venv/
 node_modules/
 .next/
+.playwright-mcp/
 dist/
 coverage/
 uploads/
 postgres_data/
 n8n_data/
-

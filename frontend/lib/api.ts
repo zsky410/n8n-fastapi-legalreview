@@ -166,8 +166,9 @@ export async function fetchMe(token: string): Promise<User> {
   return response.json();
 }
 
-export function fetchDocuments(): Promise<DocumentListItem[]> {
-  return apiFetch<DocumentListItem[]>("/api/v1/documents");
+export function fetchDocuments(status?: string): Promise<DocumentListItem[]> {
+  const query = status && status !== "all" ? `?status=${encodeURIComponent(status)}` : "";
+  return apiFetch<DocumentListItem[]>(`/api/v1/documents${query}`);
 }
 
 export function fetchDocument(id: string): Promise<DocumentDetail> {
@@ -183,8 +184,8 @@ export async function uploadDocument(file: File): Promise<DocumentUploadResponse
   });
 }
 
-export function fetchAdminQueue(): Promise<AdminDocumentListItem[]> {
-  return apiFetch<AdminDocumentListItem[]>("/api/v1/admin/queue");
+export function fetchAdminQueue(scope: "pending" | "ai_approved" | "all" = "pending"): Promise<AdminDocumentListItem[]> {
+  return apiFetch<AdminDocumentListItem[]>(`/api/v1/admin/queue?scope=${encodeURIComponent(scope)}`);
 }
 
 export function fetchAdminDocument(id: string): Promise<AdminDocumentDetail> {

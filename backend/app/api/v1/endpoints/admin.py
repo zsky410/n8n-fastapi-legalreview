@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from typing import Literal
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -30,16 +31,22 @@ router = APIRouter()
 
 @router.get("/queue", response_model=list[AdminDocumentListItem])
 def list_review_queue(
+    scope: Literal["pending", "ai_approved", "all"] = Query(default="pending"),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> list[AdminDocumentListItem]:
     _assert_reviewer(current_user)
-    rows = db.execute(
+    query = (
         select(Document, User.email)
         .join(User, Document.user_id == User.id)
-        .where(Document.review_status == "pending_admin")
         .order_by(Document.risk_score.desc(), Document.uploaded_at.asc())
-    ).all()
+    )
+    if scope == "pending":
+        query = query.where(Document.review_status == "pending_admin")
+    elif scope == "ai_approved":
+        query = query.where(Document.review_status == "ai_approved")
+
+    rows = db.execute(query).all()
     return [_build_admin_document_list_item(document, owner_email) for document, owner_email in rows]
 
 

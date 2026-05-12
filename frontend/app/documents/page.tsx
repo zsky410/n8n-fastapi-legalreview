@@ -8,22 +8,34 @@ import { DocumentListItem, fetchDocuments } from "@/lib/api";
 import { formatDateTime, humanStatus } from "@/lib/format";
 import { EmptyState, FlagList, PageError, RiskBadge, StatusBadge } from "@/components/ui";
 
+const statusFilters = [
+  ["all", "Tất cả"],
+  ["processing", "Đang xử lý"],
+  ["ai_approved", "AI đã duyệt"],
+  ["pending_admin", "Chờ admin"],
+  ["admin_approved", "Admin đã duyệt"],
+  ["admin_rejected", "Từ chối"],
+  ["failed", "Lỗi"],
+] as const;
+
 export default function DocumentsPage() {
   const [documents, setDocuments] = useState<DocumentListItem[]>([]);
+  const [statusFilter, setStatusFilter] = useState<(typeof statusFilters)[number][0]>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   const loadDocuments = useCallback(async () => {
     setError(null);
+    setIsLoading(true);
     try {
-      const data = await fetchDocuments();
+      const data = await fetchDocuments(statusFilter);
       setDocuments(data);
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Không thể tải danh sách tài liệu");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [statusFilter]);
 
   useEffect(() => {
     void loadDocuments();
@@ -52,6 +64,19 @@ export default function DocumentsPage() {
           <span className="status-pill neutral">{activeCount} đang xử lý</span>
         </div>
       </header>
+
+      <div className="tab-strip" aria-label="Lọc trạng thái tài liệu">
+        {statusFilters.map(([value, label]) => (
+          <button
+            className={statusFilter === value ? "tab-button active" : "tab-button"}
+            key={value}
+            type="button"
+            onClick={() => setStatusFilter(value)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
 
       {error ? <PageError message={error} onRetry={loadDocuments} /> : null}
 

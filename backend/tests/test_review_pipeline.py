@@ -15,6 +15,16 @@ def test_classifier_detects_contract() -> None:
     assert "agreement" in result.matched_keywords
 
 
+def test_classifier_detects_nda_invoice_and_policy() -> None:
+    nda = classify_document("Confidential information is shared by the disclosing party to the recipient.")
+    invoice = classify_document("Invoice total includes tax and payment due date.")
+    policy = classify_document("Employee policy and compliance procedure for the security team.")
+
+    assert nda.document_type == "nda"
+    assert invoice.document_type == "invoice"
+    assert policy.document_type == "policy"
+
+
 def test_classifier_returns_unknown_for_unmatched_text() -> None:
     result = classify_document("Lunch menu and meeting notes for the office social.")
     assert result.document_type == "unknown"
@@ -96,6 +106,30 @@ def test_flagging_routes_high_risk_document_to_admin() -> None:
         extraction_quality_label=extraction.quality_label,
         findings=findings,
     )
+    assert decision.review_status == "pending_admin"
+    assert decision.verdict == "needs_review"
+
+
+def test_flagging_routes_low_confidence_to_admin() -> None:
+    decision = decide_review_status(
+        risk_score=10,
+        classification_confidence=0.40,
+        extraction_quality_label="good",
+        findings=[],
+    )
+
+    assert decision.review_status == "pending_admin"
+    assert decision.verdict == "needs_review"
+
+
+def test_flagging_routes_low_extraction_quality_to_admin() -> None:
+    decision = decide_review_status(
+        risk_score=10,
+        classification_confidence=0.85,
+        extraction_quality_label="low",
+        findings=[],
+    )
+
     assert decision.review_status == "pending_admin"
     assert decision.verdict == "needs_review"
 

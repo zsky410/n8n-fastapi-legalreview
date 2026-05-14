@@ -41,8 +41,10 @@ export type DocumentDetail = DocumentListItem & {
   summary: string | null;
   extracted_text: string | null;
   ai_confidence: string | null;
+  ai_thinking_log?: string | null;
   expiry_date: string | null;
   risk_findings: RiskFinding[];
+  audit_logs: AuditLog[];
 };
 
 export type DocumentUploadResponse = {
@@ -93,6 +95,7 @@ export type AdminDocumentDetail = AdminDocumentListItem & {
   extracted_text: string | null;
   classification_confidence: string | null;
   ai_confidence: string | null;
+  ai_thinking_log?: string | null;
   risk_findings: RiskFinding[];
   reviews: AdminReview[];
   audit_logs: AuditLog[];
@@ -184,6 +187,12 @@ export async function uploadDocument(file: File): Promise<DocumentUploadResponse
   });
 }
 
+export function startAiReview(id: string): Promise<DocumentUploadResponse> {
+  return apiFetch<DocumentUploadResponse>(`/api/v1/documents/${id}/ai-review`, {
+    method: "POST",
+  });
+}
+
 export function fetchAdminQueue(scope: "pending" | "ai_approved" | "all" = "pending"): Promise<AdminDocumentListItem[]> {
   return apiFetch<AdminDocumentListItem[]>(`/api/v1/admin/queue?scope=${encodeURIComponent(scope)}`);
 }
@@ -218,10 +227,16 @@ function translateApiMessage(message: string): string {
     "Access denied": "Bạn không có quyền truy cập",
     "Could not validate credentials": "Không thể xác thực phiên đăng nhập",
     "Document is not pending admin review": "Tài liệu không còn chờ admin duyệt",
+    "Document is not waiting for AI review": "Tài liệu không ở trạng thái chờ AI review",
     "Document not found": "Không tìm thấy tài liệu",
     "Invalid email or password": "Email hoặc mật khẩu không đúng",
+    "Only PDF, DOCX, TXT, MD, RTF, and HTML files are supported":
+      "Chỉ hỗ trợ file PDF, DOCX, TXT, MD, RTF và HTML",
     "Reviewer access required": "Bạn cần quyền người rà soát hoặc admin",
     "Session expired": "Phiên đăng nhập đã hết hạn",
+    "Text extraction is not completed": "Quá trình trích xuất văn bản chưa hoàn tất",
+    "Uploaded file exceeds the 10MB size limit": "File tải lên vượt quá giới hạn 10 MB",
+    "Uploaded file is empty": "File tải lên đang trống",
   };
 
   return labels[message] ?? message;

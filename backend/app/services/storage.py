@@ -8,7 +8,7 @@ from fastapi import HTTPException, UploadFile, status
 
 from app.core.config import settings
 
-ALLOWED_EXTENSIONS = {".pdf", ".docx"}
+ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt", ".md", ".rtf", ".html", ".htm"}
 CHUNK_SIZE = 1024 * 1024
 
 
@@ -18,7 +18,7 @@ def store_upload(file: UploadFile, *, user_id: uuid.UUID) -> tuple[str, int, str
     if suffix not in ALLOWED_EXTENSIONS:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only PDF and DOCX files are supported",
+            detail="Only PDF, DOCX, TXT, MD, RTF, and HTML files are supported",
         )
 
     upload_root = Path(settings.upload_dir)

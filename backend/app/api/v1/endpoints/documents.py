@@ -10,11 +10,13 @@ from sqlalchemy.orm import Session, selectinload
 
 from app.api.v1.dependencies import get_current_user
 from app.db.session import get_db
+from app.models.audit_log import AuditLog
 from app.models.document import Document
 from app.models.user import User
-from app.schemas.document import DocumentDetail, DocumentListItem, DocumentUploadResponse
+from app.schemas.document import DocumentAuditLogRead, DocumentDetail, DocumentListItem, DocumentUploadResponse
+from app.models.risk_finding import RiskFinding
 from app.services.audit import create_audit_log
-from app.services.document_pipeline import process_document_task
+from app.services.document_pipeline import process_document_task, review_document_task
 from app.services.storage import store_upload
 
 router = APIRouter()
@@ -35,8 +37,8 @@ def upload_document(
         size_bytes=size_bytes,
         sha256=sha256,
         storage_path=storage_path,
-        processing_status="pending",
-        review_status="processing",
+        processing_status="pending_extraction",
+        review_status="awaiting_extraction",
         flag_reasons=[],
     )
     db.add(document)
@@ -62,7 +64,7 @@ def upload_document(
         filename=document.filename,
         processing_status=document.processing_status,
         review_status=document.review_status,
-        message="Document uploaded and queued for processing",
+        message="Document uploaded and queued for automatic extraction + AI review",
     )
 
 
@@ -97,7 +99,93 @@ def get_document(
     )
     if detailed_document is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
-    return DocumentDetail.model_validate(detailed_document)
+    audit_logs = db.scalars(
+        select(AuditLog)
+        .where(AuditLog.target_id == document_id)
+        .options(selectinload(AuditLog.actor))
+        .order_by(AuditLog.created_at.desc())
+        .limit(30)
+    ).all()
+    detail = DocumentDetail.model_validate(detailed_document)
+    detail.audit_logs = [_build_document_audit_log_read(audit_log) for audit_log in audit_logs]
+    return detail
+
+
+REVIEW_BLOCKED_PROCESSING_STATUSES = {"pending_extraction", "extracting", "ai_reviewing"}
+REVIEW_BLOCKED_REVIEW_STATUSES = {"awaiting_extraction", "processing"}
+
+
+@router.post("/{document_id}/ai-review", response_model=DocumentUploadResponse)
+def start_ai_review(
+    document_id: UUID,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> DocumentUploadResponse:
+    """Queue (or re-queue) AI review for a document.
+
+    Accepts any document that already has extracted text, including ones that
+    finished a previous review (`ai_approved`, `pending_admin`, `admin_approved`,
+    `admin_rejected`, `failed`). This lets operators re-run the AI after the
+    prompt, rules, or settings change without re-uploading the file.
+    """
+
+    document = _get_document_or_404(db, document_id=document_id)
+    _assert_document_access(document, current_user)
+
+    if document.processing_status in REVIEW_BLOCKED_PROCESSING_STATUSES:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Document is still being processed; please wait until extraction/AI review finishes.",
+        )
+    if document.review_status in REVIEW_BLOCKED_REVIEW_STATUSES:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Document is still being processed; please wait until extraction/AI review finishes.",
+        )
+    if not (document.extracted_text or "").strip():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Document has no extracted text yet; please wait for extraction to finish.",
+        )
+
+    previous_review_status = document.review_status
+    is_rereview = previous_review_status not in {"awaiting_ai_review", "failed"}
+
+    if is_rereview:
+        db.query(RiskFinding).filter(RiskFinding.document_id == document.id).delete()
+        document.summary = None
+        document.ai_confidence = None
+        document.ai_thinking_log = None
+        document.flag_reasons = []
+        document.risk_score = 0
+        document.processed_at = None
+
+    document.ai_thinking_log = ""
+    document.processing_status = "ai_reviewing"
+    document.review_status = "processing"
+    create_audit_log(
+        db,
+        action="ai.review.queued",
+        target_type="document",
+        target_id=document.id,
+        actor_id=current_user.id,
+        payload={
+            "filename": document.filename,
+            "text_length": len(document.extracted_text or ""),
+            "previous_review_status": previous_review_status,
+            "is_rereview": is_rereview,
+        },
+    )
+    db.commit()
+    background_tasks.add_task(review_document_task, document.id)
+    return DocumentUploadResponse(
+        id=document.id,
+        filename=document.filename,
+        processing_status=document.processing_status,
+        review_status=document.review_status,
+        message=("Document re-queued for AI review" if is_rereview else "Document queued for AI review"),
+    )
 
 
 @router.get("/{document_id}/download")
@@ -129,11 +217,28 @@ def _assert_document_access(document: Document, user: User) -> None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
 
 
+def _build_document_audit_log_read(audit_log: AuditLog) -> DocumentAuditLogRead:
+    return DocumentAuditLogRead(
+        id=audit_log.id,
+        actor_email=audit_log.actor.email if audit_log.actor else None,
+        action=audit_log.action,
+        target_type=audit_log.target_type,
+        target_id=audit_log.target_id,
+        payload=audit_log.payload,
+        created_at=audit_log.created_at,
+    )
+
+
 def _guess_mime(storage_path: str) -> str:
     suffix = Path(storage_path).suffix.lower()
     return {
         ".pdf": "application/pdf",
         ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        ".txt": "text/plain",
+        ".md": "text/markdown",
+        ".rtf": "application/rtf",
+        ".html": "text/html",
+        ".htm": "text/html",
     }.get(suffix, "application/octet-stream")
 
 

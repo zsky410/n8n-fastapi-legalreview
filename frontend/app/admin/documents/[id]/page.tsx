@@ -9,6 +9,7 @@ import {
   fetchAdminDocument,
   submitAdminDecision,
 } from "@/lib/api";
+import { ExtractedTextPanel, SummaryPanel } from "@/components/document-panels";
 import {
   formatBytes,
   formatDateTime,
@@ -149,15 +150,22 @@ export default function AdminDocumentDetailPage() {
 
           <section className="data-panel detail-panel">
             <h2>Quyết định AI</h2>
-            <article className="copy-panel">
-              <p>{humanAiSummary(document.summary) ?? "Chưa có tóm tắt AI."}</p>
-            </article>
+            <SummaryPanel summary={humanAiSummary(document.summary)} fallback="Chưa có tóm tắt AI." />
             <div className="detail-grid compact-grid">
               <FieldValue label="Trạng thái rà soát" value={humanStatus(document.review_status)} />
               <FieldValue label="Xử lý" value={humanStatus(document.processing_status)} />
               <FieldValue label="Độ tin cậy phân loại" value={formatPercent(document.classification_confidence)} />
               <FieldValue label="Độ tin cậy AI" value={formatPercent(document.ai_confidence)} />
             </div>
+          </section>
+
+          <section className="data-panel detail-panel">
+            <h2>Văn bản trích xuất</h2>
+            <ExtractedTextPanel
+              text={document.extracted_text}
+              processingStatus={document.processing_status}
+              reviewStatus={document.review_status}
+            />
           </section>
 
           <section className="data-panel detail-panel">

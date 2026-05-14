@@ -82,7 +82,7 @@ export default function AdminQueuePage() {
         ) : documents.length ? (
           <div className="table-body">
             {documents.map((document) => (
-              <Link className="table-row admin-table" href={`/admin/documents/${document.id}`} key={document.id}>
+              <Link className="table-row admin-table" href={`/admin/documents/${document.id}`} key={document.id} prefetch={false}>
                 <div>
                   <strong>{document.filename}</strong>
                   <span>{formatDateTime(document.uploaded_at)}</span>

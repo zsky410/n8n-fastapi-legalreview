@@ -86,7 +86,7 @@ export function AppShell({ children, area }: AppShellProps) {
   return (
     <div className="app-frame">
       <aside className="sidebar">
-        <Link className="sidebar-brand" href={area === "admin" ? "/admin/queue" : "/documents"}>
+        <Link className="sidebar-brand" href={area === "admin" ? "/admin/queue" : "/documents"} prefetch={false}>
           <span className="brand-mark small" aria-hidden="true">
             <Scale size={18} />
           </span>
@@ -101,7 +101,7 @@ export function AppShell({ children, area }: AppShellProps) {
                 ? pathname === "/documents" || (pathname.startsWith("/documents/") && pathname !== "/documents/upload")
                 : pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
-              <Link className={isActive ? "nav-item active" : "nav-item"} href={item.href} key={item.href}>
+              <Link className={isActive ? "nav-item active" : "nav-item"} href={item.href} key={item.href} prefetch={false}>
                 <Icon size={18} aria-hidden="true" />
                 <span>{item.label}</span>
               </Link>

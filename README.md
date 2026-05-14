@@ -27,6 +27,8 @@ Seeded accounts:
 
 The backend runs Alembic migrations, seeds demo users, and seeds 8 demo documents on container start. The seeded documents cover `ai_approved`, `pending_admin`, `admin_approved`, `admin_rejected`, `processing`, and `failed` states so the UI, dashboard, audit log, Mailhog/n8n demo, and automation endpoints have useful data immediately.
 
+Supported upload formats: text-based PDF, DOCX, TXT, MD, RTF, HTML, and HTM.
+
 Day 1 acceptance:
 
 ```bash
@@ -46,7 +48,7 @@ The backend runs Alembic migrations and seeds demo data on container start.
 
 The backend now supports:
 
-- `POST /api/v1/documents` for PDF and DOCX upload
+- `POST /api/v1/documents` for PDF, DOCX, TXT, MD, RTF, HTML, and HTM upload
 - `GET /api/v1/documents` for a user's document list
 - `GET /api/v1/documents/{id}` for detail, summary, and findings
 - `GET /api/v1/documents/{id}/download` for file download
@@ -249,7 +251,7 @@ Screenshots:
 ## Known Limitations
 
 - This is a demo, not legal advice and not production-grade legal accuracy.
-- OCR for scanned PDFs is intentionally out of scope.
+- OCR for scanned PDFs and legacy `.doc` conversion are intentionally out of scope.
 - Background work uses FastAPI `BackgroundTasks`, not Celery/Redis.
 - Files are stored on a local Docker volume, not S3/MinIO.
 - OpenAI is optional; without an API key the deterministic mock reviewer is used.

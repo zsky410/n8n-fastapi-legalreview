@@ -35,6 +35,7 @@ class Document(Base):
     classification: Mapped[str | None] = mapped_column(String(80))
     classification_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))
     summary: Mapped[str | None] = mapped_column(Text)
+    ai_thinking_log: Mapped[str | None] = mapped_column(Text, nullable=True)
     extracted_text: Mapped[str | None] = mapped_column(Text)
     risk_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     ai_confidence: Mapped[Decimal | None] = mapped_column(Numeric(5, 4))

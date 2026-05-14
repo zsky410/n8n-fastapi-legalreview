@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from app.core.config import settings
 from app.services.risk_engine import RiskFindingData
 
 
@@ -18,15 +19,13 @@ def decide_review_status(
     extraction_quality_label: str,
     findings: list[RiskFindingData],
 ) -> FlaggingDecision:
-    has_high_severity = any(finding.severity in {"high", "critical"} for finding in findings)
+    high_risk_threshold = max(1, settings.manual_review_risk_score_threshold)
+    has_critical_finding = any(finding.severity == "critical" for finding in findings)
     should_flag = (
-        risk_score >= 60
-        or has_high_severity
-        or classification_confidence < 0.55
-        or extraction_quality_label == "low"
+        risk_score >= high_risk_threshold
+        or has_critical_finding
     )
 
     if should_flag:
         return FlaggingDecision(review_status="pending_admin", verdict="needs_review")
     return FlaggingDecision(review_status="ai_approved", verdict="approve")
-

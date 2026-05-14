@@ -11,7 +11,44 @@ class ClassificationResult:
 
 
 CLASSIFICATION_KEYWORDS: dict[str, list[str]] = {
-    "contract": ["agreement", "contract", "party", "clause", "effective date"],
+    "court_judgment": [
+        "bản án",
+        "quyết định",
+        "tòa án",
+        "toà án",
+        "hội đồng xét xử",
+        "thẩm phán",
+        "nguyên đơn",
+        "bị đơn",
+        "người có quyền lợi",
+        "nghĩa vụ liên quan",
+        "thụ lý",
+        "tuyên xử",
+        "án phí",
+        "kháng cáo",
+        "viện kiểm sát",
+        "vụ án",
+        "nhân danh nước",
+        "court",
+        "judgment",
+        "case number",
+        "plaintiff",
+        "defendant",
+    ],
+    "contract": [
+        "agreement",
+        "contract",
+        "party",
+        "clause",
+        "effective date",
+        "hợp đồng",
+        "bên a",
+        "bên b",
+        "điều khoản",
+        "giá trị hợp đồng",
+        "phụ lục hợp đồng",
+        "thanh lý hợp đồng",
+    ],
     "nda": [
         "confidential",
         "confidentiality",
@@ -19,9 +56,38 @@ CLASSIFICATION_KEYWORDS: dict[str, list[str]] = {
         "non-disclosure",
         "recipient",
         "disclosing party",
+        "nda",
+        "bảo mật",
+        "thông tin mật",
+        "bên tiết lộ",
+        "bên nhận",
+        "thỏa thuận bảo mật",
     ],
-    "invoice": ["invoice", "total", "tax", "due date", "payment"],
-    "policy": ["policy", "procedure", "compliance", "employee"],
+    "invoice": [
+        "invoice",
+        "total",
+        "tax",
+        "due date",
+        "payment",
+        "hóa đơn",
+        "tổng tiền",
+        "thuế",
+        "thanh toán",
+        "đơn giá",
+        "ngày đến hạn",
+    ],
+    "policy": [
+        "policy",
+        "procedure",
+        "compliance",
+        "employee",
+        "chính sách",
+        "quy trình",
+        "tuân thủ",
+        "nhân viên",
+        "quy chế",
+        "nội quy",
+    ],
 }
 
 
@@ -44,8 +110,7 @@ def classify_document(text: str) -> ClassificationResult:
     if best_score == 0:
         return ClassificationResult(document_type="unknown", confidence=0.25, matched_keywords=[])
 
-    keyword_count = len(CLASSIFICATION_KEYWORDS[best_type])
-    confidence = max(0.35, min(0.98, best_score / keyword_count))
+    confidence = max(0.35, min(0.98, 0.25 + (best_score * 0.15)))
     return ClassificationResult(
         document_type=best_type,
         confidence=round(confidence, 4),

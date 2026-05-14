@@ -52,6 +52,7 @@ class AdminDocumentDetail(AdminDocumentListItem):
     extracted_text: str | None
     classification_confidence: Decimal | None
     ai_confidence: Decimal | None
+    ai_thinking_log: str | None = None
     risk_findings: list[RiskFindingRead]
     reviews: list[AdminReviewRead]
     audit_logs: list[AdminAuditLogRead]

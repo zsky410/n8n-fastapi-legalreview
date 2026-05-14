@@ -57,7 +57,7 @@ export default function DocumentsPage() {
             <RefreshCw size={16} aria-hidden="true" />
             <span>Làm mới</span>
           </button>
-          <Link className="primary-button compact" href="/documents/upload">
+          <Link className="primary-button compact" href="/documents/upload" prefetch={false}>
             <Plus size={16} aria-hidden="true" />
             <span>Tải lên</span>
           </Link>
@@ -93,7 +93,7 @@ export default function DocumentsPage() {
         ) : documents.length ? (
           <div className="table-body">
             {documents.map((document) => (
-              <Link className="table-row documents-table" href={`/documents/${document.id}`} key={document.id}>
+              <Link className="table-row documents-table" href={`/documents/${document.id}`} key={document.id} prefetch={false}>
                 <div>
                   <strong>{document.filename}</strong>
                   <span>{document.classification ? humanStatus(document.classification) : "Chưa phân loại"}</span>
@@ -109,7 +109,7 @@ export default function DocumentsPage() {
           <EmptyState
             title="Chưa có tài liệu"
             action={
-              <Link className="primary-button compact" href="/documents/upload">
+              <Link className="primary-button compact" href="/documents/upload" prefetch={false}>
                 <Plus size={16} aria-hidden="true" />
                 <span>Tải file đầu tiên</span>
               </Link>

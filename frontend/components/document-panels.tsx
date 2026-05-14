@@ -1,0 +1,103 @@
+"use client";
+
+import { Clipboard, FileSearch, Loader2 } from "lucide-react";
+import { useState } from "react";
+
+import { formatBytes } from "@/lib/format";
+
+type ExtractedTextPanelProps = {
+  text: string | null;
+  processingStatus?: string | null;
+  reviewStatus?: string | null;
+};
+
+type SummaryPanelProps = {
+  summary: string | null;
+  fallback: string;
+};
+
+export function SummaryPanel({ summary, fallback }: SummaryPanelProps) {
+  const paragraphs = (summary ?? "")
+    .split(/\n{2,}/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean);
+
+  if (!paragraphs.length) {
+    return (
+      <article className="copy-panel">
+        <p>{fallback}</p>
+      </article>
+    );
+  }
+
+  return (
+    <article className="copy-panel rich-copy">
+      {paragraphs.map((paragraph, index) => (
+        <p key={`${paragraph.slice(0, 24)}-${index}`}>{paragraph}</p>
+      ))}
+    </article>
+  );
+}
+
+export function ExtractedTextPanel({ text, processingStatus, reviewStatus }: ExtractedTextPanelProps) {
+  const [copyState, setCopyState] = useState<"idle" | "done">("idle");
+  const extractedText = text?.trim() ?? "";
+  const wordCount = extractedText ? extractedText.split(/\s+/).filter(Boolean).length : 0;
+
+  async function copyText() {
+    if (!extractedText) {
+      return;
+    }
+    await navigator.clipboard.writeText(extractedText);
+    setCopyState("done");
+    window.setTimeout(() => setCopyState("idle"), 1800);
+  }
+
+  if (!extractedText) {
+    if (!isExtractionTerminal(processingStatus, reviewStatus)) {
+      return (
+        <div className="extraction-pending" aria-live="polite">
+          <Loader2 className="spin-icon" size={24} aria-hidden="true" />
+          <div>
+            <strong>{processingStatus === "ai_reviewing" || reviewStatus === "processing" ? "AI đang phân tích văn bản" : "Đang trích xuất văn bản"}</strong>
+            <p>Hệ thống vẫn đang đọc file và tự động cập nhật nội dung khi bước này hoàn tất.</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="extraction-empty">
+        <FileSearch size={28} aria-hidden="true" />
+        <div>
+          <strong>Chưa trích xuất được văn bản từ file này</strong>
+          <p>
+            File có thể là PDF scan/ảnh hoặc nội dung không có text layer. Hãy thử bản PDF text-based, DOCX,
+            hoặc chạy OCR rồi tải lại để AI có dữ liệu phân tích đầy đủ hơn.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="extracted-text-panel">
+      <div className="text-toolbar">
+        <div className="text-metrics">
+          <span>{wordCount.toLocaleString("vi-VN")} từ</span>
+          <span>{formatBytes(new Blob([extractedText]).size)}</span>
+        </div>
+        <button className="secondary-button compact" type="button" onClick={copyText}>
+          <Clipboard size={15} aria-hidden="true" />
+          <span>{copyState === "done" ? "Đã sao chép" : "Sao chép"}</span>
+        </button>
+      </div>
+      <pre className="extracted-text-box">{extractedText}</pre>
+    </div>
+  );
+}
+
+function isExtractionTerminal(processingStatus?: string | null, reviewStatus?: string | null): boolean {
+  const terminalReviewStatuses = ["ai_approved", "pending_admin", "admin_approved", "admin_rejected", "failed"];
+  return processingStatus === "completed" || processingStatus === "failed" || terminalReviewStatuses.includes(reviewStatus ?? "");
+}

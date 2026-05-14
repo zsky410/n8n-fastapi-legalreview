@@ -223,6 +223,7 @@ def _build_admin_document_detail(
         extracted_text=document.extracted_text,
         classification_confidence=document.classification_confidence,
         ai_confidence=document.ai_confidence,
+        ai_thinking_log=document.ai_thinking_log,
         risk_findings=list(document.risk_findings),
         reviews=[
             AdminReviewRead(

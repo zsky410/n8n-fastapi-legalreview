@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 
+import { ChunkReloadGuard } from "@/components/chunk-reload-guard";
+
 export const metadata: Metadata = {
   title: "LegalReview",
   description: "Bảng điều phối rà soát tài liệu pháp lý",
@@ -13,7 +15,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi">
-      <body>{children}</body>
+      <body>
+        <ChunkReloadGuard />
+        {children}
+      </body>
     </html>
   );
 }

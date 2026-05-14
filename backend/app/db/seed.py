@@ -398,5 +398,8 @@ def _add_seed_audit_logs(
 
 if __name__ == "__main__":
     seed_users()
-    seed_sample_documents()
-    print("Seed users and sample documents ready.")
+    if settings.seed_sample_documents:
+        seed_sample_documents()
+        print("Seed users and sample documents ready.")
+    else:
+        print("Seed users ready. Sample documents skipped.")

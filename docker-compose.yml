@@ -26,6 +26,17 @@ services:
       FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
       N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://n8n:5678/webhook/document-reviewed}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
+      OPENAI_REVIEW_MODEL: ${OPENAI_REVIEW_MODEL:-gpt-4o-mini}
+      OPENAI_TIMEOUT_SECONDS: ${OPENAI_TIMEOUT_SECONDS:-90}
+      MANUAL_REVIEW_RISK_SCORE_THRESHOLD: ${MANUAL_REVIEW_RISK_SCORE_THRESHOLD:-70}
+      OCR_ENABLED: ${OCR_ENABLED:-true}
+      OCR_LANGUAGES: ${OCR_LANGUAGES:-vie+eng}
+      OCR_MAX_PAGES: ${OCR_MAX_PAGES:-10}
+      AI_REVIEW_EXCERPT_CHARS: ${AI_REVIEW_EXCERPT_CHARS:-120000}
+      SEED_SAMPLE_DOCUMENTS: ${SEED_SAMPLE_DOCUMENTS:-false}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "8000:8000"
     volumes:
@@ -73,4 +84,3 @@ volumes:
   postgres_data:
   uploads:
   n8n_data:
-

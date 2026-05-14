@@ -8,6 +8,10 @@ import { uploadDocument } from "@/lib/api";
 import { formatBytes } from "@/lib/format";
 import { PageError } from "@/components/ui";
 
+const supportedFileLabel = "PDF, DOCX, TXT, MD, RTF hoặc HTML";
+const supportedFileAccept =
+  ".pdf,.docx,.txt,.md,.rtf,.html,.htm,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain,text/markdown,text/html,application/rtf,text/rtf";
+
 export default function UploadPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
@@ -23,7 +27,7 @@ export default function UploadPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!file) {
-      setError("Vui lòng chọn file PDF hoặc DOCX trước");
+      setError(`Vui lòng chọn file ${supportedFileLabel} trước`);
       return;
     }
 
@@ -54,10 +58,10 @@ export default function UploadPage() {
         <label className="drop-zone">
           <FileUp size={34} aria-hidden="true" />
           <span>{file ? file.name : "Chọn tài liệu pháp lý"}</span>
-          <small>{file ? `Đã chọn ${formatBytes(file.size)}` : "PDF hoặc DOCX, tối đa 10 MB"}</small>
+          <small>{file ? `Đã chọn ${formatBytes(file.size)}` : `${supportedFileLabel}, tối đa 10 MB`}</small>
           <input
             type="file"
-            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            accept={supportedFileAccept}
             onChange={handleFileChange}
           />
         </label>
@@ -65,7 +69,7 @@ export default function UploadPage() {
         <div className="upload-summary">
           <div>
             <strong>Quy trình rà soát</strong>
-            <p>Trích xuất, phân loại, chấm điểm rủi ro và thông báo sẽ chạy ngay sau khi tải lên.</p>
+            <p>Hệ thống tự trích xuất văn bản, phân loại và chạy AI review ngay sau khi tải lên.</p>
           </div>
           <button className="primary-button" type="submit" disabled={isSubmitting}>
             <UploadCloud size={18} aria-hidden="true" />

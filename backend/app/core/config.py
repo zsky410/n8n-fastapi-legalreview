@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     openai_base_url: str = "https://api.openai.com/v1"
     openai_review_model: str = "gpt-4o-mini"
+    openai_chat_model: str | None = None
     openai_timeout_seconds: float = 90.0
     manual_review_risk_score_threshold: int = 70
     ocr_enabled: bool = True
@@ -30,6 +31,7 @@ class Settings(BaseSettings):
     seed_sample_documents: bool = False
     risk_personal_data_enabled: bool = False
     ai_review_excerpt_chars: int = 120000
+    ai_chat_excerpt_chars: int = 70000
 
     @property
     def cors_origins(self) -> list[str]:

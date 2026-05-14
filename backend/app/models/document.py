@@ -10,6 +10,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.session import Base
 
 if TYPE_CHECKING:
+    from app.models.document_chat import DocumentChatMessage
     from app.models.review import Review
     from app.models.risk_finding import RiskFinding
     from app.models.user import User
@@ -57,4 +58,7 @@ class Document(Base):
         back_populates="document",
         cascade="all, delete-orphan",
     )
-
+    chat_messages: Mapped[list["DocumentChatMessage"]] = relationship(
+        back_populates="document",
+        cascade="all, delete-orphan",
+    )

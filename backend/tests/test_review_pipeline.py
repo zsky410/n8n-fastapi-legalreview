@@ -1,5 +1,7 @@
 from datetime import UTC, datetime, timedelta
+from uuid import uuid4
 
+from app.models.document import Document
 from app.services.ai_review import (
     JSON_FR,
     THINK_FR,
@@ -12,6 +14,7 @@ from app.services.ai_review import (
     normalize_confidence,
 )
 from app.services.classification import classify_document
+from app.services.document_chat import answer_document_chat
 from app.services.extraction import ExtractionResult, extract_text
 from app.services.flagging import decide_review_status
 from app.services.risk_engine import evaluate_risks
@@ -23,6 +26,39 @@ def test_classifier_detects_contract() -> None:
     assert result.document_type == "contract"
     assert result.confidence >= 0.6
     assert "agreement" in result.matched_keywords
+
+
+def test_document_chat_does_not_fake_answer_when_provider_missing(monkeypatch) -> None:
+    from app.services import document_chat
+
+    monkeypatch.setattr(document_chat.settings, "openai_api_key", None)
+    document = Document(
+        id=uuid4(),
+        user_id=uuid4(),
+        filename="contract.pdf",
+        mime="application/pdf",
+        size_bytes=1200,
+        sha256="a" * 64,
+        storage_path="uploads/contract.pdf",
+        processing_status="completed",
+        review_status="ai_approved",
+        classification="contract",
+        summary="AI chưa thấy rủi ro trọng yếu.",
+        extracted_text="Hợp đồng dịch vụ có điều khoản thanh toán và chấm dứt.",
+        risk_score=10,
+        flag_reasons=[],
+    )
+
+    result = answer_document_chat(
+        document=document,
+        question="Rủi ro chính là gì?",
+        history=[],
+        risk_findings=[],
+    )
+
+    assert result.provider == "unavailable"
+    assert "chưa khả dụng" in result.content
+    assert "không trả lời bằng mẫu chung" in result.content
 
 
 def test_classifier_detects_nda_invoice_and_policy() -> None:

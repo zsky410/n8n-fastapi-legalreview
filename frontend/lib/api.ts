@@ -55,6 +55,22 @@ export type DocumentUploadResponse = {
   message: string;
 };
 
+export type DocumentChatMessage = {
+  id: string;
+  document_id: string;
+  user_id: string;
+  role: "user" | "assistant" | string;
+  content: string;
+  provider: string | null;
+  model: string | null;
+  created_at: string;
+};
+
+export type DocumentChatResponse = {
+  assistant_message: DocumentChatMessage;
+  messages: DocumentChatMessage[];
+};
+
 export type AdminDocumentListItem = {
   id: string;
   filename: string;
@@ -193,6 +209,17 @@ export function startAiReview(id: string): Promise<DocumentUploadResponse> {
   });
 }
 
+export function fetchDocumentChat(id: string): Promise<DocumentChatMessage[]> {
+  return apiFetch<DocumentChatMessage[]>(`/api/v1/documents/${id}/chat`);
+}
+
+export function sendDocumentChatMessage(id: string, message: string): Promise<DocumentChatResponse> {
+  return apiFetch<DocumentChatResponse>(`/api/v1/documents/${id}/chat`, {
+    method: "POST",
+    body: JSON.stringify({ message }),
+  });
+}
+
 export function fetchAdminQueue(scope: "pending" | "ai_approved" | "all" = "pending"): Promise<AdminDocumentListItem[]> {
   return apiFetch<AdminDocumentListItem[]>(`/api/v1/admin/queue?scope=${encodeURIComponent(scope)}`);
 }
@@ -228,6 +255,7 @@ function translateApiMessage(message: string): string {
     "Could not validate credentials": "Không thể xác thực phiên đăng nhập",
     "Document is not pending admin review": "Tài liệu không còn chờ admin duyệt",
     "Document is not waiting for AI review": "Tài liệu không ở trạng thái chờ AI review",
+    "Document review is not ready for chat": "Tài liệu chưa review xong nên chưa thể chat với AI",
     "Document not found": "Không tìm thấy tài liệu",
     "Invalid email or password": "Email hoặc mật khẩu không đúng",
     "Only PDF, DOCX, TXT, MD, RTF, and HTML files are supported":
@@ -237,6 +265,7 @@ function translateApiMessage(message: string): string {
     "Text extraction is not completed": "Quá trình trích xuất văn bản chưa hoàn tất",
     "Uploaded file exceeds the 10MB size limit": "File tải lên vượt quá giới hạn 10 MB",
     "Uploaded file is empty": "File tải lên đang trống",
+    "Message is too short": "Tin nhắn quá ngắn",
   };
 
   return labels[message] ?? message;

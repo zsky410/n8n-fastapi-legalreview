@@ -5,7 +5,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class RiskFindingRead(BaseModel):
@@ -62,3 +62,25 @@ class DocumentUploadResponse(BaseModel):
     processing_status: str
     review_status: str
     message: str
+
+
+class DocumentChatMessageRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    document_id: UUID
+    user_id: UUID
+    role: str
+    content: str
+    provider: str | None = None
+    model: str | None = None
+    created_at: datetime
+
+
+class DocumentChatRequest(BaseModel):
+    message: str = Field(min_length=2, max_length=4000)
+
+
+class DocumentChatResponse(BaseModel):
+    assistant_message: DocumentChatMessageRead
+    messages: list[DocumentChatMessageRead]

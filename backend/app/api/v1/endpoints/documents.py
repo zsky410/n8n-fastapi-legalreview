@@ -5,17 +5,27 @@ from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Query, UploadFile, status
 from fastapi.responses import FileResponse
-from sqlalchemy import Select, select
+from sqlalchemy import Select, case, select
 from sqlalchemy.orm import Session, selectinload
 
 from app.api.v1.dependencies import get_current_user
 from app.db.session import get_db
 from app.models.audit_log import AuditLog
 from app.models.document import Document
+from app.models.document_chat import DocumentChatMessage
 from app.models.user import User
-from app.schemas.document import DocumentAuditLogRead, DocumentDetail, DocumentListItem, DocumentUploadResponse
+from app.schemas.document import (
+    DocumentAuditLogRead,
+    DocumentChatMessageRead,
+    DocumentChatRequest,
+    DocumentChatResponse,
+    DocumentDetail,
+    DocumentListItem,
+    DocumentUploadResponse,
+)
 from app.models.risk_finding import RiskFinding
 from app.services.audit import create_audit_log
+from app.services.document_chat import answer_document_chat
 from app.services.document_pipeline import process_document_task, review_document_task
 from app.services.storage import store_upload
 
@@ -188,6 +198,104 @@ def start_ai_review(
     )
 
 
+@router.get("/{document_id}/chat", response_model=list[DocumentChatMessageRead])
+def list_document_chat_messages(
+    document_id: UUID,
+    limit: int = Query(default=80, ge=1, le=200),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> list[DocumentChatMessageRead]:
+    document = _get_document_or_404(db, document_id=document_id)
+    _assert_document_access(document, current_user)
+    messages = db.scalars(
+        select(DocumentChatMessage)
+        .where(DocumentChatMessage.document_id == document_id)
+        .order_by(*_chat_message_desc_order())
+        .limit(limit)
+    ).all()
+    return [DocumentChatMessageRead.model_validate(message) for message in reversed(messages)]
+
+
+@router.post("/{document_id}/chat", response_model=DocumentChatResponse)
+def create_document_chat_message(
+    document_id: UUID,
+    payload: DocumentChatRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> DocumentChatResponse:
+    document = _get_document_with_risks_or_404(db, document_id=document_id)
+    _assert_document_access(document, current_user)
+    _assert_chat_ready(document)
+
+    question = payload.message.strip()
+    if len(question) < 2:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Message is too short")
+
+    history = db.scalars(
+        select(DocumentChatMessage)
+        .where(DocumentChatMessage.document_id == document_id)
+        .order_by(*_chat_message_desc_order())
+        .limit(10)
+    ).all()
+    history = list(reversed(history))
+
+    user_message = DocumentChatMessage(
+        document_id=document.id,
+        user_id=current_user.id,
+        role="user",
+        content=question,
+        provider=None,
+        model=None,
+        message_metadata={},
+    )
+    db.add(user_message)
+    db.flush()
+
+    chat_result = answer_document_chat(
+        document=document,
+        question=question,
+        history=history,
+        risk_findings=list(document.risk_findings),
+    )
+    assistant_message = DocumentChatMessage(
+        document_id=document.id,
+        user_id=current_user.id,
+        role="assistant",
+        content=chat_result.content,
+        provider=chat_result.provider,
+        model=chat_result.model,
+        message_metadata={},
+    )
+    db.add(assistant_message)
+    create_audit_log(
+        db,
+        action="document.chat.completed",
+        target_type="document",
+        target_id=document.id,
+        actor_id=current_user.id,
+        payload={
+            "provider": chat_result.provider,
+            "model": chat_result.model,
+            "question_chars": len(question),
+            "answer_chars": len(chat_result.content),
+        },
+    )
+    db.commit()
+    db.refresh(user_message)
+    db.refresh(assistant_message)
+
+    messages = db.scalars(
+        select(DocumentChatMessage)
+        .where(DocumentChatMessage.document_id == document_id)
+        .order_by(*_chat_message_desc_order())
+        .limit(80)
+    ).all()
+    return DocumentChatResponse(
+        assistant_message=DocumentChatMessageRead.model_validate(assistant_message),
+        messages=[DocumentChatMessageRead.model_validate(message) for message in reversed(messages)],
+    )
+
+
 @router.get("/{document_id}/download")
 def download_document(
     document_id: UUID,
@@ -210,11 +318,43 @@ def _get_document_or_404(db: Session, *, document_id: UUID) -> Document:
     return document
 
 
+def _get_document_with_risks_or_404(db: Session, *, document_id: UUID) -> Document:
+    document = db.scalar(
+        select(Document)
+        .where(Document.id == document_id)
+        .options(selectinload(Document.risk_findings))
+    )
+    if document is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
+    return document
+
+
 def _assert_document_access(document: Document, user: User) -> None:
     if user.role in {"admin", "reviewer"}:
         return
     if document.user_id != user.id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
+
+def _assert_chat_ready(document: Document) -> None:
+    if document.processing_status != "completed":
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Document review is not ready for chat",
+        )
+    if not (document.extracted_text or "").strip():
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Document has no extracted text yet; please wait for extraction to finish.",
+        )
+
+
+def _chat_message_desc_order() -> tuple[object, object, object]:
+    return (
+        DocumentChatMessage.created_at.desc(),
+        case((DocumentChatMessage.role == "assistant", 0), else_=1),
+        DocumentChatMessage.id.desc(),
+    )
 
 
 def _build_document_audit_log_read(audit_log: AuditLog) -> DocumentAuditLogRead:

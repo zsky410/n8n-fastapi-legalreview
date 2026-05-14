@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { API_URL, DocumentDetail, RiskFinding, fetchDocument, getStoredToken, startAiReview } from "@/lib/api";
+import { DocumentChatPanel } from "@/components/document-chat-panel";
 import { ExtractedTextPanel } from "@/components/document-panels";
 import {
   formatDateTime,
@@ -16,11 +17,12 @@ import {
 import { AiFormattedSummary } from "@/components/ai-formatted-summary";
 import { EmptyState, FieldValue, FlagList, PageError, RiskBadge, StatusBadge } from "@/components/ui";
 
-const tabs = ["Overview", "Risks"] as const;
+const tabs = ["Overview", "Risks", "Chat"] as const;
 type DetailTab = (typeof tabs)[number];
 const tabLabels: Record<DetailTab, string> = {
   Overview: "Tổng quan",
   Risks: "Rủi ro",
+  Chat: "Chat AI",
 };
 
 const workflowStepLabels = ["Tải lên", "Trích xuất", "AI review", "Hoàn tất"] as const;
@@ -225,6 +227,10 @@ export default function DocumentDetailPage() {
 
             {activeTab === "Risks" ? (
               <RiskExplanationPanel document={document} />
+            ) : null}
+
+            {activeTab === "Chat" ? (
+              <DocumentChatPanel document={document} />
             ) : null}
           </section>
         </>

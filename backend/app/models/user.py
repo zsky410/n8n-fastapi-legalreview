@@ -11,6 +11,7 @@ from app.db.session import Base
 if TYPE_CHECKING:
     from app.models.audit_log import AuditLog
     from app.models.document import Document
+    from app.models.document_chat import DocumentChatMessage
     from app.models.review import Review
 
 
@@ -30,4 +31,4 @@ class User(Base):
     documents: Mapped[list["Document"]] = relationship(back_populates="user")
     reviews: Mapped[list["Review"]] = relationship(back_populates="reviewer")
     audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="actor")
-
+    document_chat_messages: Mapped[list["DocumentChatMessage"]] = relationship(back_populates="user")

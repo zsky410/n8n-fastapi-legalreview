@@ -67,7 +67,7 @@ export default function AdminAuditLogsPage() {
             ))}
           </div>
         ) : (
-          <EmptyState title="Chưa có sự kiện audit">Tải lên, AI rà soát, callback và quyết định admin sẽ xuất hiện ở đây.</EmptyState>
+          <EmptyState title="Chưa có sự kiện audit">Tải lên, AI rà soát, callback và quyết định reviewer sẽ xuất hiện ở đây.</EmptyState>
         )}
       </section>
     </section>

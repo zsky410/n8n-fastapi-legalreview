@@ -15,6 +15,7 @@ from app.services.classification import ClassificationResult
 from app.services.extraction import ExtractionResult
 from app.services.flagging import decide_review_status
 from app.services.risk_engine import RiskFindingData
+from app.services.review_status import NEEDS_REVIEW
 
 logger = logging.getLogger(__name__)
 
@@ -102,7 +103,7 @@ def build_mock_review(
         risk_score=risk_score,
     )
 
-    if findings and decision.review_status == "pending_admin":
+    if findings and decision.review_status == NEEDS_REVIEW:
         evidence_lines = "\n".join(
             f"- {_human_label(finding.rule_code)} ({_human_label(finding.severity).lower()}): "
             f"{finding.snippet or 'Không có đoạn trích cụ thể.'} Khuyến nghị: {finding.suggestion}"
@@ -113,7 +114,7 @@ def build_mock_review(
             f"{risk_insight}\n\n"
             f"Chi tiết finding:\n{evidence_lines}\n\n"
             "Khuyến nghị xử lý: Mở tab Rủi ro để kiểm tra từng finding, đối chiếu bằng chứng trong mục Tổng quan, "
-            "sau đó admin/người rà soát quyết định duyệt hoặc yêu cầu bổ sung tài liệu."
+            "sau đó người rà soát nghiệp vụ quyết định duyệt, yêu cầu sửa, hoặc yêu cầu bổ sung tài liệu."
         )
         verdict = decision.verdict
     else:
@@ -270,10 +271,10 @@ def _build_risk_insight(
     risk_score: int,
 ) -> str:
     top_issues = ", ".join(_human_label(finding.rule_code) for finding in findings[:3]) if findings else "không có finding rủi ro trọng yếu"
-    if getattr(decision, "review_status", "") == "pending_admin":
+    if getattr(decision, "review_status", "") == NEEDS_REVIEW:
         return (
             f"Đánh giá rủi ro: Risk score {risk_score}, các điểm chính gồm {top_issues}. "
-            "Tổng điểm vượt ngưỡng tự động nên tài liệu được chuyển admin kiểm tra."
+            "Tổng điểm vượt ngưỡng tự động nên tài liệu được chuyển reviewer xử lý exception."
         )
     return (
         f"Đánh giá rủi ro: Risk score {risk_score}, các điểm AI ghi nhận gồm {top_issues}. "

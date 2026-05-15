@@ -1,10 +1,10 @@
 "use client";
 
-import { Download, Loader2, RefreshCw, Sparkles } from "lucide-react";
+import { Download, Loader2, RefreshCw } from "lucide-react";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-import { API_URL, DocumentDetail, RiskFinding, fetchDocument, getStoredToken, startAiReview } from "@/lib/api";
+import { API_URL, DocumentDetail, RiskFinding, fetchDocument, getStoredToken } from "@/lib/api";
 import { DocumentChatPanel } from "@/components/document-chat-panel";
 import { ExtractedTextPanel } from "@/components/document-panels";
 import {
@@ -34,7 +34,6 @@ export default function DocumentDetailPage() {
   const [activeTab, setActiveTab] = useState<DetailTab>("Overview");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isReReviewing, setIsReReviewing] = useState(false);
 
   const loadDocument = useCallback(async () => {
     setError(null);
@@ -66,30 +65,6 @@ export default function DocumentDetailPage() {
     }, pollMs);
     return () => window.clearInterval(timer);
   }, [document, loadDocument]);
-
-  const canReReview = useMemo(() => {
-    if (!document) return false;
-    const blockedProcessing = ["pending_extraction", "extracting", "ai_reviewing"];
-    const blockedReview = ["awaiting_extraction", "processing"];
-    if (blockedProcessing.includes(document.processing_status)) return false;
-    if (blockedReview.includes(document.review_status)) return false;
-    if (!document.extracted_text || !document.extracted_text.trim()) return false;
-    return true;
-  }, [document]);
-
-  const handleReReview = useCallback(async () => {
-    if (!document || !canReReview) return;
-    setError(null);
-    setIsReReviewing(true);
-    try {
-      await startAiReview(document.id);
-      await loadDocument();
-    } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Không thể chạy lại AI review");
-    } finally {
-      setIsReReviewing(false);
-    }
-  }, [canReReview, document, loadDocument]);
 
   const downloadUrl = useMemo(() => `${API_URL}/api/v1/documents/${documentId}/download`, [documentId]);
   async function openDownload() {
@@ -130,20 +105,6 @@ export default function DocumentDetailPage() {
           <button className="secondary-button" type="button" onClick={loadDocument} disabled={isLoading}>
             <RefreshCw size={16} aria-hidden="true" />
             <span>Làm mới</span>
-          </button>
-          <button
-            className="secondary-button"
-            type="button"
-            onClick={handleReReview}
-            disabled={!canReReview || isReReviewing}
-            title="Chạy lại AI review với prompt và cấu hình hiện tại"
-          >
-            {isReReviewing ? (
-              <Loader2 size={16} aria-hidden="true" className="spin-icon" />
-            ) : (
-              <Sparkles size={16} aria-hidden="true" />
-            )}
-            <span>{isReReviewing ? "Đang xếp hàng..." : "Review lại bằng AI"}</span>
           </button>
           <button className="secondary-button" type="button" onClick={openDownload}>
             <Download size={16} aria-hidden="true" />
@@ -250,10 +211,6 @@ function isWorkflowLive(document: DocumentDetail): boolean {
 }
 
 function LiveProcessingLog({ document }: { document: DocumentDetail }) {
-  const showThinking =
-    document.processing_status === "ai_reviewing" || document.review_status === "processing";
-  const thinkingText = (document.ai_thinking_log ?? "").trim();
-
   return (
     <div className="live-log-stack">
       <div className="live-log" aria-live="polite">
@@ -269,17 +226,6 @@ function LiveProcessingLog({ document }: { document: DocumentDetail }) {
           </span>
         </div>
       </div>
-      {showThinking ? (
-        <div className="ai-thinking-log" aria-live="polite" aria-label="Nhật ký suy luận AI">
-          <div className="ai-thinking-log-header">
-            <span className="eyebrow">Luồng suy luận (stream)</span>
-            <span className="ai-thinking-hint">Cập nhật theo thời gian thực từ LLM</span>
-          </div>
-          <pre className="ai-thinking-log-body">
-            {thinkingText || "Đang chờ token đầu tiên từ model…"}
-          </pre>
-        </div>
-      ) : null}
     </div>
   );
 }
@@ -440,17 +386,17 @@ function getWorkflowStep(document: DocumentDetail): number {
 }
 
 function resultTitle(document: DocumentDetail): string {
-  if (document.review_status === "pending_admin") {
+  if (isNeedsReviewer(document.review_status)) {
     return "Cần người rà soát trước khi duyệt";
   }
   if (document.review_status === "ai_approved") {
     return "AI chưa thấy rủi ro trọng yếu";
   }
-  if (document.review_status === "admin_rejected") {
-    return "Admin đã từ chối tài liệu";
+  if (["reviewer_rejected", "admin_rejected"].includes(document.review_status)) {
+    return "Reviewer đã từ chối tài liệu";
   }
-  if (document.review_status === "admin_approved") {
-    return "Admin đã duyệt tài liệu";
+  if (["reviewer_approved", "admin_approved"].includes(document.review_status)) {
+    return "Reviewer đã duyệt tài liệu";
   }
   return humanStatus(document.review_status);
 }
@@ -458,7 +404,7 @@ function resultTitle(document: DocumentDetail): string {
 function resultDescription(document: DocumentDetail): string {
   if (document.risk_findings.length) {
     const reasons = document.risk_findings.slice(0, 3).map((finding) => humanStatus(finding.rule_code)).join(", ");
-    return `AI ghi nhận các điểm cần lưu ý: ${reasons}. Tài liệu chuyển admin khi tổng risk score vượt ngưỡng hoặc có finding nghiêm trọng cần người rà soát.`;
+    return `AI ghi nhận các điểm cần lưu ý: ${reasons}. Tài liệu chuyển reviewer khi risk score vượt ngưỡng hoặc có finding nghiêm trọng cần người rà soát nghiệp vụ.`;
   }
   if (document.flag_reasons.length) {
     return `Tài liệu có cờ: ${document.flag_reasons.map((flag) => humanStatus(flag)).join(", ")}.`;
@@ -468,14 +414,14 @@ function resultDescription(document: DocumentDetail): string {
 
 function riskScoreExplanation(document: DocumentDetail): string {
   if (document.risk_findings.length) {
-    return "Risk score được cộng từ các điểm AI phát hiện trong văn bản. Hệ thống chuyển admin khi tổng điểm vượt ngưỡng hoặc có finding nghiêm trọng.";
+    return "Risk score được cộng từ các điểm AI phát hiện trong văn bản. Hệ thống chuyển reviewer khi tổng điểm vượt ngưỡng hoặc có finding nghiêm trọng.";
   }
   return "Risk score thấp vì chưa có quy tắc rủi ro nào được kích hoạt từ văn bản trích xuất.";
 }
 
 function riskPanelTitle(document: DocumentDetail): string {
-  if (document.review_status === "pending_admin") {
-    return `Risk score ${document.risk_score}: cần admin kiểm tra`;
+  if (isNeedsReviewer(document.review_status)) {
+    return `Risk score ${document.risk_score}: cần reviewer kiểm tra`;
   }
   return `Risk score ${document.risk_score}: AI tự xử lý`;
 }
@@ -495,7 +441,7 @@ function riskLevelLabel(score: number): string {
 
 function riskLevelDescription(document: DocumentDetail): string {
   if (document.risk_score >= 70) {
-    return "Điểm đã vượt ngưỡng tự động, nên cần người có quyền duyệt kiểm tra trước.";
+    return "Điểm đã vượt ngưỡng tự động, nên cần reviewer nghiệp vụ kiểm tra trước.";
   }
   if (document.risk_score >= 40) {
     return "Có một số điều khoản hoặc dữ liệu cần chú ý, nhưng chưa đủ cao để chặn tự động.";
@@ -507,8 +453,8 @@ function riskLevelDescription(document: DocumentDetail): string {
 }
 
 function automationExplanation(document: DocumentDetail): string {
-  if (document.review_status === "pending_admin") {
-    return "Tài liệu được đưa sang hàng chờ admin vì vượt ngưỡng rủi ro hoặc có finding nghiêm trọng cần người rà soát.";
+  if (isNeedsReviewer(document.review_status)) {
+    return "Tài liệu được đưa sang hàng chờ reviewer vì vượt ngưỡng rủi ro hoặc có finding nghiêm trọng cần người rà soát.";
   }
   if (document.review_status === "ai_approved") {
     return "Tài liệu tiếp tục luồng tự động; các finding được lưu để tham khảo, không phải yêu cầu xử lý thủ công.";
@@ -535,13 +481,13 @@ function riskImpactText(finding: RiskFinding): string {
 }
 
 function riskAutomationText(document: DocumentDetail, finding: RiskFinding): string {
-  if (document.review_status === "pending_admin") {
+  if (isNeedsReviewer(document.review_status)) {
     return "Finding này góp phần làm tài liệu cần người rà soát trước khi duyệt tự động.";
   }
   if (finding.severity === "critical") {
-    return "Finding có mức rất cao; hệ thống sẽ chuyển admin nếu tổng risk score hoặc rule chặn vượt ngưỡng.";
+    return "Finding có mức rất cao; hệ thống sẽ chuyển reviewer nếu tổng risk score hoặc rule chặn vượt ngưỡng.";
   }
-  return "Finding được ghi nhận để minh bạch, nhưng tổng risk score vẫn dưới ngưỡng chuyển admin nên AI tiếp tục duyệt tự động.";
+  return "Finding được ghi nhận để minh bạch, nhưng tổng risk score vẫn dưới ngưỡng chuyển reviewer nên AI tiếp tục duyệt tự động.";
 }
 
 function userFacingSuggestion(document: DocumentDetail, finding: RiskFinding, suggestion: string): string {
@@ -552,4 +498,8 @@ function userFacingSuggestion(document: DocumentDetail, finding: RiskFinding, su
     return "Chỉ chia sẻ file cho người có quyền xem; cân nhắc che CCCD/số điện thoại/địa chỉ khi gửi ra ngoài.";
   }
   return suggestion;
+}
+
+function isNeedsReviewer(status: string): boolean {
+  return status === "needs_reviewer" || status === "pending_admin";
 }

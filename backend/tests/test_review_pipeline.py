@@ -258,7 +258,7 @@ def test_flagging_routes_high_risk_document_to_admin() -> None:
         extraction_quality_label=extraction.quality_label,
         findings=findings,
     )
-    assert decision.review_status == "pending_admin"
+    assert decision.review_status == "needs_reviewer"
     assert decision.verdict == "needs_review"
 
 

@@ -5,11 +5,11 @@ import { humanStatus } from "@/lib/format";
 
 export function StatusBadge({ status }: { status: string }) {
   const tone =
-    status === "ai_approved" || status === "admin_approved"
+    status === "ai_approved" || status === "admin_approved" || status === "reviewer_approved"
       ? "success"
-      : status === "pending_admin" || status === "processing" || status === "pending"
+      : status === "needs_reviewer" || status === "pending_admin" || status === "processing" || status === "pending"
         ? "warning"
-        : status === "admin_rejected" || status === "failed"
+        : status === "reviewer_rejected" || status === "admin_rejected" || status === "failed"
           ? "danger"
           : "neutral";
 

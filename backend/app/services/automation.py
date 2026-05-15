@@ -5,6 +5,14 @@ from typing import Any
 
 from app.core.config import settings
 from app.models.document import Document
+from app.services.review_status import (
+    AI_APPROVED,
+    APPROVED_STATUSES,
+    HUMAN_APPROVED_STATUSES,
+    HUMAN_REJECTED_STATUSES,
+    HUMAN_REVIEW_PENDING_STATUSES,
+    count_statuses,
+)
 
 
 def build_document_automation_payload(
@@ -32,6 +40,7 @@ def build_document_automation_payload(
         "uploaded_at": document.uploaded_at,
         "processed_at": document.processed_at,
         "client_url": f"{frontend_base_url}/documents/{document.id}",
+        "reviewer_url": f"{frontend_base_url}/admin/documents/{document.id}",
         "admin_url": f"{frontend_base_url}/admin/documents/{document.id}",
     }
 
@@ -44,9 +53,10 @@ def build_weekly_summary_payload(
     period_end: datetime,
     generated_at: datetime | None = None,
 ) -> dict[str, Any]:
-    ai_approved = status_counts.get("ai_approved", 0)
+    ai_approved = status_counts.get(AI_APPROVED, 0)
     reviewed_count = sum(status_counts.values())
-    agreement_rate = round((ai_approved / reviewed_count) * 100, 2) if reviewed_count else 0.0
+    approved_count = count_statuses(status_counts, APPROVED_STATUSES)
+    agreement_rate = round((approved_count / reviewed_count) * 100, 2) if reviewed_count else 0.0
 
     return {
         "generated_at": generated_at or datetime.now(UTC),
@@ -54,9 +64,9 @@ def build_weekly_summary_payload(
         "period_end": period_end,
         "total_documents": total_documents,
         "ai_approved": ai_approved,
-        "pending_admin": status_counts.get("pending_admin", 0),
-        "admin_approved": status_counts.get("admin_approved", 0),
-        "admin_rejected": status_counts.get("admin_rejected", 0),
+        "needs_reviewer": count_statuses(status_counts, HUMAN_REVIEW_PENDING_STATUSES),
+        "reviewer_approved": count_statuses(status_counts, HUMAN_APPROVED_STATUSES),
+        "reviewer_rejected": count_statuses(status_counts, HUMAN_REJECTED_STATUSES),
         "failed": status_counts.get("failed", 0),
         "processing": status_counts.get("processing", 0),
         "agreement_rate": agreement_rate,

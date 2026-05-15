@@ -12,9 +12,9 @@ const statusFilters = [
   ["all", "Tất cả"],
   ["processing", "Đang xử lý"],
   ["ai_approved", "AI đã duyệt"],
-  ["pending_admin", "Chờ admin"],
-  ["admin_approved", "Admin đã duyệt"],
-  ["admin_rejected", "Từ chối"],
+  ["needs_reviewer", "Cần reviewer"],
+  ["reviewer_approved", "Reviewer duyệt"],
+  ["reviewer_rejected", "Từ chối"],
   ["failed", "Lỗi"],
 ] as const;
 
@@ -42,7 +42,7 @@ export default function DocumentsPage() {
   }, [loadDocuments]);
 
   const activeCount = documents.filter((document) =>
-    ["pending", "processing", "pending_admin"].includes(document.review_status),
+    ["pending", "processing", "needs_reviewer", "pending_admin"].includes(document.review_status),
   ).length;
 
   return (

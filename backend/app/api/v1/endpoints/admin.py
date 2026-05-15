@@ -24,6 +24,17 @@ from app.schemas.admin import (
     AdminStats,
 )
 from app.services.audit import create_audit_log
+from app.services.review_status import (
+    AI_APPROVED,
+    APPROVED_STATUSES,
+    HUMAN_APPROVED_STATUSES,
+    HUMAN_REJECTED_STATUSES,
+    HUMAN_REVIEW_PENDING_STATUSES,
+    REVIEWER_APPROVED,
+    REVIEWER_REJECTED,
+    count_statuses,
+    is_human_review_pending,
+)
 from app.services.webhooks import send_document_reviewed_webhook
 
 router = APIRouter()
@@ -42,9 +53,9 @@ def list_review_queue(
         .order_by(Document.risk_score.desc(), Document.uploaded_at.asc())
     )
     if scope == "pending":
-        query = query.where(Document.review_status == "pending_admin")
+        query = query.where(Document.review_status.in_(HUMAN_REVIEW_PENDING_STATUSES))
     elif scope == "ai_approved":
-        query = query.where(Document.review_status == "ai_approved")
+        query = query.where(Document.review_status == AI_APPROVED)
 
     rows = db.execute(query).all()
     return [_build_admin_document_list_item(document, owner_email) for document, owner_email in rows]
@@ -94,13 +105,14 @@ def submit_admin_decision(
     )
     if document is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
-    if document.review_status != "pending_admin":
+    if not is_human_review_pending(document.review_status):
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
-            detail="Document is not pending admin review",
+            detail="Document is not waiting for reviewer handling",
         )
 
-    review_status = "admin_approved" if payload.decision == "approve" else "admin_rejected"
+    previous_status = document.review_status
+    review_status = REVIEWER_APPROVED if payload.decision == "approve" else REVIEWER_REJECTED
     document.review_status = review_status
     review = Review(
         document_id=document.id,
@@ -112,14 +124,14 @@ def submit_admin_decision(
     db.add(review)
     create_audit_log(
         db,
-        action="admin.decision.submitted",
+        action="reviewer.decision.submitted",
         target_type="document",
         target_id=document.id,
         actor_id=current_user.id,
         payload={
             "decision": review_status,
             "comment": payload.comment,
-            "previous_status": "pending_admin",
+            "previous_status": previous_status,
         },
     )
     db.commit()
@@ -146,7 +158,7 @@ def get_admin_stats(
     status_rows = db.execute(select(Document.review_status, func.count()).group_by(Document.review_status)).all()
     status_counts = {row_status: count for row_status, count in status_rows}
     reviewed_total = sum(status_counts.values())
-    approved_total = status_counts.get("ai_approved", 0) + status_counts.get("admin_approved", 0)
+    approved_total = count_statuses(status_counts, APPROVED_STATUSES)
     agreement_rate = round((approved_total / reviewed_total) * 100, 1) if reviewed_total else 0.0
 
     flag_reasons = db.scalars(select(Document.flag_reasons)).all()
@@ -154,10 +166,10 @@ def get_admin_stats(
 
     return AdminStats(
         total_documents=total_documents,
-        ai_approved=status_counts.get("ai_approved", 0),
-        pending_admin=status_counts.get("pending_admin", 0),
-        admin_approved=status_counts.get("admin_approved", 0),
-        admin_rejected=status_counts.get("admin_rejected", 0),
+        ai_approved=status_counts.get(AI_APPROVED, 0),
+        needs_reviewer=count_statuses(status_counts, HUMAN_REVIEW_PENDING_STATUSES),
+        reviewer_approved=count_statuses(status_counts, HUMAN_APPROVED_STATUSES),
+        reviewer_rejected=count_statuses(status_counts, HUMAN_REJECTED_STATUSES),
         failed=status_counts.get("failed", 0),
         agreement_rate=agreement_rate,
         top_flag_reason=top_flag_reason,

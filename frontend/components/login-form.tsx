@@ -39,8 +39,12 @@ export function LoginForm() {
       localStorage.setItem("legalreview_token", data.access_token);
       localStorage.setItem("legalreview_user", JSON.stringify(data.user));
 
-      if (data.user.role === "admin" || data.user.role === "reviewer") {
+      if (data.user.role === "reviewer") {
         router.replace("/admin/queue");
+        return;
+      }
+      if (data.user.role === "admin") {
+        router.replace("/admin/dashboard");
         return;
       }
 

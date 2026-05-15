@@ -125,6 +125,7 @@ def test_build_document_automation_payload_includes_links_and_days_left() -> Non
     assert payload["user_email"] == "client@example.com"
     assert payload["days_left"] == 3
     assert payload["client_url"].endswith(f"/documents/{document_id}")
+    assert payload["reviewer_url"].endswith(f"/admin/documents/{document_id}")
     assert payload["admin_url"].endswith(f"/admin/documents/{document_id}")
 
 
@@ -136,7 +137,7 @@ def test_build_weekly_summary_payload_counts_statuses() -> None:
         total_documents=4,
         status_counts={
             "ai_approved": 2,
-            "pending_admin": 1,
+            "needs_reviewer": 1,
             "failed": 1,
         },
         period_start=period_start,
@@ -146,7 +147,7 @@ def test_build_weekly_summary_payload_counts_statuses() -> None:
 
     assert payload["total_documents"] == 4
     assert payload["ai_approved"] == 2
-    assert payload["pending_admin"] == 1
+    assert payload["needs_reviewer"] == 1
     assert payload["failed"] == 1
-    assert payload["admin_rejected"] == 0
+    assert payload["reviewer_rejected"] == 0
     assert payload["agreement_rate"] == 50.0

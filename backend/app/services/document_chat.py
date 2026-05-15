@@ -134,7 +134,7 @@ def _system_prompt() -> str:
         "- Khi nêu rủi ro/điều khoản, trích 1-3 đoạn ngắn nguyên văn trong dấu “...” nếu context có bằng chứng.\n"
         "- Nếu không thấy điều khoản hoặc thiếu file nền/phụ lục, nói rõ 'chưa đủ dữ kiện' và nêu cần kiểm tra gì.\n"
         "- Không bịa số điều khoản, luật áp dụng, nghĩa vụ, bên tham gia, ngày tháng hoặc kết luận pháp lý không có trong context.\n"
-        "- Không dùng câu chung chung kiểu 'cần admin review' trừ khi giải thích cụ thể điểm nào làm tăng rủi ro.\n"
+        "- Không dùng câu chung chung kiểu 'cần reviewer xử lý' trừ khi giải thích cụ thể điểm nào làm tăng rủi ro.\n"
         "- Nếu câu hỏi ngoài phạm vi tài liệu, trả lời giới hạn và đề xuất user cung cấp thêm tài liệu/thông tin.\n\n"
         "Định dạng ưu tiên:\n"
         "1. Kết luận ngắn: 1-2 câu.\n"

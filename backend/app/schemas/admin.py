@@ -73,9 +73,9 @@ class AdminDecisionResponse(BaseModel):
 class AdminStats(BaseModel):
     total_documents: int
     ai_approved: int
-    pending_admin: int
-    admin_approved: int
-    admin_rejected: int
+    needs_reviewer: int
+    reviewer_approved: int
+    reviewer_rejected: int
     failed: int
     agreement_rate: float
     top_flag_reason: str | None

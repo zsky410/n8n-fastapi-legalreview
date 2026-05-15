@@ -25,7 +25,7 @@ Seeded accounts:
 | Reviewer | reviewer@example.com | password123 |
 | Admin | admin@example.com | password123 |
 
-The backend runs Alembic migrations, seeds demo users, and seeds 8 demo documents on container start. The seeded documents cover `ai_approved`, `pending_admin`, `admin_approved`, `admin_rejected`, `processing`, and `failed` states so the UI, dashboard, audit log, Mailhog/n8n demo, and automation endpoints have useful data immediately.
+The backend runs Alembic migrations, seeds demo users, and seeds 8 demo documents on container start. The seeded documents cover `ai_approved`, `needs_reviewer`, `reviewer_approved`, `reviewer_rejected`, `processing`, and `failed` states so the UI, dashboard, audit log, Mailhog/n8n demo, and automation endpoints have useful data immediately.
 
 Supported upload formats: text-based PDF, DOCX, TXT, MD, RTF, HTML, and HTM.
 
@@ -56,7 +56,7 @@ The backend now supports:
 Day 2 acceptance:
 
 1. Upload one low-risk DOCX or PDF and confirm it becomes `ai_approved`.
-2. Upload one risky DOCX or PDF and confirm it becomes `pending_admin`.
+2. Upload one risky DOCX or PDF and confirm it becomes `needs_reviewer`.
 3. Confirm `GET /api/v1/documents/{id}` includes `risk_findings`, `summary`, `classification`, and `flag_reasons`.
 4. Confirm `n8n_events` records outbound webhook attempts even if no workflow exists yet.
 
@@ -109,11 +109,11 @@ When running n8n outside Docker, change workflow HTTP URLs from `http://backend:
 | --- | --- |
 | Webhook Processing | Workflow A receives `document.reviewed` from FastAPI. |
 | HTTP API Integration | n8n calls FastAPI callback and automation APIs. |
-| IF/Switch | Workflow A routes `ai_approved`, `pending_admin`, and admin decisions. |
+| IF/Switch | Workflow A routes `ai_approved`, `needs_reviewer`, and reviewer decisions. |
 | Scheduled Tasks | Workflow B daily expiry and weekly audit/summary triggers. |
 | Batch Processing | Workflow B sends expiry emails one at a time. |
 | Error/No-data Handling | Invalid, unknown, and no-data branches callback to FastAPI. |
-| Human Handoff | `pending_admin` email goes to reviewer/admin. |
+| Human Handoff | `needs_reviewer` email goes to reviewer. |
 
 ### Day 3 smoke tests
 
@@ -157,14 +157,14 @@ Workflow B:
 Implemented screens:
 
 - Client: login, document list with status filters, upload, detail, download.
-- Admin/reviewer: review queue with scope toggle, document detail, decision form, dashboard, audit logs.
+- Reviewer: exception queue, document detail, and decision form. Admin: system dashboard, audit logs, and reviewer queue oversight.
 - Shared UI: fixed sidebar on desktop, responsive mobile layout, Vietnamese labels, status badges, empty states, risk badges, and translated audit/risk labels.
 
 Useful URLs:
 
 - Client documents: http://localhost:3000/documents
 - Upload: http://localhost:3000/documents/upload
-- Admin queue: http://localhost:3000/admin/queue
+- Reviewer queue: http://localhost:3000/admin/queue
 - Dashboard: http://localhost:3000/admin/dashboard
 - Audit logs: http://localhost:3000/admin/audit-logs
 
@@ -176,10 +176,10 @@ Seeded demo documents:
 | --- | --- | --- |
 | `demo-safe-contract.docx` | `ai_approved` | Normal auto-approval. |
 | `demo-safe-nda.docx` | `ai_approved` | AI audit sample. |
-| `demo-high-value-contract.docx` | `pending_admin` | High-risk human handoff. |
-| `demo-expiring-renewal.docx` | `pending_admin` | Expiry alert and renewal risk. |
-| `demo-approved-after-review.docx` | `admin_approved` | Admin override/approval trail. |
-| `demo-rejected-invoice.docx` | `admin_rejected` | Rejection trail. |
+| `demo-high-value-contract.docx` | `needs_reviewer` | High-risk human handoff. |
+| `demo-expiring-renewal.docx` | `needs_reviewer` | Expiry alert and renewal risk. |
+| `demo-approved-after-review.docx` | `reviewer_approved` | Reviewer approval trail. |
+| `demo-rejected-invoice.docx` | `reviewer_rejected` | Rejection trail. |
 | `demo-processing-upload.docx` | `processing` | In-progress UI state. |
 | `demo-failed-extraction.docx` | `failed` | Failed-processing UI state. |
 
@@ -223,7 +223,7 @@ Screenshots:
 | --- | --- |
 | Login | `docs/screenshots/login.png` |
 | Client documents | `docs/screenshots/client-documents.png` |
-| Admin queue | `docs/screenshots/admin-queue.png` |
+| Reviewer queue | `docs/screenshots/admin-queue.png` |
 | Admin detail | `docs/screenshots/admin-detail.png` |
 | Dashboard | `docs/screenshots/admin-dashboard.png` |
 | Audit logs | `docs/screenshots/audit-logs.png` |
@@ -241,8 +241,8 @@ Screenshots:
 
 1. Login as `client@example.com`.
 2. Show seeded safe document already `AI đã duyệt`.
-3. Upload or open a high-risk document and show `Chờ admin duyệt`.
-4. Login as `admin@example.com`, open queue, inspect "Lý do bị gắn cờ".
+3. Upload or open a high-risk document and show `Cần reviewer xử lý`.
+4. Login as `reviewer@example.com`, open queue, inspect "Lý do vào exception queue".
 5. Submit approve/reject with a comment.
 6. Open dashboard and audit logs.
 7. Open Mailhog to show notification emails.

@@ -120,9 +120,9 @@ export type AdminDocumentDetail = AdminDocumentListItem & {
 export type AdminStats = {
   total_documents: number;
   ai_approved: number;
-  pending_admin: number;
-  admin_approved: number;
-  admin_rejected: number;
+  needs_reviewer: number;
+  reviewer_approved: number;
+  reviewer_rejected: number;
   failed: number;
   agreement_rate: number;
   top_flag_reason: string | null;
@@ -253,14 +253,15 @@ function translateApiMessage(message: string): string {
   const labels: Record<string, string> = {
     "Access denied": "Bạn không có quyền truy cập",
     "Could not validate credentials": "Không thể xác thực phiên đăng nhập",
-    "Document is not pending admin review": "Tài liệu không còn chờ admin duyệt",
+    "Document is not pending admin review": "Tài liệu không còn chờ reviewer xử lý",
+    "Document is not waiting for reviewer handling": "Tài liệu không còn chờ reviewer xử lý",
     "Document is not waiting for AI review": "Tài liệu không ở trạng thái chờ AI review",
     "Document review is not ready for chat": "Tài liệu chưa review xong nên chưa thể chat với AI",
     "Document not found": "Không tìm thấy tài liệu",
     "Invalid email or password": "Email hoặc mật khẩu không đúng",
     "Only PDF, DOCX, TXT, MD, RTF, and HTML files are supported":
       "Chỉ hỗ trợ file PDF, DOCX, TXT, MD, RTF và HTML",
-    "Reviewer access required": "Bạn cần quyền người rà soát hoặc admin",
+    "Reviewer access required": "Bạn cần quyền reviewer hoặc admin",
     "Session expired": "Phiên đăng nhập đã hết hạn",
     "Text extraction is not completed": "Quá trình trích xuất văn bản chưa hoàn tất",
     "Uploaded file exceeds the 10MB size limit": "File tải lên vượt quá giới hạn 10 MB",

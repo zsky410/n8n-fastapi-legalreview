@@ -24,9 +24,12 @@ const clientNav = [
   { href: "/documents", label: "Tài liệu", icon: FileText },
   { href: "/documents/upload", label: "Tải lên", icon: UploadCloud },
 ];
+const reviewerNav = [
+  { href: "/admin/queue", label: "Exception queue", icon: ClipboardList },
+];
 const adminNav = [
-  { href: "/admin/queue", label: "Hàng chờ", icon: ClipboardList },
-  { href: "/admin/dashboard", label: "Tổng quan", icon: Gauge },
+  { href: "/admin/dashboard", label: "Hệ thống", icon: Gauge },
+  { href: "/admin/queue", label: "Reviewer queue", icon: ClipboardList },
   { href: "/admin/audit-logs", label: "Nhật ký audit", icon: History },
 ];
 
@@ -36,7 +39,12 @@ export function AppShell({ children, area }: AppShellProps) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const navItems = useMemo(() => (area === "admin" ? adminNav : clientNav), [area]);
+  const navItems = useMemo(() => {
+    if (area !== "admin") {
+      return clientNav;
+    }
+    return user?.role === "reviewer" ? reviewerNav : adminNav;
+  }, [area, user?.role]);
 
   useEffect(() => {
     const token = localStorage.getItem("legalreview_token");
@@ -86,14 +94,14 @@ export function AppShell({ children, area }: AppShellProps) {
   return (
     <div className="app-frame">
       <aside className="sidebar">
-        <Link className="sidebar-brand" href={area === "admin" ? "/admin/queue" : "/documents"} prefetch={false}>
+        <Link className="sidebar-brand" href={area === "admin" ? homeHref(user.role) : "/documents"} prefetch={false}>
           <span className="brand-mark small" aria-hidden="true">
             <Scale size={18} />
           </span>
           <span>LegalReview</span>
         </Link>
 
-        <nav className="nav-list" aria-label={area === "admin" ? "Điều hướng admin" : "Điều hướng khách hàng"}>
+        <nav className="nav-list" aria-label={area === "admin" ? "Điều hướng nội bộ" : "Điều hướng khách hàng"}>
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -123,6 +131,10 @@ export function AppShell({ children, area }: AppShellProps) {
       <main className="workspace">{children}</main>
     </div>
   );
+}
+
+function homeHref(role: string): string {
+  return role === "admin" ? "/admin/dashboard" : "/admin/queue";
 }
 
 function roleLabel(role: string): string {

@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from app.core.config import settings
 from app.services.risk_engine import RiskFindingData
+from app.services.review_status import AI_APPROVED, NEEDS_REVIEW
 
 
 @dataclass
@@ -27,5 +28,5 @@ def decide_review_status(
     )
 
     if should_flag:
-        return FlaggingDecision(review_status="pending_admin", verdict="needs_review")
-    return FlaggingDecision(review_status="ai_approved", verdict="approve")
+        return FlaggingDecision(review_status=NEEDS_REVIEW, verdict="needs_review")
+    return FlaggingDecision(review_status=AI_APPROVED, verdict="approve")

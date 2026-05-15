@@ -17,6 +17,7 @@ from app.models.document import Document
 from app.models.review import Review
 from app.models.risk_finding import RiskFinding
 from app.models.user import User
+from app.services.review_status import REVIEWER_APPROVED, REVIEWER_REJECTED
 
 DEMO_USERS = [
     ("client@example.com", "client"),
@@ -111,11 +112,11 @@ def seed_sample_documents() -> None:
                 review_status=spec["review_status"],
             )
 
-            if spec["review_status"] in {"admin_approved", "admin_rejected"}:
+            if spec["review_status"] in {REVIEWER_APPROVED, REVIEWER_REJECTED}:
                 db.add(
                     Review(
                         document_id=document.id,
-                        reviewer_id=admin.id if spec["review_status"] == "admin_approved" else reviewer.id,
+                        reviewer_id=reviewer.id,
                         decision=spec["review_status"],
                         comment=spec["review_comment"],
                         override_ai=True,
@@ -123,10 +124,10 @@ def seed_sample_documents() -> None:
                 )
                 db.add(
                     AuditLog(
-                        action="admin.decision.submitted",
+                        action="reviewer.decision.submitted",
                         target_type="document",
                         target_id=document.id,
-                        actor_id=admin.id if spec["review_status"] == "admin_approved" else reviewer.id,
+                        actor_id=reviewer.id,
                         payload={
                             "decision": spec["review_status"],
                             "comment": spec["review_comment"],
@@ -177,7 +178,7 @@ def _sample_document_specs(now: datetime) -> list[dict[str, Any]]:
         {
             "filename": "demo-high-value-contract.docx",
             "processing_status": "completed",
-            "review_status": "pending_admin",
+            "review_status": "needs_reviewer",
             "classification": "contract",
             "classification_confidence": "0.7100",
             "summary": "Tài liệu hợp đồng bị gắn cờ với điểm rủi ro 100. Vấn đề chính: Thiếu chữ ký, Giá trị cao, Thiếu luật điều chỉnh.",
@@ -198,7 +199,7 @@ def _sample_document_specs(now: datetime) -> list[dict[str, Any]]:
         {
             "filename": "demo-expiring-renewal.docx",
             "processing_status": "completed",
-            "review_status": "pending_admin",
+            "review_status": "needs_reviewer",
             "classification": "contract",
             "classification_confidence": "0.6600",
             "summary": "Tài liệu hợp đồng bị gắn cờ với điểm rủi ro 55. Vấn đề chính: Sắp hết hạn, Tự động gia hạn.",
@@ -218,7 +219,7 @@ def _sample_document_specs(now: datetime) -> list[dict[str, Any]]:
         {
             "filename": "demo-approved-after-review.docx",
             "processing_status": "completed",
-            "review_status": "admin_approved",
+            "review_status": "reviewer_approved",
             "classification": "nda",
             "classification_confidence": "0.7600",
             "summary": "Tài liệu NDA đã được người rà soát duyệt sau khi kiểm tra các điều khoản bị gắn cờ.",
@@ -236,7 +237,7 @@ def _sample_document_specs(now: datetime) -> list[dict[str, Any]]:
         {
             "filename": "demo-rejected-invoice.docx",
             "processing_status": "completed",
-            "review_status": "admin_rejected",
+            "review_status": "reviewer_rejected",
             "classification": "invoice",
             "classification_confidence": "0.7300",
             "summary": "Tài liệu hóa đơn bị từ chối do giá trị cao và thiếu thông tin xác nhận.",

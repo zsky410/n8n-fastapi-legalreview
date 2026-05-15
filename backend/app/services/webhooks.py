@@ -61,6 +61,7 @@ def build_document_reviewed_payload(
         "classification": document.classification,
         "risk_score": document.risk_score,
         "flag_reasons": document.flag_reasons,
+        "reviewer_url": f"{settings.frontend_base_url}/admin/documents/{document.id}",
         "admin_url": f"{settings.frontend_base_url}/admin/documents/{document.id}",
         "client_url": f"{settings.frontend_base_url}/documents/{document.id}",
     }

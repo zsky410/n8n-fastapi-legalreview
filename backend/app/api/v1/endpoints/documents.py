@@ -135,8 +135,8 @@ def start_ai_review(
     """Queue (or re-queue) AI review for a document.
 
     Accepts any document that already has extracted text, including ones that
-    finished a previous review (`ai_approved`, `pending_admin`, `admin_approved`,
-    `admin_rejected`, `failed`). This lets operators re-run the AI after the
+    finished a previous review (`ai_approved`, `needs_reviewer`, `reviewer_approved`,
+    `reviewer_rejected`, `failed`). This lets operators re-run the AI after the
     prompt, rules, or settings change without re-uploading the file.
     """
 

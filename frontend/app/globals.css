@@ -733,47 +733,6 @@ textarea:focus {
   overflow-wrap: anywhere;
 }
 
-.ai-thinking-log {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  display: grid;
-  gap: 8px;
-  max-height: 240px;
-  min-height: 72px;
-  overflow: hidden;
-  padding: 10px 12px;
-}
-
-.ai-thinking-log-header {
-  align-items: baseline;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 12px;
-  justify-content: space-between;
-}
-
-.ai-thinking-log-header .eyebrow {
-  margin: 0;
-}
-
-.ai-thinking-hint {
-  color: var(--slate);
-  font-size: 12px;
-}
-
-.ai-thinking-log-body {
-  color: var(--ink);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-  font-size: 12px;
-  line-height: 1.45;
-  margin: 0;
-  max-height: 180px;
-  overflow-wrap: anywhere;
-  overflow-y: auto;
-  white-space: pre-wrap;
-}
-
 .spin-icon {
   animation: spin 0.9s linear infinite;
   flex: 0 0 auto;

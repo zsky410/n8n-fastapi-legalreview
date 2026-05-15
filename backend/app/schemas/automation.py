@@ -21,6 +21,7 @@ class AutomationDocument(BaseModel):
     uploaded_at: datetime
     processed_at: datetime | None
     client_url: str
+    reviewer_url: str
     admin_url: str
 
 
@@ -30,9 +31,9 @@ class WeeklySummary(BaseModel):
     period_end: datetime
     total_documents: int
     ai_approved: int
-    pending_admin: int
-    admin_approved: int
-    admin_rejected: int
+    needs_reviewer: int
+    reviewer_approved: int
+    reviewer_rejected: int
     failed: int
     processing: int
     agreement_rate: float

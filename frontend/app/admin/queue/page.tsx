@@ -9,7 +9,7 @@ import { ageFromNow, formatDateTime } from "@/lib/format";
 import { EmptyState, FlagList, PageError, RiskBadge, StatusBadge } from "@/components/ui";
 
 const queueScopes = [
-  ["pending", "Chờ duyệt"],
+  ["pending", "Cần xử lý"],
   ["ai_approved", "AI đã duyệt"],
   ["all", "Tất cả"],
 ] as const;
@@ -41,8 +41,8 @@ export default function AdminQueuePage() {
     <section className="page-stack">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Khu vực người rà soát</p>
-          <h1>Hàng chờ rà soát</h1>
+          <p className="eyebrow">Reviewer workspace</p>
+          <h1>Exception queue</h1>
         </div>
         <div className="header-actions">
           <button className="secondary-button" type="button" onClick={loadQueue} disabled={isLoading}>
@@ -53,7 +53,7 @@ export default function AdminQueuePage() {
         </div>
       </header>
 
-      <div className="tab-strip" aria-label="Lọc hàng chờ admin">
+      <div className="tab-strip" aria-label="Lọc hàng chờ reviewer">
         {queueScopes.map(([value, label]) => (
           <button
             className={scope === value ? "tab-button active" : "tab-button"}

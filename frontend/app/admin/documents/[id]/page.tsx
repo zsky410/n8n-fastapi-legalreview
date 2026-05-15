@@ -66,7 +66,7 @@ export default function AdminDocumentDetailPage() {
     <section className="page-stack">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Tài liệu cần duyệt</p>
+          <p className="eyebrow">Reviewer exception</p>
           <h1>{document?.filename ?? "Rà soát tài liệu"}</h1>
         </div>
         <div className="header-actions">
@@ -107,8 +107,8 @@ export default function AdminDocumentDetailPage() {
             </section>
 
             <section className="data-panel detail-panel">
-              <h2>Biểu mẫu quyết định</h2>
-              {document.review_status === "pending_admin" ? (
+              <h2>Quyết định reviewer</h2>
+              {isNeedsReviewer(document.review_status) ? (
                 <form className="decision-form" onSubmit={handleSubmit}>
                   <div className="segmented-control" aria-label="Quyết định">
                     <button
@@ -117,7 +117,7 @@ export default function AdminDocumentDetailPage() {
                       onClick={() => setDecision("approve")}
                     >
                       <CheckCircle2 size={16} aria-hidden="true" />
-                      Duyệt
+                      Duyệt sau rà soát
                     </button>
                     <button
                       className={decision === "reject" ? "active danger" : "danger"}
@@ -125,11 +125,11 @@ export default function AdminDocumentDetailPage() {
                       onClick={() => setDecision("reject")}
                     >
                       <XCircle size={16} aria-hidden="true" />
-                      Từ chối
+                      Từ chối / yêu cầu xử lý lại
                     </button>
                   </div>
                   <label>
-                    Ghi chú của người rà soát
+                    Ghi chú nghiệp vụ cho client / audit
                     <textarea
                       value={comment}
                       onChange={(event) => setComment(event.target.value)}
@@ -143,13 +143,13 @@ export default function AdminDocumentDetailPage() {
                   </button>
                 </form>
               ) : (
-                <EmptyState title="Đã có quyết định">Tài liệu này không còn chờ admin duyệt.</EmptyState>
+                <EmptyState title="Đã có quyết định">Tài liệu này không còn chờ reviewer xử lý.</EmptyState>
               )}
             </section>
           </section>
 
           <section className="data-panel detail-panel">
-            <h2>Quyết định AI</h2>
+            <h2>Nhận định AI</h2>
             <SummaryPanel summary={humanAiSummary(document.summary)} fallback="Chưa có tóm tắt AI." />
             <div className="detail-grid compact-grid">
               <FieldValue label="Trạng thái rà soát" value={humanStatus(document.review_status)} />
@@ -169,7 +169,7 @@ export default function AdminDocumentDetailPage() {
           </section>
 
           <section className="data-panel detail-panel">
-            <h2>Lý do bị gắn cờ</h2>
+            <h2>Lý do vào exception queue</h2>
             <FlagList flags={document.flag_reasons} />
           </section>
 
@@ -215,4 +215,8 @@ export default function AdminDocumentDetailPage() {
       ) : null}
     </section>
   );
+}
+
+function isNeedsReviewer(status: string): boolean {
+  return status === "needs_reviewer" || status === "pending_admin";
 }

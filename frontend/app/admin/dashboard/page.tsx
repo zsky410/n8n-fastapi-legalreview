@@ -10,8 +10,8 @@ import { PageError } from "@/components/ui";
 const statLabels: Array<[keyof AdminStats, string, string]> = [
   ["total_documents", "Tổng tài liệu", "Tất cả lượt gửi"],
   ["ai_approved", "AI đã duyệt", "Tự động thông qua"],
-  ["pending_admin", "Chờ admin", "Cần người rà soát xử lý"],
-  ["admin_rejected", "Đã từ chối", "Quyết định thủ công"],
+  ["needs_reviewer", "Cần reviewer", "Exception cần xử lý"],
+  ["reviewer_rejected", "Reviewer từ chối", "Quyết định thủ công"],
   ["agreement_rate", "Tỷ lệ duyệt", "Tỷ lệ được thông qua"],
 ];
 
@@ -40,8 +40,8 @@ export default function AdminDashboardPage() {
     <section className="page-stack">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Vận hành</p>
-          <h1>Bảng tổng quan</h1>
+          <p className="eyebrow">System operations</p>
+          <h1>Bảng tổng quan hệ thống</h1>
         </div>
         <button className="secondary-button" type="button" onClick={loadStats} disabled={isLoading}>
           <RefreshCw size={16} aria-hidden="true" />
@@ -71,8 +71,8 @@ export default function AdminDashboardPage() {
           <strong>{stats?.top_flag_reason ? humanStatus(stats.top_flag_reason) : "Chưa có cờ rủi ro"}</strong>
         </div>
         <div>
-          <span>Admin đã duyệt</span>
-          <strong>{stats?.admin_approved ?? 0}</strong>
+          <span>Reviewer đã duyệt</span>
+          <strong>{stats?.reviewer_approved ?? 0}</strong>
         </div>
         <div>
           <span>Thất bại</span>

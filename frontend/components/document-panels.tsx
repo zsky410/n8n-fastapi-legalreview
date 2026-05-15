@@ -98,6 +98,15 @@ export function ExtractedTextPanel({ text, processingStatus, reviewStatus }: Ext
 }
 
 function isExtractionTerminal(processingStatus?: string | null, reviewStatus?: string | null): boolean {
-  const terminalReviewStatuses = ["ai_approved", "pending_admin", "admin_approved", "admin_rejected", "failed"];
+  const terminalReviewStatuses = [
+    "ai_approved",
+    "needs_reviewer",
+    "pending_admin",
+    "reviewer_approved",
+    "reviewer_rejected",
+    "admin_approved",
+    "admin_rejected",
+    "failed",
+  ];
   return processingStatus === "completed" || processingStatus === "failed" || terminalReviewStatuses.includes(reviewStatus ?? "");
 }

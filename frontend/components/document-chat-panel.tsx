@@ -110,8 +110,8 @@ export function DocumentChatPanel({ document }: { document: DocumentDetail }) {
             <MessageSquareText size={20} aria-hidden="true" />
           </div>
           <div>
-            <h2>Chat AI theo tài liệu</h2>
-            <p>Chat sẽ mở khi tài liệu đã trích xuất text và hoàn tất AI review.</p>
+            <h2>Hỏi AI theo tài liệu</h2>
+            <p>Phần hỏi AI sẽ mở khi tài liệu đã trích xuất văn bản và hoàn tất bước AI rà soát.</p>
           </div>
         </div>
         <div className="chat-empty">
@@ -128,10 +128,10 @@ export function DocumentChatPanel({ document }: { document: DocumentDetail }) {
           <MessageSquareText size={20} aria-hidden="true" />
         </div>
         <div className="chat-intro-copy">
-          <h2>Chat AI theo tài liệu</h2>
+          <h2>Hỏi AI theo tài liệu</h2>
           <p>
             Hỏi tiếp về rủi ro, điều khoản cần sửa, tài liệu cần bổ sung hoặc cách đàm phán. AI sẽ bám vào
-            văn bản trích xuất và kết quả review hiện tại.
+            văn bản trích xuất và kết quả rà soát hiện tại.
           </p>
         </div>
       </div>

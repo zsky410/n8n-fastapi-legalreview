@@ -155,7 +155,7 @@ def evaluate_risks(
             "BROAD_INDEMNITY",
             "high",
             "Phát hiện nội dung về bồi thường/miễn trừ trách nhiệm.",
-            "Kiểm tra nghĩa vụ bồi thường có được giới hạn phù hợp hay không.",
+            "Kiểm tra trách nhiệm bồi thường có được giới hạn phù hợp hay không.",
         )
 
     if any(token in lowered for token in ("auto renew", "automatic renewal", "automatically renew", "tự động gia hạn", "gia hạn tự động")):

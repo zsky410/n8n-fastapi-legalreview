@@ -23,6 +23,9 @@ class AutomationDocument(BaseModel):
     client_url: str
     reviewer_url: str
     admin_url: str
+    from_email: str
+    ops_email: str
+    manager_email: str
 
 
 class WeeklySummary(BaseModel):
@@ -37,3 +40,6 @@ class WeeklySummary(BaseModel):
     failed: int
     processing: int
     agreement_rate: float
+    from_email: str
+    ops_email: str
+    manager_email: str

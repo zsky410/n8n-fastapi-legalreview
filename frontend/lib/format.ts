@@ -1,19 +1,19 @@
 export function humanStatus(status: string): string {
   const labels: Record<string, string> = {
-    admin_approved: "Reviewer đã duyệt",
-    admin_rejected: "Reviewer đã từ chối",
-    reviewer_approved: "Reviewer đã duyệt",
-    reviewer_rejected: "Reviewer đã từ chối",
+    admin_approved: "Người rà soát đã duyệt",
+    admin_rejected: "Người rà soát đã từ chối",
+    reviewer_approved: "Người rà soát đã duyệt",
+    reviewer_rejected: "Người rà soát đã từ chối",
     ai_approved: "AI đã duyệt",
-    pending_admin: "Cần reviewer xử lý",
-    needs_reviewer: "Cần reviewer xử lý",
+    pending_admin: "Cần người rà soát xử lý",
+    needs_reviewer: "Cần người rà soát xử lý",
     processing: "Đang xử lý",
     pending_extraction: "Chờ trích xuất",
     awaiting_extraction: "Chờ trích xuất",
     extracting: "Đang trích xuất",
     extracted: "Đã trích xuất",
-    awaiting_ai_review: "Chờ AI review",
-    ai_reviewing: "Đang AI review",
+    awaiting_ai_review: "Chờ AI rà soát",
+    ai_reviewing: "AI đang rà soát",
     pending: "Đang chờ",
     completed: "Hoàn tất",
     failed: "Thất bại",
@@ -23,29 +23,49 @@ export function humanStatus(status: string): string {
     document_extraction_started: "Bắt đầu trích xuất văn bản",
     document_extraction_completed: "Đã trích xuất văn bản",
     document_extraction_failed: "Trích xuất văn bản thất bại",
-    ai_review_queued: "Đã xếp hàng AI review",
-    ai_review_started: "Bắt đầu AI review",
+    document_chat_completed: "Đã trả lời hỏi đáp tài liệu",
+    document_chat_failed: "Hỏi đáp tài liệu thất bại",
+    ai_review_queued: "Đã xếp hàng AI rà soát",
+    ai_review_started: "Bắt đầu AI rà soát",
     ai_classification_completed: "Đã phân loại tài liệu",
     risk_analysis_completed: "Đã phân tích rủi ro",
     ai_summary_started: "Bắt đầu tạo phân tích AI",
     ai_summary_completed: "Đã tạo phân tích AI",
-    ai_review_failed: "AI review thất bại",
+    ai_review_failed: "AI rà soát thất bại",
     ai_review_completed: "AI đã rà soát xong",
-    admin_decision_submitted: "Reviewer đã gửi quyết định",
-    reviewer_decision_submitted: "Reviewer đã gửi quyết định",
+    admin_decision_submitted: "Người rà soát đã gửi quyết định",
+    reviewer_decision_submitted: "Người rà soát đã gửi quyết định",
     n8n_callback_received: "Đã nhận callback từ n8n",
     notification_sent: "Đã gửi thông báo",
     notification_invalid_payload: "Payload thông báo không hợp lệ",
     notification_unknown_status: "Trạng thái thông báo chưa rõ",
     compliance_expiry_alert_completed: "Đã gửi cảnh báo hết hạn",
     compliance_expiry_alert_no_data: "Không có dữ liệu cảnh báo hết hạn",
-    compliance_weekly_audit_created: "Đã tạo audit hằng tuần",
-    compliance_weekly_audit_no_data: "Không có dữ liệu audit hằng tuần",
+    compliance_weekly_audit_created: "Đã tạo kiểm soát hằng tuần",
+    compliance_weekly_audit_no_data: "Không có dữ liệu kiểm soát hằng tuần",
     compliance_weekly_summary_sent: "Đã gửi tổng kết hằng tuần",
+    legal_obligations_extracted: "Đã trích xuất cam kết/mốc cần theo dõi",
+    legal_obligations_detected: "Đã gửi cam kết/mốc sang n8n",
+    legal_obligations_alert_sent: "Đã gửi cảnh báo cam kết/mốc",
+    legal_obligations_no_data: "Không có cam kết/mốc cần cảnh báo",
+    overdue: "Quá hạn",
+    due_soon: "Sắp đến hạn",
+    normal: "Đang theo dõi",
+    no_deadline: "Chưa có hạn cụ thể",
+    open: "Đang mở",
+    payment: "Thanh toán",
+    filing: "Nộp hồ sơ",
+    reporting: "Báo cáo",
+    approval: "Phê duyệt",
+    notice: "Thông báo",
+    renewal: "Gia hạn",
+    termination: "Chấm dứt",
+    security: "Bảo đảm",
+    other: "Khác",
     document: "Tài liệu",
     n8n_event: "Sự kiện n8n",
     contract: "Hợp đồng",
-    nda: "NDA",
+    nda: "Thỏa thuận bảo mật",
     invoice: "Hóa đơn",
     policy: "Chính sách",
     court_judgment: "Bản án / văn bản tố tụng",
@@ -162,7 +182,7 @@ export function humanRiskSuggestion(ruleCode: string, suggestion: string | null)
     EXPIRY_SOON: "Kiểm tra điều khoản gia hạn hoặc gia hạn trước khi tài liệu hết hiệu lực.",
     NO_TERMINATION_CLAUSE: "Bổ sung quyền chấm dứt và thời hạn thông báo rõ ràng.",
     NO_GOVERNING_LAW: "Nêu rõ luật điều chỉnh và địa điểm giải quyết tranh chấp.",
-    BROAD_INDEMNITY: "Kiểm tra nghĩa vụ bồi thường có được giới hạn phù hợp hay không.",
+    BROAD_INDEMNITY: "Kiểm tra trách nhiệm bồi thường có được giới hạn phù hợp hay không.",
     AUTO_RENEWAL: "Xác nhận thời hạn thông báo gia hạn và điều kiện từ chối gia hạn.",
     LOW_EXTRACTION_QUALITY: "Kiểm tra chất lượng file gốc hoặc tải lên phiên bản có văn bản rõ hơn.",
     UNKNOWN_DOC_TYPE: "Chuyển sang rà soát thủ công hoặc cải thiện quy tắc phân loại tài liệu.",
@@ -186,16 +206,62 @@ export function humanAiSummary(summary: string | null): string | null {
       .split(", ")
       .map((issue) => humanStatus(issue))
       .join(", ");
-    return `Tài liệu ${humanStatus(documentType).toLowerCase()} bị gắn cờ với điểm rủi ro ${score}. Vấn đề chính: ${translatedIssues}.`;
+    return localizeAiReviewText(`Tài liệu ${humanStatus(documentType).toLowerCase()} bị gắn cờ với điểm rủi ro ${score}. Vấn đề chính: ${translatedIssues}.`);
   }
 
   const lowRisk = summary.match(/^This (.+) appears low risk with extracted text quality rated (.+)\.$/);
   if (lowRisk) {
     const [, documentType, quality] = lowRisk;
-    return `Tài liệu ${humanStatus(documentType).toLowerCase()} có vẻ rủi ro thấp, chất lượng trích xuất được đánh giá là ${humanStatus(quality).toLowerCase()}.`;
+    return localizeAiReviewText(`Tài liệu ${humanStatus(documentType).toLowerCase()} có vẻ rủi ro thấp, chất lượng trích xuất được đánh giá là ${humanStatus(quality).toLowerCase()}.`);
   }
 
-  return summary;
+  return localizeAiReviewText(summary);
+}
+
+export function localizeAiReviewText(text: string): string {
+  const replacements: Array<[RegExp, string]> = [
+    [/\bneeds_review\b/gi, "cần người rà soát"],
+    [/\bapprove\b/gi, "có thể duyệt tự động"],
+    [/\bapproved\b/gi, "đã được duyệt"],
+    [/\brejected\b/gi, "đã bị từ chối"],
+    [/\bescalated\b/gi, "được chuyển người rà soát"],
+    [/\bescalate\b/gi, "chuyển người rà soát"],
+    [/\bescalation\b/gi, "việc chuyển người rà soát"],
+    [/\bBlocker\b/g, "Điểm chặn"],
+    [/\bblocker\b/g, "điểm chặn"],
+    [/\brisk code(s)?\b/gi, "mã rủi ro"],
+    [/\brisk score\b/gi, "điểm rủi ro"],
+    [/\brule engine\b/gi, "bộ quy tắc"],
+    [/\bseverity\b/gi, "mức độ"],
+    [/\bcritical\b/gi, "rất cao"],
+    [/\bhigh\b/gi, "cao"],
+    [/\bmedium\b/gi, "trung bình"],
+    [/\blow\b/gi, "thấp"],
+    [/\bfinding(s)?\b/gi, "phát hiện"],
+    [/\breviewer\b/gi, "người rà soát"],
+    [/\breview\b/gi, "rà soát"],
+    [/\bcollateral\b/gi, "tài sản bảo đảm"],
+    [/\bprovisioning\b/gi, "trích lập dự phòng"],
+    [/\bdefault(s)?\b/gi, "sự kiện vi phạm"],
+    [/\bwaiver(s)?\b/gi, "miễn trừ"],
+    [/\bforbearance(s)?\b/gi, "tạm hoãn thực thi"],
+    [/\blender(s)?\b/gi, "bên cho vay"],
+    [/\bborrower(s)?\b/gi, "bên vay"],
+    [/\bcounsel\b/gi, "luật sư phụ trách"],
+    [/\bops\b/gi, "bộ phận vận hành"],
+    [/\bdue diligence\b/gi, "thẩm tra"],
+    [/\bclient\b/gi, "khách hàng"],
+  ];
+
+  return text
+    .split(/(“[^”]*”)/g)
+    .map((segment) => {
+      if (segment.startsWith("“") && segment.endsWith("”")) {
+        return segment;
+      }
+      return replacements.reduce((current, [pattern, replacement]) => current.replace(pattern, replacement), segment);
+    })
+    .join("");
 }
 
 export function ageFromNow(value: string): string {

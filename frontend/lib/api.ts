@@ -22,6 +22,21 @@ export type RiskFinding = {
   created_at: string;
 };
 
+export type LegalObligation = {
+  id: string;
+  title: string;
+  responsible_party: string | null;
+  obligation_type: string;
+  due_date: string | null;
+  urgency: string;
+  severity: string;
+  status: string;
+  source_excerpt: string | null;
+  consequence: string | null;
+  recommended_action: string | null;
+  created_at: string;
+};
+
 export type DocumentListItem = {
   id: string;
   filename: string;
@@ -44,6 +59,7 @@ export type DocumentDetail = DocumentListItem & {
   ai_thinking_log?: string | null;
   expiry_date: string | null;
   risk_findings: RiskFinding[];
+  legal_obligations: LegalObligation[];
   audit_logs: AuditLog[];
 };
 
@@ -113,6 +129,7 @@ export type AdminDocumentDetail = AdminDocumentListItem & {
   ai_confidence: string | null;
   ai_thinking_log?: string | null;
   risk_findings: RiskFinding[];
+  legal_obligations: LegalObligation[];
   reviews: AdminReview[];
   audit_logs: AuditLog[];
 };
@@ -253,18 +270,19 @@ function translateApiMessage(message: string): string {
   const labels: Record<string, string> = {
     "Access denied": "Bạn không có quyền truy cập",
     "Could not validate credentials": "Không thể xác thực phiên đăng nhập",
-    "Document is not pending admin review": "Tài liệu không còn chờ reviewer xử lý",
-    "Document is not waiting for reviewer handling": "Tài liệu không còn chờ reviewer xử lý",
-    "Document is not waiting for AI review": "Tài liệu không ở trạng thái chờ AI review",
-    "Document review is not ready for chat": "Tài liệu chưa review xong nên chưa thể chat với AI",
+    "Document is not pending admin review": "Tài liệu không còn chờ người rà soát xử lý",
+    "Document is not waiting for reviewer handling": "Tài liệu không còn chờ người rà soát xử lý",
+    "Document is not waiting for AI review": "Tài liệu không ở trạng thái chờ AI rà soát",
+    "Document review is not ready for chat": "Tài liệu chưa được rà soát xong nên chưa thể hỏi AI",
     "Document not found": "Không tìm thấy tài liệu",
     "Invalid email or password": "Email hoặc mật khẩu không đúng",
     "Only PDF, DOCX, TXT, MD, RTF, and HTML files are supported":
       "Chỉ hỗ trợ file PDF, DOCX, TXT, MD, RTF và HTML",
-    "Reviewer access required": "Bạn cần quyền reviewer hoặc admin",
+    "Reviewer access required": "Bạn cần quyền người rà soát hoặc quản trị hệ thống",
     "Session expired": "Phiên đăng nhập đã hết hạn",
     "Text extraction is not completed": "Quá trình trích xuất văn bản chưa hoàn tất",
     "Uploaded file exceeds the 10MB size limit": "File tải lên vượt quá giới hạn 10 MB",
+    "Uploaded file exceeds the 20MB size limit": "File tải lên vượt quá giới hạn 20 MB",
     "Uploaded file is empty": "File tải lên đang trống",
     "Message is too short": "Tin nhắn quá ngắn",
   };

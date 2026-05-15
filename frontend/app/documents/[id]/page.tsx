@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { API_URL, DocumentDetail, RiskFinding, fetchDocument, getStoredToken } from "@/lib/api";
 import { DocumentChatPanel } from "@/components/document-chat-panel";
-import { ExtractedTextPanel } from "@/components/document-panels";
+import { ExtractedTextPanel, LegalObligationsPanel } from "@/components/document-panels";
 import {
   formatDateTime,
   formatPercent,
@@ -22,10 +22,10 @@ type DetailTab = (typeof tabs)[number];
 const tabLabels: Record<DetailTab, string> = {
   Overview: "Tổng quan",
   Risks: "Rủi ro",
-  Chat: "Chat AI",
+  Chat: "Hỏi AI",
 };
 
-const workflowStepLabels = ["Tải lên", "Trích xuất", "AI review", "Hoàn tất"] as const;
+const workflowStepLabels = ["Tải lên", "Trích xuất", "AI rà soát", "Hoàn tất"] as const;
 
 export default function DocumentDetailPage() {
   const params = useParams<{ id: string }>();
@@ -151,7 +151,10 @@ export default function DocumentDetailPage() {
           </section>
 
           {document.processing_status === "completed" ? (
-            <AIResultPanel document={document} />
+            <>
+              <AIResultPanel document={document} />
+              <LegalObligationsPanel obligations={document.legal_obligations} />
+            </>
           ) : null}
 
           <div className="tab-strip">
@@ -238,16 +241,15 @@ function AIResultPanel({ document }: { document: DocumentDetail }) {
           <p className="eyebrow">Phân tích pháp lý (AI)</p>
           <h2>{resultTitle(document)}</h2>
           <p className="ai-result-meta-line">{aiResultMetaLine(document)}</p>
-          <p className="ai-result-context">{resultDescription(document)}</p>
         </div>
         <div className="result-score">
-          <span>Risk score</span>
+          <span>Điểm rủi ro</span>
           <strong>{document.risk_score}</strong>
         </div>
       </div>
 
       <div className="ai-analysis-primary">
-        <div className="ai-analysis-primary-label">Trọng tâm review rủi ro</div>
+        <div className="ai-analysis-primary-label">Trọng tâm rà soát rủi ro</div>
         <AiFormattedSummary text={document.summary} />
       </div>
     </section>
@@ -257,7 +259,7 @@ function AIResultPanel({ document }: { document: DocumentDetail }) {
 function aiResultMetaLine(document: DocumentDetail): string {
   const type = document.classification ? humanStatus(document.classification) : "Chưa rõ";
   const status = humanStatus(document.review_status);
-  return `Trạng thái: ${status} · Phân loại: ${type} · Risk score: ${document.risk_score}`;
+  return `Trạng thái: ${status} · Phân loại: ${type} · Điểm rủi ro: ${document.risk_score}`;
 }
 
 function RiskExplanationPanel({ document }: { document: DocumentDetail }) {
@@ -270,6 +272,7 @@ function RiskExplanationPanel({ document }: { document: DocumentDetail }) {
         </div>
         <FlagList flags={document.flag_reasons} />
       </div>
+      <RiskScalePanel />
 
       {document.risk_findings.length ? (
         <>
@@ -320,9 +323,39 @@ function RiskExplanationPanel({ document }: { document: DocumentDetail }) {
   );
 }
 
+function RiskScalePanel() {
+  return (
+    <section className="risk-scale-panel" aria-label="Thang điểm rủi ro">
+      <div>
+        <span>Thang điểm phát hiện</span>
+        <p>Mỗi phát hiện cộng điểm theo mức độ; tổng điểm tối đa là 100.</p>
+      </div>
+      <dl>
+        <div>
+          <dt>Rất cao</dt>
+          <dd>+40 điểm</dd>
+        </div>
+        <div>
+          <dt>Cao</dt>
+          <dd>+25 điểm</dd>
+        </div>
+        <div>
+          <dt>Trung bình</dt>
+          <dd>+15 điểm</dd>
+        </div>
+        <div>
+          <dt>Thấp</dt>
+          <dd>+10 điểm</dd>
+        </div>
+      </dl>
+      <p className="risk-scale-note">Tài liệu từ 70 điểm trở lên, hoặc có tín hiệu chặn nghiêm trọng, sẽ được đưa sang người rà soát xử lý.</p>
+    </section>
+  );
+}
+
 function workflowTitle(document: DocumentDetail): string {
   if (document.review_status === "awaiting_ai_review") {
-    return "Đã trích xuất văn bản, đang vào bước AI review tự động";
+    return "Đã trích xuất văn bản, đang vào bước AI rà soát tự động";
   }
   if (document.processing_status === "pending_extraction" || document.processing_status === "extracting") {
     return "Đang trích xuất văn bản từ file";
@@ -334,23 +367,23 @@ function workflowTitle(document: DocumentDetail): string {
     return "Quy trình xử lý thất bại";
   }
   if (document.processing_status === "completed") {
-    return "AI review đã hoàn tất";
+    return "AI đã rà soát xong";
   }
   return humanStatus(document.processing_status);
 }
 
 function workflowDescription(document: DocumentDetail): string {
   if (document.review_status === "awaiting_ai_review") {
-    return "Hệ thống đã trích xuất xong và tự động chuyển sang AI review, không cần thao tác tay thêm.";
+    return "Hệ thống đã trích xuất xong và tự động chuyển sang AI rà soát, không cần thao tác tay thêm.";
   }
   if (document.processing_status === "pending_extraction" || document.processing_status === "extracting") {
     return "Hệ thống đang đọc file. Văn bản trích xuất sẽ hiển thị trong phần Tổng quan khi sẵn sàng.";
   }
   if (document.processing_status === "ai_reviewing" || document.review_status === "processing") {
-    return "AI đang đọc văn bản trích xuất, phân loại tài liệu, tính risk score và ghi nhận các finding cần lưu ý.";
+    return "AI đang đọc văn bản trích xuất, phân loại tài liệu, tính điểm rủi ro và ghi nhận các phát hiện cần lưu ý.";
   }
   if (document.processing_status === "failed") {
-    return "Quá trình xử lý chưa hoàn tất. Hãy thử tải lại file rõ text hơn hoặc dùng định dạng DOCX/PDF text-based.";
+    return "Quá trình xử lý chưa hoàn tất. Hãy thử tải lại file có văn bản rõ hơn hoặc dùng DOCX/PDF có lớp văn bản.";
   }
   if (document.processing_status === "completed") {
     return "Kết quả AI, phân tích rủi ro và văn bản trích xuất đã sẵn sàng.";
@@ -393,37 +426,26 @@ function resultTitle(document: DocumentDetail): string {
     return "AI chưa thấy rủi ro trọng yếu";
   }
   if (["reviewer_rejected", "admin_rejected"].includes(document.review_status)) {
-    return "Reviewer đã từ chối tài liệu";
+    return "Người rà soát đã từ chối tài liệu";
   }
   if (["reviewer_approved", "admin_approved"].includes(document.review_status)) {
-    return "Reviewer đã duyệt tài liệu";
+    return "Người rà soát đã duyệt tài liệu";
   }
   return humanStatus(document.review_status);
 }
 
-function resultDescription(document: DocumentDetail): string {
-  if (document.risk_findings.length) {
-    const reasons = document.risk_findings.slice(0, 3).map((finding) => humanStatus(finding.rule_code)).join(", ");
-    return `AI ghi nhận các điểm cần lưu ý: ${reasons}. Tài liệu chuyển reviewer khi risk score vượt ngưỡng hoặc có finding nghiêm trọng cần người rà soát nghiệp vụ.`;
-  }
-  if (document.flag_reasons.length) {
-    return `Tài liệu có cờ: ${document.flag_reasons.map((flag) => humanStatus(flag)).join(", ")}.`;
-  }
-  return "Không có finding rủi ro cụ thể từ văn bản trích xuất.";
-}
-
 function riskScoreExplanation(document: DocumentDetail): string {
   if (document.risk_findings.length) {
-    return "Risk score được cộng từ các điểm AI phát hiện trong văn bản. Hệ thống chuyển reviewer khi tổng điểm vượt ngưỡng hoặc có finding nghiêm trọng.";
+    return "Điểm rủi ro được cộng từ các phát hiện trong văn bản. Hệ thống chỉ đưa sang người rà soát khi tổng điểm vượt ngưỡng hoặc có dấu hiệu nghiêm trọng.";
   }
-  return "Risk score thấp vì chưa có quy tắc rủi ro nào được kích hoạt từ văn bản trích xuất.";
+  return "Điểm rủi ro thấp vì chưa có quy tắc rủi ro nào được kích hoạt từ văn bản trích xuất.";
 }
 
 function riskPanelTitle(document: DocumentDetail): string {
   if (isNeedsReviewer(document.review_status)) {
-    return `Risk score ${document.risk_score}: cần reviewer kiểm tra`;
+    return `Điểm rủi ro ${document.risk_score}: cần người rà soát kiểm tra`;
   }
-  return `Risk score ${document.risk_score}: AI tự xử lý`;
+  return `Điểm rủi ro ${document.risk_score}: AI tự xử lý`;
 }
 
 function riskLevelLabel(score: number): string {
@@ -441,7 +463,7 @@ function riskLevelLabel(score: number): string {
 
 function riskLevelDescription(document: DocumentDetail): string {
   if (document.risk_score >= 70) {
-    return "Điểm đã vượt ngưỡng tự động, nên cần reviewer nghiệp vụ kiểm tra trước.";
+    return "Điểm đã vượt ngưỡng tự động, nên cần người rà soát nghiệp vụ kiểm tra trước.";
   }
   if (document.risk_score >= 40) {
     return "Có một số điều khoản hoặc dữ liệu cần chú ý, nhưng chưa đủ cao để chặn tự động.";
@@ -454,10 +476,10 @@ function riskLevelDescription(document: DocumentDetail): string {
 
 function automationExplanation(document: DocumentDetail): string {
   if (isNeedsReviewer(document.review_status)) {
-    return "Tài liệu được đưa sang hàng chờ reviewer vì vượt ngưỡng rủi ro hoặc có finding nghiêm trọng cần người rà soát.";
+    return "Tài liệu được đưa sang hàng chờ người rà soát vì vượt ngưỡng rủi ro hoặc có phát hiện nghiêm trọng.";
   }
   if (document.review_status === "ai_approved") {
-    return "Tài liệu tiếp tục luồng tự động; các finding được lưu để tham khảo, không phải yêu cầu xử lý thủ công.";
+    return "Tài liệu tiếp tục luồng tự động; các phát hiện được lưu để tham khảo, không phải yêu cầu xử lý thủ công.";
   }
   return "Hệ thống đang chờ kết quả xử lý cuối cùng.";
 }
@@ -468,11 +490,11 @@ function riskImpactText(finding: RiskFinding): string {
     SENSITIVE_PERSONAL_DATA: "Tài liệu có dữ liệu cá nhân. Rủi ro chính nằm ở việc chia sẻ hoặc lưu hành file ngoài đúng phạm vi.",
     MISSING_SIGNATURE: "Hợp đồng hoặc NDA thiếu dấu hiệu phần ký kết, nên hiệu lực hoặc khả năng thực thi có thể chưa rõ.",
     HIGH_VALUE: "Giá trị tài liệu lớn làm tăng tác động tài chính nếu điều khoản bị sai hoặc thiếu kiểm soát.",
-    EXPIRY_SOON: "Tài liệu gần hết hạn, có thể ảnh hưởng đến quyền lợi hoặc nghĩa vụ nếu không gia hạn đúng lúc.",
+    EXPIRY_SOON: "Tài liệu gần hết hạn, có thể ảnh hưởng đến quyền lợi hoặc cam kết đang có hiệu lực nếu không gia hạn đúng lúc.",
     NO_TERMINATION_CLAUSE: "Thiếu điều khoản chấm dứt làm giảm khả năng thoát khỏi cam kết khi có tranh chấp hoặc thay đổi nhu cầu.",
     NO_GOVERNING_LAW: "Thiếu luật điều chỉnh hoặc thẩm quyền xử lý tranh chấp làm tăng độ bất định khi phát sinh mâu thuẫn.",
-    BROAD_INDEMNITY: "Điều khoản bồi thường rộng có thể khiến nghĩa vụ vượt quá phạm vi mong muốn.",
-    AUTO_RENEWAL: "Tự động gia hạn có thể tạo nghĩa vụ tiếp tục nếu không theo dõi thời hạn thông báo.",
+    BROAD_INDEMNITY: "Điều khoản bồi thường rộng có thể khiến trách nhiệm vượt quá phạm vi mong muốn.",
+    AUTO_RENEWAL: "Tự động gia hạn có thể làm cam kết tiếp tục hiệu lực nếu không theo dõi thời hạn thông báo.",
     LOW_EXTRACTION_QUALITY: "Văn bản trích xuất yếu làm giảm độ tin cậy của kết quả AI.",
     UNKNOWN_DOC_TYPE: "AI chưa nhận diện rõ loại tài liệu, nên kết luận phân loại có độ chắc chắn thấp.",
     CONFIDENCE_LOW: "Độ tin cậy phân loại thấp khiến kết quả cần được xem như tín hiệu tham khảo.",
@@ -482,12 +504,12 @@ function riskImpactText(finding: RiskFinding): string {
 
 function riskAutomationText(document: DocumentDetail, finding: RiskFinding): string {
   if (isNeedsReviewer(document.review_status)) {
-    return "Finding này góp phần làm tài liệu cần người rà soát trước khi duyệt tự động.";
+    return "Phát hiện này góp phần làm tài liệu cần người rà soát trước khi duyệt tự động.";
   }
   if (finding.severity === "critical") {
-    return "Finding có mức rất cao; hệ thống sẽ chuyển reviewer nếu tổng risk score hoặc rule chặn vượt ngưỡng.";
+    return "Phát hiện có mức rất cao; hệ thống sẽ chuyển người rà soát nếu tổng điểm rủi ro hoặc quy tắc chặn vượt ngưỡng.";
   }
-  return "Finding được ghi nhận để minh bạch, nhưng tổng risk score vẫn dưới ngưỡng chuyển reviewer nên AI tiếp tục duyệt tự động.";
+  return "Phát hiện được ghi nhận để minh bạch, nhưng tổng điểm rủi ro vẫn dưới ngưỡng chuyển người rà soát nên AI tiếp tục duyệt tự động.";
 }
 
 function userFacingSuggestion(document: DocumentDetail, finding: RiskFinding, suggestion: string): string {

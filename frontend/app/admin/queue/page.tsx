@@ -41,8 +41,8 @@ export default function AdminQueuePage() {
     <section className="page-stack">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Reviewer workspace</p>
-          <h1>Exception queue</h1>
+          <p className="eyebrow">Không gian người rà soát</p>
+          <h1>Hàng chờ ngoại lệ</h1>
         </div>
         <div className="header-actions">
           <button className="secondary-button" type="button" onClick={loadQueue} disabled={isLoading}>
@@ -53,7 +53,7 @@ export default function AdminQueuePage() {
         </div>
       </header>
 
-      <div className="tab-strip" aria-label="Lọc hàng chờ reviewer">
+      <div className="tab-strip" aria-label="Lọc hàng chờ người rà soát">
         {queueScopes.map(([value, label]) => (
           <button
             className={scope === value ? "tab-button active" : "tab-button"}

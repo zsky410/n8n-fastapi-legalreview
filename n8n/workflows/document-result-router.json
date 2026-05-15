@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const body = $json.body ?? $json;\nconst riskScore = Number(body.risk_score ?? 0);\nreturn [{\n  json: {\n    event_type: body.event_type ?? 'document.reviewed',\n    trace_id: body.trace_id ?? null,\n    document_id: body.document_id ?? null,\n    user_email: body.user_email ?? null,\n    filename: body.filename ?? 'Untitled document',\n    review_status: body.review_status ?? null,\n    classification: body.classification ?? 'unknown',\n    risk_score: riskScore,\n    flag_reasons: Array.isArray(body.flag_reasons) ? body.flag_reasons : [],\n    admin_url: body.admin_url ?? '',\n    client_url: body.client_url ?? '',\n    valid: Boolean(body.trace_id && body.document_id && body.user_email && body.review_status),\n    critical: riskScore >= 85\n  }\n}];"
+        "jsCode": "const body = $json.body ?? $json;\nconst statusAliases = {\n  pending_admin: 'needs_reviewer',\n  admin_approved: 'reviewer_approved',\n  admin_rejected: 'reviewer_rejected'\n};\nconst rawStatus = body.review_status ?? null;\nconst reviewStatus = statusAliases[rawStatus] ?? rawStatus;\nconst riskScore = Number(body.risk_score ?? 0);\nreturn [{\n  json: {\n    event_type: body.event_type ?? 'document.reviewed',\n    trace_id: body.trace_id ?? null,\n    document_id: body.document_id ?? null,\n    user_email: body.user_email ?? null,\n    filename: body.filename ?? 'Tài liệu chưa đặt tên',\n    review_status: reviewStatus,\n    raw_review_status: rawStatus,\n    classification: body.classification ?? 'unknown',\n    risk_score: riskScore,\n    flag_reasons: Array.isArray(body.flag_reasons) ? body.flag_reasons : [],\n    from_email: body.from_email ?? 'legalreview@example.com',\n    ops_email: body.ops_email ?? 'reviewer@example.com',\n    manager_email: body.manager_email ?? body.ops_email ?? 'admin@example.com',\n    reviewer_url: body.reviewer_url ?? body.admin_url ?? '',\n    admin_url: body.admin_url ?? body.reviewer_url ?? '',\n    client_url: body.client_url ?? '',\n    valid: Boolean(body.trace_id && body.document_id && body.user_email && reviewStatus),\n    critical: riskScore >= 85\n  }\n}];"
       },
       "id": "d9c605a0-3efd-454d-8e2a-688817cb9814",
       "name": "Normalize Payload",
@@ -98,9 +98,9 @@
                 },
                 "conditions": [
                   {
-                    "id": "pending-admin",
+                    "id": "needs-reviewer",
                     "leftValue": "={{ $json.review_status }}",
-                    "rightValue": "pending_admin",
+                    "rightValue": "needs_reviewer",
                     "operator": {
                       "type": "string",
                       "operation": "equals"
@@ -110,7 +110,7 @@
                 "combinator": "and"
               },
               "renameOutput": true,
-              "outputKey": "pending_admin"
+              "outputKey": "needs_reviewer"
             },
             {
               "conditions": {
@@ -144,9 +144,9 @@
                 },
                 "conditions": [
                   {
-                    "id": "admin-approved",
+                    "id": "reviewer-approved",
                     "leftValue": "={{ $json.review_status }}",
-                    "rightValue": "admin_approved",
+                    "rightValue": "reviewer_approved",
                     "operator": {
                       "type": "string",
                       "operation": "equals"
@@ -156,7 +156,7 @@
                 "combinator": "and"
               },
               "renameOutput": true,
-              "outputKey": "admin_approved"
+              "outputKey": "reviewer_approved"
             },
             {
               "conditions": {
@@ -167,9 +167,9 @@
                 },
                 "conditions": [
                   {
-                    "id": "admin-rejected",
+                    "id": "reviewer-rejected",
                     "leftValue": "={{ $json.review_status }}",
-                    "rightValue": "admin_rejected",
+                    "rightValue": "reviewer_rejected",
                     "operator": {
                       "type": "string",
                       "operation": "equals"
@@ -179,7 +179,7 @@
                 "combinator": "and"
               },
               "renameOutput": true,
-              "outputKey": "admin_rejected"
+              "outputKey": "reviewer_rejected"
             }
           ]
         },
@@ -198,7 +198,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const flags = ($json.flag_reasons || []).join(', ') || 'None';\nreturn [{ json: { ...$json, to: 'reviewer@example.com', subject: `[LegalReview] Document flagged: ${$json.filename}`, body: `A document needs human review.\\n\\nFilename: ${$json.filename}\\nRisk score: ${$json.risk_score}\\nReasons: ${flags}\\nAdmin link: ${$json.admin_url}` } }];"
+        "jsCode": "const flags = ($json.flag_reasons || []).join(', ') || 'Không có';\nreturn [{ json: { ...$json, to: $json.ops_email || 'reviewer@example.com', subject: `[LegalReview] Tài liệu cần người rà soát: ${$json.filename}`, body: `Tài liệu cần người rà soát nghiệp vụ.\n\nTên file: ${$json.filename}\nĐiểm rủi ro: ${$json.risk_score}\nLý do: ${flags}\nMở tài liệu: ${$json.reviewer_url || $json.admin_url}` } }];"
       },
       "id": "9cf9d4a7-05a0-445c-98c1-e134bf7134d3",
       "name": "Build Pending Admin Email",
@@ -211,7 +211,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "legalreview@example.com",
+        "fromEmail": "={{ $json.from_email || 'legalreview@example.com' }}",
         "toEmail": "={{ $json.to }}",
         "subject": "={{ $json.subject }}",
         "emailFormat": "text",
@@ -228,8 +228,8 @@
       ],
       "credentials": {
         "smtp": {
-          "id": "mailhog-smtp",
-          "name": "Mailhog SMTP"
+          "id": "gmail-smtp",
+          "name": "Gmail SMTP"
         }
       }
     },
@@ -268,7 +268,7 @@
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { ...$json, to: 'admin@example.com', subject: `[LegalReview] CRITICAL legal document flagged: ${$json.filename}`, body: `Critical risk document.\\n\\nFilename: ${$json.filename}\\nRisk score: ${$json.risk_score}\\nAdmin link: ${$json.admin_url}` } }];"
+        "jsCode": "const to = $json.manager_email || $json.ops_email || 'reviewer@example.com';\nconst alreadyNotified = to && $json.ops_email && to === $json.ops_email;\nif (alreadyNotified) {\n  return [];\n}\nreturn [{ json: { ...$json, to, subject: `[LegalReview] Cảnh báo rủi ro nghiêm trọng: ${$json.filename}`, body: `Tài liệu có điểm rủi ro rất cao và cần kiểm tra ngay.\n\nTên file: ${$json.filename}\nĐiểm rủi ro: ${$json.risk_score}\nMở tài liệu: ${$json.reviewer_url || $json.admin_url}` } }];"
       },
       "id": "3726d6c5-586d-4ffa-aa6b-76c440f948f2",
       "name": "Build Critical Admin Email",
@@ -281,7 +281,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "legalreview@example.com",
+        "fromEmail": "={{ $json.from_email || 'legalreview@example.com' }}",
         "toEmail": "={{ $json.to }}",
         "subject": "={{ $json.subject }}",
         "emailFormat": "text",
@@ -298,14 +298,14 @@
       ],
       "credentials": {
         "smtp": {
-          "id": "mailhog-smtp",
-          "name": "Mailhog SMTP"
+          "id": "gmail-smtp",
+          "name": "Gmail SMTP"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "return [{ json: { ...$json, to: $json.user_email, subject: `[LegalReview] Your document was AI approved`, body: `Your document was AI approved.\\n\\nFilename: ${$json.filename}\\nClassification: ${$json.classification}\\nRisk score: ${$json.risk_score}\\nOpen document: ${$json.client_url}` } }];"
+        "jsCode": "return [{ json: { ...$json, to: $json.user_email, subject: `[LegalReview] AI đã rà soát xong: ${$json.filename}`, body: `AI đã rà soát tài liệu và chưa thấy rủi ro vượt ngưỡng chuyển người rà soát.\n\nTên file: ${$json.filename}\nĐiểm rủi ro: ${$json.risk_score}\nMở tài liệu: ${$json.client_url}` } }];"
       },
       "id": "99d08e29-1d64-45f6-8df6-ad3f2decf07a",
       "name": "Build AI Approved Email",
@@ -318,7 +318,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "legalreview@example.com",
+        "fromEmail": "={{ $json.from_email || 'legalreview@example.com' }}",
         "toEmail": "={{ $json.to }}",
         "subject": "={{ $json.subject }}",
         "emailFormat": "text",
@@ -335,14 +335,14 @@
       ],
       "credentials": {
         "smtp": {
-          "id": "mailhog-smtp",
-          "name": "Mailhog SMTP"
+          "id": "gmail-smtp",
+          "name": "Gmail SMTP"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const label = $json.review_status === 'admin_approved' ? 'approved' : 'rejected';\nreturn [{ json: { ...$json, to: $json.user_email, subject: `[LegalReview] Final decision: ${label}`, body: `A reviewer has ${label} your document.\\n\\nFilename: ${$json.filename}\\nOpen document: ${$json.client_url}` } }];"
+        "jsCode": "const approved = $json.review_status === 'reviewer_approved';\nconst label = approved ? 'đã duyệt' : 'đã từ chối / yêu cầu xử lý lại';\nreturn [{ json: { ...$json, to: $json.user_email, subject: `[LegalReview] Quyết định người rà soát: ${approved ? 'đã duyệt' : 'cần xử lý lại'}`, body: `Người rà soát ${label} tài liệu của bạn.\n\nTên file: ${$json.filename}\nMở tài liệu: ${$json.client_url}` } }];"
       },
       "id": "8c06297f-4bc0-4d60-b38f-36de7ab7a859",
       "name": "Build Final Decision Email",
@@ -355,7 +355,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "legalreview@example.com",
+        "fromEmail": "={{ $json.from_email || 'legalreview@example.com' }}",
         "toEmail": "={{ $json.to }}",
         "subject": "={{ $json.subject }}",
         "emailFormat": "text",
@@ -372,8 +372,8 @@
       ],
       "credentials": {
         "smtp": {
-          "id": "mailhog-smtp",
-          "name": "Mailhog SMTP"
+          "id": "gmail-smtp",
+          "name": "Gmail SMTP"
         }
       }
     },
@@ -421,7 +421,7 @@
     },
     {
       "parameters": {
-        "content": "Workflow A: receive FastAPI document.reviewed events, route by review_status, send Mailhog emails, and callback FastAPI at /api/v1/webhooks/n8n-events. Create an SMTP credential named \"Mailhog SMTP\" with host mailhog and port 1025 before activating.",
+        "content": "Workflow A: nhận sự kiện document.reviewed từ FastAPI, chuẩn hóa trạng thái reviewer, gửi email SMTP và callback FastAPI tại /api/v1/webhooks/n8n-events. Demo local có thể dùng MailHog; demo gửi thật dùng credential \"Gmail SMTP\".",
         "height": 220,
         "width": 360,
         "color": 5

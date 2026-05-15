@@ -112,8 +112,8 @@ def build_mock_review(
         summary = (
             f"{document_insight}\n\n"
             f"{risk_insight}\n\n"
-            f"Chi tiết finding:\n{evidence_lines}\n\n"
-            "Khuyến nghị xử lý: Mở tab Rủi ro để kiểm tra từng finding, đối chiếu bằng chứng trong mục Tổng quan, "
+            f"Chi tiết phát hiện:\n{evidence_lines}\n\n"
+            "Khuyến nghị xử lý: Mở tab Rủi ro để kiểm tra từng phát hiện, đối chiếu bằng chứng trong mục Tổng quan, "
             "sau đó người rà soát nghiệp vụ quyết định duyệt, yêu cầu sửa, hoặc yêu cầu bổ sung tài liệu."
         )
         verdict = decision.verdict
@@ -270,15 +270,15 @@ def _build_risk_insight(
     findings: list[RiskFindingData],
     risk_score: int,
 ) -> str:
-    top_issues = ", ".join(_human_label(finding.rule_code) for finding in findings[:3]) if findings else "không có finding rủi ro trọng yếu"
+    top_issues = ", ".join(_human_label(finding.rule_code) for finding in findings[:3]) if findings else "không có phát hiện rủi ro trọng yếu"
     if getattr(decision, "review_status", "") == NEEDS_REVIEW:
         return (
-            f"Đánh giá rủi ro: Risk score {risk_score}, các điểm chính gồm {top_issues}. "
-            "Tổng điểm vượt ngưỡng tự động nên tài liệu được chuyển reviewer xử lý exception."
+            f"Đánh giá rủi ro: Điểm rủi ro {risk_score}, các điểm chính gồm {top_issues}. "
+            "Tổng điểm vượt ngưỡng tự động nên tài liệu được chuyển người rà soát xử lý ngoại lệ."
         )
     return (
-        f"Đánh giá rủi ro: Risk score {risk_score}, các điểm AI ghi nhận gồm {top_issues}. "
-        "Tổng điểm chưa vượt ngưỡng cao nên hệ thống tự duyệt và lưu các finding để tham khảo."
+        f"Đánh giá rủi ro: Điểm rủi ro {risk_score}, các điểm AI ghi nhận gồm {top_issues}. "
+        "Tổng điểm chưa vượt ngưỡng cao nên hệ thống tự duyệt và lưu các phát hiện để tham khảo."
     )
 
 
@@ -411,14 +411,14 @@ def _post_chat_completion_stream_collect(
 
 def _build_review_system_prompt(*, stream_delimiter: bool) -> str:
     shared = (
-        "You are a senior Vietnamese legal reviewer for automated contract review. "
-        "Your output is used in a risk dashboard, so be decisive, short, and evidence-driven. "
+        "Bạn là chuyên gia pháp lý Việt Nam hỗ trợ hệ thống rà soát tài liệu tự động. "
+        "Kết quả của bạn hiển thị trực tiếp cho người dùng cuối, nên phải dứt khoát, ngắn gọn và bám bằng chứng. "
         "Do NOT write a legal memo, chronology, party biography, or clause-by-clause summary. "
         "Only mention background facts when they explain a concrete risk or action.\n\n"
-        "PRIMARY GOAL:\n"
-        "- Identify the top legal/business risks, drafting gaps, missing documents, and approval blockers.\n"
-        "- For each risk, explain: what is wrong, exact evidence from the excerpt, why it matters, and what to do next.\n"
-        "- If a risk is not proven from the excerpt, say the precise diligence question instead of speculating.\n\n"
+        "MỤC TIÊU CHÍNH:\n"
+        "- Xác định các rủi ro pháp lý/kinh doanh quan trọng nhất, lỗi soạn thảo, tài liệu còn thiếu và điểm chặn phê duyệt.\n"
+        "- Với từng rủi ro, giải thích: vấn đề là gì, bằng chứng chính xác từ đoạn trích, vì sao quan trọng và cần làm gì tiếp.\n"
+        "- Nếu rủi ro chưa đủ bằng chứng từ đoạn trích, nêu câu hỏi thẩm tra cụ thể thay vì suy đoán.\n\n"
         "STRICT LENGTH / FOCUS:\n"
         "- Entire `summary` should normally be 700-1200 Vietnamese words, shorter for simple documents.\n"
         "- At least 55% of `summary` must be under '## Rủi ro cần xử lý trước'.\n"
@@ -430,26 +430,27 @@ def _build_review_system_prompt(*, stream_delimiter: bool) -> str:
         "## Thiếu dữ kiện / tài liệu cần bổ sung\n"
         "## Hành động khuyến nghị\n"
         "## Bối cảnh tối thiểu\n\n"
-        "SECTION RULES:\n"
-        "- '## Kết luận nhanh': 3 bullets only: decision, why it is / is not escalated, highest-risk blocker.\n"
+        "QUY TẮC TỪNG PHẦN:\n"
+        "- '## Kết luận nhanh': đúng 3 gạch đầu dòng: quyết định xử lý, lý do có/không cần người rà soát, điểm chặn rủi ro cao nhất.\n"
         "- '## Rủi ro cần xử lý trước': 5-8 bullets for complex contracts, 3-5 for simple ones. "
         "Each bullet must follow this pattern: **3-8 word risk label** — Mức: Cao/Trung bình/Thấp. "
         "Bằng chứng: “short exact quote”. Tác động: one practical consequence. Cần làm: one concrete action.\n"
         "- '## Thiếu dữ kiện / tài liệu cần bổ sung': 3-6 bullets; name the missing document, clause, calculation, approval, or evidence.\n"
         "- '## Hành động khuyến nghị': numbered list, 4-6 prioritized actions, written as tasks counsel/ops can execute.\n"
         "- '## Bối cảnh tối thiểu': maximum 4 bullets, only facts needed to understand the risks; no long party list.\n\n"
-        "RULE ENGINE:\n"
-        "- Treat the user-provided findings as signals, not conclusions. Convert them into context-specific risks.\n"
-        "- If findings include HIGH_VALUE, explain what amount/obligation makes it material.\n"
-        "- If findings include NO_TERMINATION_CLAUSE, do not blindly say the document lacks termination; check whether the document type actually needs it.\n"
-        "- Escalate to needs_review when there are existing defaults, acceleration/remedies risk, broad release, unclear waiver scope, major collateral/guarantee expansion, subjective approval standards, or missing base agreements.\n\n"
+        "BỘ QUY TẮC RỦI RO:\n"
+        "- Xem các phát hiện do hệ thống cung cấp là tín hiệu, không phải kết luận cuối cùng. Chuyển chúng thành rủi ro cụ thể theo ngữ cảnh.\n"
+        "- Nếu có tín hiệu HIGH_VALUE, giải thích số tiền/cam kết nào làm tài liệu trở nên trọng yếu.\n"
+        "- Nếu có tín hiệu NO_TERMINATION_CLAUSE, không mặc định nói tài liệu thiếu điều khoản chấm dứt; phải kiểm tra loại tài liệu có thật sự cần điều khoản đó không.\n"
+        "- Chuyển sang người rà soát khi có sự kiện vi phạm hiện hữu, rủi ro bị tuyên đến hạn/truy đòi ngay, miễn trừ quá rộng, phạm vi miễn trừ không rõ, mở rộng tài sản bảo đảm/bảo lãnh lớn, tiêu chuẩn chấp thuận chủ quan, hoặc thiếu hợp đồng nền.\n\n"
         "WRITING:\n"
-        "- Vietnamese with diacritics. Use typographic double quotes “...” only for short verbatim spans from the document.\n"
-        "- Keep AI, OCR, PDF, DOCX, risk score, default, waiver, forbearance, lender, borrower, collateral in English when natural.\n"
+        "- Viết bằng tiếng Việt có dấu. Chỉ giữ nguyên tiếng Anh trong trích dẫn nguyên văn từ tài liệu hoặc các thuật ngữ sản phẩm rất phổ biến như AI, OCR, PDF, DOCX.\n"
+        "- Không dùng các cụm tiếng Anh trong phần diễn giải cho người dùng: needs_review, approve, escalated, blocker, finding, risk score, reviewer, collateral, default, waiver, forbearance, lender, borrower.\n"
+        "- Dùng các cách nói tiếng Việt tương ứng: cần người rà soát, có thể duyệt tự động, được chuyển người rà soát, điểm chặn, phát hiện, điểm rủi ro, tài sản bảo đảm, sự kiện vi phạm, miễn trừ, tạm hoãn thực thi, bên cho vay, bên vay.\n"
         "- No markdown tables, no HTML, no raw angle brackets, no single # headings.\n"
-        "- `reasoning`: 5-8 short bullets; each is a distinct risk/action, not a duplicate paragraph.\n"
+        "- `reasoning`: 5-8 gạch đầu dòng tiếng Việt; mỗi dòng là một rủi ro/hành động riêng, không lặp lại nguyên văn đoạn summary.\n"
         "- `confidence`: confidence in this review (0..1).\n"
-        "- `verdict`: approve only if risks are low or fully mitigated; otherwise needs_review."
+        "- `verdict`: trường JSON bắt buộc dùng đúng một trong hai giá trị kỹ thuật approve hoặc needs_review; không đưa hai giá trị này vào nội dung summary/reasoning."
     )
     if stream_delimiter:
         header = (
@@ -625,16 +626,16 @@ def _try_openai_review(
     excerpt_chars = max(4000, settings.ai_review_excerpt_chars)
     excerpt, excerpt_note = _build_review_excerpt(text, max_chars=excerpt_chars)
     user_prompt = (
-        f"Classification: {classification.document_type} ({classification.confidence:.2f})\n"
-        f"Extraction method: {extraction.extraction_method}\n"
-        f"Extraction quality: {extraction.quality_label} ({extraction.quality_score:.2f})\n"
-        f"Extracted text length: {len(extraction.text)} characters\n"
-        f"Risk score (rules engine): {risk_score}\n"
-        f"Findings from rules engine (already excludes PII rule): "
+        f"Phân loại nội bộ: {classification.document_type} ({classification.confidence:.2f})\n"
+        f"Cách trích xuất: {extraction.extraction_method}\n"
+        f"Chất lượng trích xuất: {extraction.quality_label} ({extraction.quality_score:.2f})\n"
+        f"Độ dài văn bản trích xuất: {len(extraction.text)} ký tự\n"
+        f"Điểm rủi ro từ bộ quy tắc: {risk_score}\n"
+        f"Các tín hiệu rủi ro từ bộ quy tắc (đã loại tín hiệu dữ liệu cá nhân): "
         f"{json.dumps(findings_payload, ensure_ascii=False)}\n\n"
-        "Use the excerpt below as the single source of truth for facts. "
-        "Stay focused on legal/business substance; ignore PII concerns.\n\n"
-        f"=== DOCUMENT EXCERPT ===\n{excerpt}{excerpt_note}"
+        "Chỉ dùng đoạn trích dưới đây làm nguồn sự thật cho các nhận định. "
+        "Tập trung vào nội dung pháp lý/kinh doanh; bỏ qua cảnh báo dữ liệu cá nhân nếu không tạo rủi ro cụ thể trong tài liệu này.\n\n"
+        f"=== ĐOẠN TRÍCH TÀI LIỆU ===\n{excerpt}{excerpt_note}"
     )
     base_url = settings.openai_base_url.rstrip("/")
     url = f"{base_url}/chat/completions"

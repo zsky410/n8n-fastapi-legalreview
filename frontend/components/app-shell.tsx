@@ -25,12 +25,12 @@ const clientNav = [
   { href: "/documents/upload", label: "Tải lên", icon: UploadCloud },
 ];
 const reviewerNav = [
-  { href: "/admin/queue", label: "Exception queue", icon: ClipboardList },
+  { href: "/admin/queue", label: "Hàng chờ ngoại lệ", icon: ClipboardList },
 ];
 const adminNav = [
   { href: "/admin/dashboard", label: "Hệ thống", icon: Gauge },
-  { href: "/admin/queue", label: "Reviewer queue", icon: ClipboardList },
-  { href: "/admin/audit-logs", label: "Nhật ký audit", icon: History },
+  { href: "/admin/queue", label: "Hàng chờ rà soát", icon: ClipboardList },
+  { href: "/admin/audit-logs", label: "Nhật ký kiểm soát", icon: History },
 ];
 
 export function AppShell({ children, area }: AppShellProps) {

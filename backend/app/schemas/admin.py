@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from app.schemas.document import RiskFindingRead
+from app.schemas.document import LegalObligationRead, RiskFindingRead
 
 
 class AdminDocumentListItem(BaseModel):
@@ -54,6 +54,7 @@ class AdminDocumentDetail(AdminDocumentListItem):
     ai_confidence: Decimal | None
     ai_thinking_log: str | None = None
     risk_findings: list[RiskFindingRead]
+    legal_obligations: list[LegalObligationRead]
     reviews: list[AdminReviewRead]
     audit_logs: list[AdminAuditLogRead]
 

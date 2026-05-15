@@ -13,6 +13,7 @@ from app.db.session import get_db
 from app.models.audit_log import AuditLog
 from app.models.document import Document
 from app.models.document_chat import DocumentChatMessage
+from app.models.legal_obligation import LegalObligation
 from app.models.user import User
 from app.schemas.document import (
     DocumentAuditLogRead,
@@ -105,7 +106,7 @@ def get_document(
     detailed_document = db.scalar(
         select(Document)
         .where(Document.id == document_id)
-        .options(selectinload(Document.risk_findings))
+        .options(selectinload(Document.risk_findings), selectinload(Document.legal_obligations))
     )
     if detailed_document is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Document not found")
@@ -164,6 +165,7 @@ def start_ai_review(
 
     if is_rereview:
         db.query(RiskFinding).filter(RiskFinding.document_id == document.id).delete()
+        db.query(LegalObligation).filter(LegalObligation.document_id == document.id).delete()
         document.summary = None
         document.ai_confidence = None
         document.ai_thinking_log = None

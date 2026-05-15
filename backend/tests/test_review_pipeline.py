@@ -17,6 +17,7 @@ from app.services.classification import classify_document
 from app.services.document_chat import answer_document_chat
 from app.services.extraction import ExtractionResult, extract_text
 from app.services.flagging import decide_review_status
+from app.services.legal_obligations import extract_legal_obligations
 from app.services.risk_engine import evaluate_risks
 
 
@@ -236,6 +237,34 @@ def test_flagging_ai_approves_low_risk_document() -> None:
     )
     assert decision.review_status == "ai_approved"
     assert decision.verdict == "approve"
+
+
+def test_legal_obligation_rules_extract_deadline_actions(monkeypatch) -> None:
+    from app.services import legal_obligations
+
+    monkeypatch.setattr(legal_obligations.settings, "openai_api_key", None)
+    text = (
+        "The Loan Parties shall cause all subsidiaries to become Loan Parties and execute "
+        "Security Documents no later than 10/12/2025. Failure shall be an immediate Event of Default. "
+        "Borrower must provide an appraisal report satisfactory to the Administrative Agent by 22/12/2025."
+    )
+    extraction = ExtractionResult(text=text, quality_label="good", quality_score=0.95, expiry_date=None)
+    classification = classify_document(text)
+    findings, risk_score, _, _ = evaluate_risks(text=text, extraction=extraction, classification=classification)
+
+    obligations = extract_legal_obligations(
+        text=text,
+        summary=None,
+        classification=classification,
+        findings=findings,
+        risk_score=risk_score,
+    )
+
+    assert len(obligations) >= 2
+    assert obligations[0].due_date is not None
+    assert any("công ty con" in obligation.title.lower() for obligation in obligations)
+    assert any("định giá" in obligation.title.lower() for obligation in obligations)
+    assert any(obligation.severity in {"high", "critical"} for obligation in obligations)
 
 
 def test_flagging_routes_high_risk_document_to_admin() -> None:

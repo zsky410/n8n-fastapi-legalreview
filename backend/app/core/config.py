@@ -16,9 +16,13 @@ class Settings(BaseSettings):
     backend_cors_origins: str = "http://localhost:3000"
     frontend_base_url: AnyUrl | str = "http://localhost:3000"
     n8n_webhook_url: str = "http://n8n:5678/webhook/document-reviewed"
+    n8n_obligations_webhook_url: str = "http://n8n:5678/webhook/legal-obligations"
     n8n_webhook_timeout_seconds: float = 10.0
+    email_sender: str = "legalreview@example.com"
+    email_ops_recipient: str = "reviewer@example.com"
+    email_manager_recipient: str = "admin@example.com"
     upload_dir: str = "uploads"
-    max_upload_size_bytes: int = 10 * 1024 * 1024
+    max_upload_size_bytes: int = 20 * 1024 * 1024
     openai_api_key: str | None = None
     openai_base_url: str = "https://api.openai.com/v1"
     openai_review_model: str = "gpt-4o-mini"
@@ -32,6 +36,7 @@ class Settings(BaseSettings):
     risk_personal_data_enabled: bool = False
     ai_review_excerpt_chars: int = 120000
     ai_chat_excerpt_chars: int = 70000
+    ai_obligation_excerpt_chars: int = 70000
 
     @property
     def cors_origins(self) -> list[str]:

@@ -12,8 +12,8 @@ const statusFilters = [
   ["all", "Tất cả"],
   ["processing", "Đang xử lý"],
   ["ai_approved", "AI đã duyệt"],
-  ["needs_reviewer", "Cần reviewer"],
-  ["reviewer_approved", "Reviewer duyệt"],
+  ["needs_reviewer", "Cần người rà soát"],
+  ["reviewer_approved", "Người rà soát duyệt"],
   ["reviewer_rejected", "Từ chối"],
   ["failed", "Lỗi"],
 ] as const;

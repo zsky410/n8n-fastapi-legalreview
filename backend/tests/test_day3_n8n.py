@@ -12,9 +12,11 @@ from app.db.session import get_db
 from app.main import app
 from app.models.audit_log import AuditLog
 from app.models.document import Document
+from app.models.legal_obligation import LegalObligation
 from app.models.n8n_event import N8nEvent
 from app.schemas.webhook import N8nEventCallback
 from app.services.automation import build_document_automation_payload, build_weekly_summary_payload
+from app.services.webhooks import build_legal_obligations_payload
 
 
 class FakeSession:
@@ -151,3 +153,60 @@ def test_build_weekly_summary_payload_counts_statuses() -> None:
     assert payload["failed"] == 1
     assert payload["reviewer_rejected"] == 0
     assert payload["agreement_rate"] == 50.0
+
+
+def test_build_legal_obligations_payload_includes_recipients_and_days_left(monkeypatch) -> None:
+    from app.services import webhooks
+
+    monkeypatch.setattr(webhooks.settings, "email_ops_recipient", "ops@example.com")
+    monkeypatch.setattr(webhooks.settings, "email_manager_recipient", "manager@example.com")
+    monkeypatch.setattr(webhooks.settings, "frontend_base_url", "http://localhost:3000")
+
+    document_id = uuid.uuid4()
+    document = Document(
+        id=document_id,
+        user_id=uuid.uuid4(),
+        filename="credit-agreement.pdf",
+        mime="application/pdf",
+        size_bytes=2048,
+        sha256="b" * 64,
+        storage_path="uploads/credit-agreement.pdf",
+        processing_status="completed",
+        review_status="needs_reviewer",
+        classification="contract",
+        classification_confidence=Decimal("0.9100"),
+        risk_score=82,
+        flag_reasons=["HIGH_VALUE"],
+        uploaded_at=datetime(2026, 5, 10, tzinfo=UTC),
+        processed_at=datetime(2026, 5, 11, tzinfo=UTC),
+    )
+    obligation = LegalObligation(
+        id=uuid.uuid4(),
+        document_id=document_id,
+        title="Cung cấp báo cáo định giá tài sản",
+        responsible_party="Borrower",
+        obligation_type="reporting",
+        due_date=datetime.now(UTC).date() + timedelta(days=5),
+        urgency="due_soon",
+        severity="high",
+        status="open",
+        source_excerpt="Borrower must provide an appraisal report by the deadline.",
+        consequence="Có thể phát sinh sự kiện vi phạm.",
+        recommended_action="Giao người phụ trách xác nhận trước hạn.",
+    )
+    owner = type("Owner", (), {"email": "client@example.com"})()
+
+    payload = build_legal_obligations_payload(
+        document=document,
+        owner=owner,  # type: ignore[arg-type]
+        obligations=[obligation],
+        trace_id="obl-123",
+    )
+
+    assert payload["trace_id"] == "obl-123"
+    assert payload["ops_email"] == "ops@example.com"
+    assert payload["manager_email"] == "manager@example.com"
+    assert payload["obligation_count"] == 1
+    assert payload["high_priority_count"] == 1
+    assert payload["obligations"][0]["days_left"] == 5
+    assert payload["obligations"][0]["title"] == "Cung cấp báo cáo định giá tài sản"

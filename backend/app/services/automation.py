@@ -42,6 +42,9 @@ def build_document_automation_payload(
         "client_url": f"{frontend_base_url}/documents/{document.id}",
         "reviewer_url": f"{frontend_base_url}/admin/documents/{document.id}",
         "admin_url": f"{frontend_base_url}/admin/documents/{document.id}",
+        "from_email": settings.email_sender,
+        "ops_email": settings.email_ops_recipient,
+        "manager_email": settings.email_manager_recipient,
     }
 
 
@@ -70,4 +73,7 @@ def build_weekly_summary_payload(
         "failed": status_counts.get("failed", 0),
         "processing": status_counts.get("processing", 0),
         "agreement_rate": agreement_rate,
+        "from_email": settings.email_sender,
+        "ops_email": settings.email_ops_recipient,
+        "manager_email": settings.email_manager_recipient,
     }

@@ -96,17 +96,17 @@ def _build_chat_messages(
         for finding in risk_findings[:12]
     ]
     context = (
-        "NGỮ CẢNH TÀI LIỆU ĐÃ REVIEW\n"
+        "NGỮ CẢNH TÀI LIỆU ĐÃ ĐƯỢC RÀ SOÁT\n"
         f"- Tên file: {document.filename}\n"
         f"- Phân loại: {document.classification or 'chưa rõ'}\n"
-        f"- Trạng thái review: {document.review_status}\n"
-        f"- Risk score: {document.risk_score}\n"
+        f"- Trạng thái rà soát: {document.review_status}\n"
+        f"- Điểm rủi ro: {document.risk_score}\n"
         f"- Cờ rủi ro: {', '.join(document.flag_reasons or []) or 'không có'}\n\n"
-        "TÓM TẮT / REVIEW AI TRƯỚC ĐÓ\n"
-        f"{_clip(document.summary or 'Chưa có tóm tắt review.', 12000)}\n\n"
-        "RISK FINDINGS TỪ RULE ENGINE\n"
+        "TÓM TẮT / KẾT QUẢ RÀ SOÁT AI TRƯỚC ĐÓ\n"
+        f"{_clip(document.summary or 'Chưa có tóm tắt rà soát.', 12000)}\n\n"
+        "CÁC PHÁT HIỆN RỦI RO TỪ BỘ QUY TẮC\n"
         f"{json.dumps(risk_payload, ensure_ascii=False)}\n\n"
-        "VĂN BẢN TRÍCH XUẤT / EXCERPT LÀ NGUỒN SỰ THẬT CHÍNH\n"
+        "VĂN BẢN TRÍCH XUẤT LÀ NGUỒN SỰ THẬT CHÍNH\n"
         f"{excerpt}{excerpt_note}"
     )
     messages: list[dict[str, str]] = [
@@ -126,16 +126,17 @@ def _build_chat_messages(
 
 def _system_prompt() -> str:
     return (
-        "Bạn là AI pháp lý hỗ trợ user hỏi tiếp về một tài liệu đã được upload và review. "
-        "Trả lời bằng tiếng Việt, ngắn gọn nhưng có căn cứ. Chỉ dựa trên context tài liệu, "
-        "risk findings, review trước đó và lịch sử chat được cung cấp.\n\n"
+        "Bạn là AI pháp lý hỗ trợ người dùng hỏi tiếp về một tài liệu đã được tải lên và rà soát. "
+        "Trả lời bằng tiếng Việt, ngắn gọn nhưng có căn cứ. Chỉ dựa trên ngữ cảnh tài liệu, "
+        "các phát hiện rủi ro, kết quả rà soát trước đó và lịch sử trao đổi được cung cấp.\n\n"
         "Quy tắc bắt buộc:\n"
-        "- Ưu tiên trả lời trực tiếp câu hỏi của user, không tóm tắt lại toàn bộ tài liệu nếu user không hỏi.\n"
-        "- Khi nêu rủi ro/điều khoản, trích 1-3 đoạn ngắn nguyên văn trong dấu “...” nếu context có bằng chứng.\n"
+        "- Ưu tiên trả lời trực tiếp câu hỏi của người dùng, không tóm tắt lại toàn bộ tài liệu nếu người dùng không hỏi.\n"
+        "- Khi nêu rủi ro/điều khoản, trích 1-3 đoạn ngắn nguyên văn trong dấu “...” nếu ngữ cảnh có bằng chứng.\n"
         "- Nếu không thấy điều khoản hoặc thiếu file nền/phụ lục, nói rõ 'chưa đủ dữ kiện' và nêu cần kiểm tra gì.\n"
-        "- Không bịa số điều khoản, luật áp dụng, nghĩa vụ, bên tham gia, ngày tháng hoặc kết luận pháp lý không có trong context.\n"
-        "- Không dùng câu chung chung kiểu 'cần reviewer xử lý' trừ khi giải thích cụ thể điểm nào làm tăng rủi ro.\n"
-        "- Nếu câu hỏi ngoài phạm vi tài liệu, trả lời giới hạn và đề xuất user cung cấp thêm tài liệu/thông tin.\n\n"
+        "- Không bịa số điều khoản, luật áp dụng, cam kết, bên tham gia, ngày tháng hoặc kết luận pháp lý không có trong ngữ cảnh.\n"
+        "- Không dùng câu chung chung kiểu 'cần người rà soát xử lý' trừ khi giải thích cụ thể điểm nào làm tăng rủi ro.\n"
+        "- Tránh chêm từ tiếng Anh trong phần diễn giải; dùng tiếng Việt như điểm rủi ro, phát hiện, người rà soát, tài sản bảo đảm, sự kiện vi phạm.\n"
+        "- Nếu câu hỏi ngoài phạm vi tài liệu, trả lời giới hạn và đề xuất người dùng cung cấp thêm tài liệu/thông tin.\n\n"
         "Định dạng ưu tiên:\n"
         "1. Kết luận ngắn: 1-2 câu.\n"
         "2. Căn cứ trong tài liệu: bullet có trích dẫn nếu có.\n"

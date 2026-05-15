@@ -11,6 +11,7 @@ from app.db.session import Base
 
 if TYPE_CHECKING:
     from app.models.document_chat import DocumentChatMessage
+    from app.models.legal_obligation import LegalObligation
     from app.models.review import Review
     from app.models.risk_finding import RiskFinding
     from app.models.user import User
@@ -51,6 +52,10 @@ class Document(Base):
 
     user: Mapped["User"] = relationship(back_populates="documents")
     risk_findings: Mapped[list["RiskFinding"]] = relationship(
+        back_populates="document",
+        cascade="all, delete-orphan",
+    )
+    legal_obligations: Mapped[list["LegalObligation"]] = relationship(
         back_populates="document",
         cascade="all, delete-orphan",
     )

@@ -292,7 +292,7 @@ export function AiFormattedSummary({ text }: { text: string | null }) {
 
       <section className="ai-review-risk-section">
         <div className="ai-review-section-heading">
-          <span className="ai-review-section-kicker">Trọng tâm review</span>
+          <span className="ai-review-section-kicker">Trọng tâm rà soát</span>
           <h3>Rủi ro cần xử lý trước</h3>
         </div>
         <ReviewCards items={review.riskItems} />

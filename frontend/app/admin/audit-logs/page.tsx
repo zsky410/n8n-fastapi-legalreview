@@ -18,7 +18,7 @@ export default function AdminAuditLogsPage() {
       const data = await fetchAuditLogs();
       setAuditLogs(data);
     } catch (caught) {
-      setError(caught instanceof Error ? caught.message : "Không thể tải nhật ký audit");
+      setError(caught instanceof Error ? caught.message : "Không thể tải nhật ký kiểm soát");
     } finally {
       setIsLoading(false);
     }
@@ -33,7 +33,7 @@ export default function AdminAuditLogsPage() {
       <header className="page-header">
         <div>
           <p className="eyebrow">Truy vết</p>
-          <h1>Nhật ký audit</h1>
+          <h1>Nhật ký kiểm soát</h1>
         </div>
         <button className="secondary-button" type="button" onClick={loadAuditLogs} disabled={isLoading}>
           <RefreshCw size={16} aria-hidden="true" />
@@ -51,7 +51,7 @@ export default function AdminAuditLogsPage() {
           <span>Thời gian</span>
         </div>
         {isLoading ? (
-          <div className="empty-state">Đang tải nhật ký audit</div>
+          <div className="empty-state">Đang tải nhật ký kiểm soát</div>
         ) : auditLogs.length ? (
           <div className="table-body">
             {auditLogs.map((log) => (
@@ -67,7 +67,7 @@ export default function AdminAuditLogsPage() {
             ))}
           </div>
         ) : (
-          <EmptyState title="Chưa có sự kiện audit">Tải lên, AI rà soát, callback và quyết định reviewer sẽ xuất hiện ở đây.</EmptyState>
+          <EmptyState title="Chưa có sự kiện kiểm soát">Tải lên, AI rà soát, callback và quyết định người rà soát sẽ xuất hiện ở đây.</EmptyState>
         )}
       </section>
     </section>

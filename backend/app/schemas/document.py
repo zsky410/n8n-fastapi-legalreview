@@ -19,6 +19,23 @@ class RiskFindingRead(BaseModel):
     created_at: datetime
 
 
+class LegalObligationRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: UUID
+    title: str
+    responsible_party: str | None
+    obligation_type: str
+    due_date: date | None
+    urgency: str
+    severity: str
+    status: str
+    source_excerpt: str | None
+    consequence: str | None
+    recommended_action: str | None
+    created_at: datetime
+
+
 class DocumentAuditLogRead(BaseModel):
     id: UUID
     actor_email: str | None = None
@@ -53,6 +70,7 @@ class DocumentDetail(DocumentListItem):
     ai_thinking_log: str | None = None
     expiry_date: date | None
     risk_findings: list[RiskFindingRead]
+    legal_obligations: list[LegalObligationRead] = []
     audit_logs: list[DocumentAuditLogRead] = []
 
 

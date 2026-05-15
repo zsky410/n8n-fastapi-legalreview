@@ -25,6 +25,10 @@ services:
       BACKEND_CORS_ORIGINS: ${BACKEND_CORS_ORIGINS:-http://localhost:3000}
       FRONTEND_BASE_URL: ${FRONTEND_BASE_URL:-http://localhost:3000}
       N8N_WEBHOOK_URL: ${N8N_WEBHOOK_URL:-http://n8n:5678/webhook/document-reviewed}
+      N8N_OBLIGATIONS_WEBHOOK_URL: ${N8N_OBLIGATIONS_WEBHOOK_URL:-http://n8n:5678/webhook/legal-obligations}
+      EMAIL_SENDER: ${EMAIL_SENDER:-legalreview@example.com}
+      EMAIL_OPS_RECIPIENT: ${EMAIL_OPS_RECIPIENT:-reviewer@example.com}
+      EMAIL_MANAGER_RECIPIENT: ${EMAIL_MANAGER_RECIPIENT:-admin@example.com}
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       OPENAI_BASE_URL: ${OPENAI_BASE_URL:-https://api.openai.com/v1}
       OPENAI_REVIEW_MODEL: ${OPENAI_REVIEW_MODEL:-gpt-4o-mini}
@@ -36,6 +40,7 @@ services:
       OCR_MAX_PAGES: ${OCR_MAX_PAGES:-10}
       AI_REVIEW_EXCERPT_CHARS: ${AI_REVIEW_EXCERPT_CHARS:-120000}
       AI_CHAT_EXCERPT_CHARS: ${AI_CHAT_EXCERPT_CHARS:-70000}
+      AI_OBLIGATION_EXCERPT_CHARS: ${AI_OBLIGATION_EXCERPT_CHARS:-70000}
       SEED_SAMPLE_DOCUMENTS: ${SEED_SAMPLE_DOCUMENTS:-false}
     extra_hosts:
       - "host.docker.internal:host-gateway"
@@ -69,6 +74,12 @@ services:
       N8N_PROTOCOL: http
       WEBHOOK_URL: http://localhost:5678/
       GENERIC_TIMEZONE: Asia/Ho_Chi_Minh
+      SMTP_HOST: ${SMTP_HOST:-mailhog}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      EMAIL_OPS_RECIPIENT: ${EMAIL_OPS_RECIPIENT:-reviewer@example.com}
+      EMAIL_MANAGER_RECIPIENT: ${EMAIL_MANAGER_RECIPIENT:-admin@example.com}
     ports:
       - "5678:5678"
     volumes:

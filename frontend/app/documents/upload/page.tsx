@@ -58,7 +58,7 @@ export default function UploadPage() {
         <label className="drop-zone">
           <FileUp size={34} aria-hidden="true" />
           <span>{file ? file.name : "Chọn tài liệu pháp lý"}</span>
-          <small>{file ? `Đã chọn ${formatBytes(file.size)}` : `${supportedFileLabel}, tối đa 10 MB`}</small>
+          <small>{file ? `Đã chọn ${formatBytes(file.size)}` : `${supportedFileLabel}, tối đa 20 MB`}</small>
           <input
             type="file"
             accept={supportedFileAccept}
@@ -69,7 +69,7 @@ export default function UploadPage() {
         <div className="upload-summary">
           <div>
             <strong>Quy trình rà soát</strong>
-            <p>Hệ thống tự trích xuất văn bản, phân loại và chạy AI review ngay sau khi tải lên.</p>
+            <p>Hệ thống tự trích xuất văn bản, phân loại và chạy AI rà soát ngay sau khi tải lên.</p>
           </div>
           <button className="primary-button" type="submit" disabled={isSubmitting}>
             <UploadCloud size={18} aria-hidden="true" />

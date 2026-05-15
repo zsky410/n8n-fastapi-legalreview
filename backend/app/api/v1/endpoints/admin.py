@@ -74,6 +74,7 @@ def get_admin_document(
         .options(
             selectinload(Document.user),
             selectinload(Document.risk_findings),
+            selectinload(Document.legal_obligations),
             selectinload(Document.reviews).selectinload(Review.reviewer),
         )
     )
@@ -237,6 +238,7 @@ def _build_admin_document_detail(
         ai_confidence=document.ai_confidence,
         ai_thinking_log=document.ai_thinking_log,
         risk_findings=list(document.risk_findings),
+        legal_obligations=list(document.legal_obligations),
         reviews=[
             AdminReviewRead(
                 id=review.id,

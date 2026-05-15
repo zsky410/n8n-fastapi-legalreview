@@ -9,12 +9,12 @@ import {
   fetchAdminDocument,
   submitAdminDecision,
 } from "@/lib/api";
-import { ExtractedTextPanel, SummaryPanel } from "@/components/document-panels";
+import { AiFormattedSummary } from "@/components/ai-formatted-summary";
+import { ExtractedTextPanel, LegalObligationsPanel } from "@/components/document-panels";
 import {
   formatBytes,
   formatDateTime,
   formatPercent,
-  humanAiSummary,
   humanRiskSnippet,
   humanRiskSuggestion,
   humanStatus,
@@ -66,7 +66,7 @@ export default function AdminDocumentDetailPage() {
     <section className="page-stack">
       <header className="page-header">
         <div>
-          <p className="eyebrow">Reviewer exception</p>
+          <p className="eyebrow">Ngoại lệ cần người rà soát</p>
           <h1>{document?.filename ?? "Rà soát tài liệu"}</h1>
         </div>
         <div className="header-actions">
@@ -107,7 +107,7 @@ export default function AdminDocumentDetailPage() {
             </section>
 
             <section className="data-panel detail-panel">
-              <h2>Quyết định reviewer</h2>
+              <h2>Quyết định người rà soát</h2>
               {isNeedsReviewer(document.review_status) ? (
                 <form className="decision-form" onSubmit={handleSubmit}>
                   <div className="segmented-control" aria-label="Quyết định">
@@ -129,7 +129,7 @@ export default function AdminDocumentDetailPage() {
                     </button>
                   </div>
                   <label>
-                    Ghi chú nghiệp vụ cho client / audit
+                    Ghi chú nghiệp vụ cho khách hàng / nhật ký kiểm soát
                     <textarea
                       value={comment}
                       onChange={(event) => setComment(event.target.value)}
@@ -143,21 +143,39 @@ export default function AdminDocumentDetailPage() {
                   </button>
                 </form>
               ) : (
-                <EmptyState title="Đã có quyết định">Tài liệu này không còn chờ reviewer xử lý.</EmptyState>
+                <EmptyState title="Đã có quyết định">Tài liệu này không còn chờ người rà soát xử lý.</EmptyState>
               )}
             </section>
           </section>
 
-          <section className="data-panel detail-panel">
-            <h2>Nhận định AI</h2>
-            <SummaryPanel summary={humanAiSummary(document.summary)} fallback="Chưa có tóm tắt AI." />
-            <div className="detail-grid compact-grid">
+          <section className="data-panel detail-panel reviewer-ai-review-panel">
+            <div className="reviewer-ai-heading">
+              <div>
+                <p className="eyebrow">Nhận định AI</p>
+                <h2>Trọng tâm cần kiểm tra</h2>
+                <span>Đọc nhanh theo kết luận, rủi ro, dữ kiện còn thiếu và việc cần làm tiếp.</span>
+              </div>
+              <div className="reviewer-ai-score-card">
+                <span>Điểm rủi ro</span>
+                <strong>{document.risk_score}</strong>
+              </div>
+            </div>
+
+            <div className="reviewer-ai-meta">
               <FieldValue label="Trạng thái rà soát" value={humanStatus(document.review_status)} />
               <FieldValue label="Xử lý" value={humanStatus(document.processing_status)} />
               <FieldValue label="Độ tin cậy phân loại" value={formatPercent(document.classification_confidence)} />
               <FieldValue label="Độ tin cậy AI" value={formatPercent(document.ai_confidence)} />
             </div>
+
+            <AiFormattedSummary text={document.summary} />
           </section>
+
+          <LegalObligationsPanel
+            obligations={document.legal_obligations}
+            title="Cam kết & mốc cần theo dõi"
+            emptyCopy="AI chưa bóc được cam kết hoặc mốc có hạn chót rõ ràng. Người rà soát có thể đọc văn bản trích xuất nếu tài liệu vẫn có việc vận hành quan trọng cần kiểm tra."
+          />
 
           <section className="data-panel detail-panel">
             <h2>Văn bản trích xuất</h2>
@@ -169,7 +187,7 @@ export default function AdminDocumentDetailPage() {
           </section>
 
           <section className="data-panel detail-panel">
-            <h2>Lý do vào exception queue</h2>
+            <h2>Lý do vào hàng chờ ngoại lệ</h2>
             <FlagList flags={document.flag_reasons} />
           </section>
 
@@ -197,7 +215,7 @@ export default function AdminDocumentDetailPage() {
           </section>
 
           <section className="data-panel detail-panel">
-            <h2>Dòng thời gian audit</h2>
+            <h2>Dòng thời gian kiểm soát</h2>
             {document.audit_logs.length ? (
               <div className="timeline-list">
                 {document.audit_logs.map((log) => (
@@ -208,7 +226,7 @@ export default function AdminDocumentDetailPage() {
                 ))}
               </div>
             ) : (
-              <EmptyState title="Chưa có dòng thời gian audit">Tài liệu này chưa có sự kiện audit.</EmptyState>
+              <EmptyState title="Chưa có dòng thời gian kiểm soát">Tài liệu này chưa có sự kiện kiểm soát.</EmptyState>
             )}
           </section>
         </>

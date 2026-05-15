@@ -1,0 +1,372 @@
+{
+  "name": "legal-obligation-monitor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "legal-obligations",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "0b9e00d8-0e1a-4d12-902b-bf53c1ab2a11",
+      "name": "Receive Legal Obligations",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -920,
+        0
+      ],
+      "webhookId": "legal-obligations"
+    },
+    {
+      "parameters": {
+        "jsCode": "const body = $json.body ?? $json;\nconst obligations = Array.isArray(body.obligations) ? body.obligations : [];\nconst highPriorityCount = obligations.filter((item) => ['high', 'critical'].includes(String(item.severity || '').toLowerCase())).length;\nreturn [{\n  json: {\n    event_type: body.event_type ?? 'legal_obligations.detected',\n    trace_id: body.trace_id ?? null,\n    document_id: body.document_id ?? null,\n    user_email: body.user_email ?? null,\n    from_email: body.from_email ?? 'legalreview@example.com',\n    ops_email: body.ops_email ?? 'reviewer@example.com',\n    manager_email: body.manager_email ?? 'admin@example.com',\n    filename: body.filename ?? 'Tài liệu chưa đặt tên',\n    review_status: body.review_status ?? null,\n    classification: body.classification ?? 'unknown',\n    risk_score: Number(body.risk_score ?? 0),\n    client_url: body.client_url ?? '',\n    reviewer_url: body.reviewer_url ?? '',\n    obligations,\n    obligation_count: obligations.length,\n    high_priority_count: Number(body.high_priority_count ?? highPriorityCount),\n    critical_count: Number(body.critical_count ?? obligations.filter((item) => String(item.severity || '').toLowerCase() === 'critical').length),\n    valid: Boolean(body.trace_id && body.document_id && body.user_email),\n    has_obligations: obligations.length > 0\n  }\n}];"
+      },
+      "id": "f6d4b47d-4817-4ff7-b034-38da4af72c19",
+      "name": "Normalize Obligation Payload",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -680,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "valid",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "d58057d4-cd95-43ce-a1e5-93f4ce6dd1ca",
+      "name": "Validate Obligation Payload",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/webhooks/n8n-events",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ trace_id: $json.trace_id, event_type: 'legal_obligations.invalid_payload', status: 'failed', payload: { workflow: 'legal-obligation-monitor', document_id: $json.document_id, reason: 'missing_required_fields' } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "b78fa824-8f01-4971-82ed-331c2b246180",
+      "name": "Callback Invalid Obligation Payload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -180,
+        220
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "has-obligations",
+              "leftValue": "={{ $json.has_obligations }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "f70bb238-5c2a-49a9-af85-ad9c498462c9",
+      "name": "Has Obligations?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -180,
+        -40
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const severityLabels = { critical: 'Nghiêm trọng', high: 'Cao', medium: 'Trung bình', low: 'Thấp' };\nconst urgencyLabels = { overdue: 'Quá hạn', due_soon: 'Sắp đến hạn', normal: 'Đang theo dõi', no_deadline: 'Chưa có hạn cụ thể' };\nconst severityRank = { critical: 4, high: 3, medium: 2, low: 1 };\nconst urgencyRank = { overdue: 4, due_soon: 3, normal: 2, no_deadline: 1 };\nconst escapeHtml = (value) => String(value ?? '').replace(/[&<>\"']/g, (char) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '\"': '&quot;', \"'\": '&#39;' }[char]));\nconst formatDate = (value) => value ? new Date(value).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' }) : 'Chưa có hạn cụ thể';\nconst daysText = (value) => {\n  if (value === null || value === undefined || value === '') return 'Chưa tính được số ngày còn lại';\n  const days = Number(value);\n  if (Number.isNaN(days)) return 'Chưa tính được số ngày còn lại';\n  if (days < 0) return `Quá hạn ${Math.abs(days)} ngày`;\n  if (days === 0) return 'Đến hạn hôm nay';\n  return `Còn ${days} ngày`;\n};\nconst badgeColor = (severity) => ({ critical: '#8f1d1d', high: '#ad4f32', medium: '#c99d36', low: '#0f6b68' }[severity] || '#0f6b68');\nconst obligations = [...($json.obligations || [])].sort((left, right) => {\n  const leftDate = left.due_date ? new Date(left.due_date).getTime() : Number.POSITIVE_INFINITY;\n  const rightDate = right.due_date ? new Date(right.due_date).getTime() : Number.POSITIVE_INFINITY;\n  if (leftDate !== rightDate) return leftDate - rightDate;\n  return (severityRank[String(right.severity || '').toLowerCase()] || 0) - (severityRank[String(left.severity || '').toLowerCase()] || 0);\n});\nconst highestSeverity = obligations.reduce((best, item) => {\n  const current = String(item.severity || 'medium').toLowerCase();\n  return (severityRank[current] || 0) > (severityRank[best] || 0) ? current : best;\n}, 'low');\nconst highestUrgency = obligations.reduce((best, item) => {\n  const current = String(item.urgency || 'normal').toLowerCase();\n  return (urgencyRank[current] || 0) > (urgencyRank[best] || 0) ? current : best;\n}, 'no_deadline');\nconst needsReviewer = obligations.some((item) => {\n  const severity = String(item.severity || '').toLowerCase();\n  const urgency = String(item.urgency || '').toLowerCase();\n  return ['critical', 'high'].includes(severity) || ['overdue', 'due_soon'].includes(urgency);\n});\nconst to = needsReviewer ? ($json.ops_email || $json.manager_email || $json.user_email) : $json.user_email;\nconst cc = needsReviewer && $json.manager_email && $json.manager_email !== to ? $json.manager_email : '';\nconst actionUrl = needsReviewer ? ($json.reviewer_url || $json.client_url) : $json.client_url;\nconst headline = needsReviewer ? 'Cảnh báo cam kết & mốc cần xử lý' : 'Cam kết & mốc cần theo dõi';\nconst obligationRows = obligations.map((obligation, index) => {\n  const severity = String(obligation.severity || 'medium').toLowerCase();\n  const urgency = String(obligation.urgency || 'normal').toLowerCase();\n  const color = badgeColor(severity);\n  return `\n    <tr><td style=\"padding:0 0 14px;\">\n      <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"border:1px solid #ded8c9;border-left:5px solid ${color};border-radius:14px;background:#fffaf0;overflow:hidden;\">\n        <tr><td style=\"padding:16px 18px;\">\n          <div style=\"font-size:12px;font-weight:800;color:${color};text-transform:uppercase;letter-spacing:.04em;\">Mục ${index + 1} · ${severityLabels[severity] || severity} · ${urgencyLabels[urgency] || urgency}</div>\n          <h3 style=\"margin:8px 0 8px;font-size:18px;line-height:1.35;color:#1f2a2e;\">${escapeHtml(obligation.title)}</h3>\n          <p style=\"margin:0 0 8px;color:#667078;font-size:13px;line-height:1.55;\"><strong>Bên phụ trách:</strong> ${escapeHtml(obligation.responsible_party || 'Chưa xác định rõ')} · <strong>Hạn:</strong> ${formatDate(obligation.due_date)} (${daysText(obligation.days_left)})</p>\n          ${obligation.consequence ? `<p style=\"margin:8px 0 0;font-size:14px;line-height:1.6;color:#223136;\"><strong>Rủi ro nếu bỏ sót:</strong> ${escapeHtml(obligation.consequence)}</p>` : ''}\n          ${obligation.recommended_action ? `<p style=\"margin:8px 0 0;font-size:14px;line-height:1.6;color:#223136;\"><strong>Việc nên làm:</strong> ${escapeHtml(obligation.recommended_action)}</p>` : ''}\n          ${obligation.source_excerpt ? `<blockquote style=\"margin:12px 0 0;padding:10px 12px;border-left:3px solid #0f6b68;background:#f7fbfa;color:#344247;font-size:12px;line-height:1.55;\">${escapeHtml(obligation.source_excerpt)}</blockquote>` : ''}\n        </td></tr>\n      </table>\n    </td></tr>`;\n}).join('');\nconst html = `\n<div style=\"margin:0;padding:0;background:#f7f4ec;font-family:Arial,'Helvetica Neue',sans-serif;color:#223136;\">\n  <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\" style=\"background:#f7f4ec;padding:28px 12px;\">\n    <tr><td align=\"center\">\n      <table role=\"presentation\" width=\"720\" cellspacing=\"0\" cellpadding=\"0\" style=\"max-width:720px;width:100%;background:#fffdf8;border:1px solid #ded8c9;border-radius:18px;overflow:hidden;box-shadow:0 18px 45px rgba(31,42,46,.12);\">\n        <tr><td style=\"background:#223136;padding:24px 28px;color:#fff;\">\n          <div style=\"font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#d9b45c;font-weight:800;\">LegalReview AI · Workflow 3</div>\n          <h1 style=\"margin:8px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:28px;line-height:1.15;\">${escapeHtml(headline)}</h1>\n          <p style=\"margin:10px 0 0;color:#dbe3e3;font-size:14px;line-height:1.6;\">AI đã bóc ${obligations.length} cam kết/mốc cần theo dõi từ tài liệu sau khi review.</p>\n        </td></tr>\n        <tr><td style=\"padding:24px 28px;\">\n          <div style=\"display:inline-block;background:${badgeColor(highestSeverity)};color:#fff;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800;\">Mức cao nhất: ${severityLabels[highestSeverity] || highestSeverity} · ${urgencyLabels[highestUrgency] || highestUrgency}</div>\n          <h2 style=\"margin:16px 0 8px;font-size:22px;line-height:1.3;color:#1f2a2e;\">${escapeHtml($json.filename)}</h2>\n          <p style=\"margin:0 0 20px;color:#667078;font-size:14px;line-height:1.6;\">Điểm rủi ro tài liệu: <strong style=\"color:#223136;\">${escapeHtml($json.risk_score)}</strong>. Email này gom tất cả cam kết/mốc trong một lần gửi để tránh spam người nhận.</p>\n          <table role=\"presentation\" width=\"100%\" cellspacing=\"0\" cellpadding=\"0\">${obligationRows}</table>\n          <div style=\"margin-top:18px;\">\n            <a href=\"${escapeHtml(actionUrl)}\" style=\"display:inline-block;background:#0f6b68;color:#fff;text-decoration:none;border-radius:10px;padding:12px 18px;font-weight:800;\">Mở tài liệu</a>\n          </div>\n        </td></tr>\n        <tr><td style=\"background:#f0eadc;padding:16px 28px;color:#726b60;font-size:12px;line-height:1.5;\">Email này được tạo tự động bởi n8n từ kết quả phân tích AI. Vui lòng kiểm tra lại tài liệu gốc trước khi ra quyết định pháp lý cuối cùng.</td></tr>\n      </table>\n    </td></tr>\n  </table>\n</div>`;\nconst text = [\n  `${headline}`,\n  '',\n  `Tài liệu: ${$json.filename}`,\n  `Số cam kết/mốc: ${obligations.length}`,\n  `Mức cao nhất: ${severityLabels[highestSeverity] || highestSeverity}`,\n  '',\n  ...obligations.flatMap((obligation, index) => [\n    `${index + 1}. ${obligation.title}`,\n    `   Hạn: ${obligation.due_date || 'Chưa có'} · ${daysText(obligation.days_left)}`,\n    `   Mức: ${severityLabels[String(obligation.severity || 'medium').toLowerCase()] || obligation.severity}`,\n    `   Việc nên làm: ${obligation.recommended_action || 'Kiểm tra tài liệu gốc.'}`,\n    '',\n  ]),\n  `Mở tài liệu: ${actionUrl}`,\n].join('\\n');\nreturn [{\n  json: {\n    ...$json,\n    to,\n    cc,\n    subject: `${needsReviewer ? '[LegalReview] Cảnh báo cam kết & mốc' : '[LegalReview] Cam kết & mốc cần theo dõi'}: ${$json.filename}`,\n    html,\n    text,\n    email_obligation_count: obligations.length,\n    highest_severity: highestSeverity,\n    highest_urgency: highestUrgency,\n  }\n}];"
+      },
+      "id": "01dd888c-7249-4f72-8e9e-6048d22ace0f",
+      "name": "Build Obligation Digest Email",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        80,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "f5196f20-c548-4635-8eb7-f760c919185c",
+      "name": "Split Obligation Emails",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        320,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "fromEmail": "={{ $json.from_email || 'legalreview@example.com' }}",
+        "toEmail": "={{ $json.to }}",
+        "subject": "={{ $json.subject }}",
+        "emailFormat": "both",
+        "text": "={{ $json.text }}",
+        "html": "={{ $json.html }}",
+        "options": {
+          "ccEmail": "={{ $json.cc }}"
+        }
+      },
+      "id": "71e7f07c-9a22-4330-9825-30b90192a67f",
+      "name": "Send Obligation Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        560,
+        -140
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "gmail-smtp",
+          "name": "Gmail SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 1,
+        "unit": "seconds"
+      },
+      "id": "3e5e261f-055d-447b-9919-f521351bc4ae",
+      "name": "Wait Email Rate Limit",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        -140
+      ],
+      "webhookId": "wait-obligation-email"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/webhooks/n8n-events",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ trace_id: $json.trace_id, event_type: 'legal_obligations.alert_sent', status: 'success', payload: { workflow: 'legal-obligation-monitor', document_id: $json.document_id, obligation_count: $json.email_obligation_count, highest_severity: $json.highest_severity, highest_urgency: $json.highest_urgency, to: $json.to, cc: $json.cc } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "271766f2-d3c5-4065-a555-9da2ec2082d8",
+      "name": "Callback Obligation Alert Sent",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        -140
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://backend:8000/api/v1/webhooks/n8n-events",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ trace_id: $json.trace_id, event_type: 'legal_obligations.no_data', status: 'success', payload: { workflow: 'legal-obligation-monitor', document_id: $json.document_id, obligation_count: 0 } }) }}",
+        "options": {
+          "timeout": 10000
+        }
+      },
+      "id": "dbf6a16e-9157-4b16-bf0c-2db99d354a06",
+      "name": "Callback No Obligations",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "Workflow 3: nhận danh sách cam kết & mốc cần theo dõi từ FastAPI sau AI review, gom tất cả mục của một tài liệu thành 1 email HTML, gửi SMTP, rồi callback FastAPI. Email ưu tiên gửi reviewer/ops nếu có mục cao/quá hạn/sắp đến hạn; nếu chỉ là mục bình thường thì gửi user.",
+        "height": 240,
+        "width": 380,
+        "color": 4
+      },
+      "id": "1b1a54ab-c5f5-4f6e-a4d6-920766409151",
+      "name": "Demo Instructions",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -920,
+        -300
+      ]
+    }
+  ],
+  "connections": {
+    "Receive Legal Obligations": {
+      "main": [
+        [
+          {
+            "node": "Normalize Obligation Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Obligation Payload": {
+      "main": [
+        [
+          {
+            "node": "Validate Obligation Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Obligation Payload": {
+      "main": [
+        [
+          {
+            "node": "Has Obligations?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Callback Invalid Obligation Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Obligations?": {
+      "main": [
+        [
+          {
+            "node": "Build Obligation Digest Email",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Callback No Obligations",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Obligation Emails": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Send Obligation Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Obligation Alert": {
+      "main": [
+        [
+          {
+            "node": "Wait Email Rate Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Email Rate Limit": {
+      "main": [
+        [
+          {
+            "node": "Callback Obligation Alert Sent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Callback Obligation Alert Sent": {
+      "main": [
+        [
+          {
+            "node": "Split Obligation Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Obligation Digest Email": {
+      "main": [
+        [
+          {
+            "node": "Split Obligation Emails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "pinData": {},
+  "active": false,
+  "versionId": "1"
+}

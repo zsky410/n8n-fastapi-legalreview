@@ -9,14 +9,16 @@ from sqlalchemy.orm import Session
 
 from app.db.session import SessionLocal
 from app.models.document import Document
+from app.models.legal_obligation import LegalObligation
 from app.models.risk_finding import RiskFinding
 from app.services.ai_review import JSON_FR, preview_streaming_thinking, review_document_with_ai
 from app.services.audit import create_audit_log
 from app.services.classification import classify_document
 from app.services.extraction import ExtractionResult, compute_quality_score, detect_expiry_date, extract_text
 from app.services.flagging import decide_review_status
+from app.services.legal_obligations import extract_legal_obligations
 from app.services.risk_engine import evaluate_risks
-from app.services.webhooks import send_document_reviewed_webhook
+from app.services.webhooks import send_document_reviewed_webhook, send_legal_obligations_webhook
 
 
 def process_document_task(document_id: UUID) -> None:
@@ -76,6 +78,7 @@ def extract_document(db: Session, *, document_id: UUID) -> None:
         document.processed_at = None
 
         db.query(RiskFinding).filter(RiskFinding.document_id == document.id).delete()
+        db.query(LegalObligation).filter(LegalObligation.document_id == document.id).delete()
         create_audit_log(
             db,
             action="document.extraction.completed",
@@ -229,6 +232,7 @@ def review_document(db: Session, *, document_id: UUID) -> None:
         document.processed_at = datetime.now(UTC)
 
         db.query(RiskFinding).filter(RiskFinding.document_id == document.id).delete()
+        db.query(LegalObligation).filter(LegalObligation.document_id == document.id).delete()
         db.flush()
         for finding in findings:
             db.add(
@@ -240,6 +244,41 @@ def review_document(db: Session, *, document_id: UUID) -> None:
                     suggestion=finding.suggestion,
                 )
             )
+
+        obligations = extract_legal_obligations(
+            text=extraction.text,
+            summary=ai_review.summary,
+            classification=classification,
+            findings=findings,
+            risk_score=risk_score,
+        )
+        for obligation in obligations:
+            db.add(
+                LegalObligation(
+                    document_id=document.id,
+                    title=obligation.title,
+                    responsible_party=obligation.responsible_party,
+                    obligation_type=obligation.obligation_type,
+                    due_date=obligation.due_date,
+                    urgency=obligation.urgency,
+                    severity=obligation.severity,
+                    status="open",
+                    source_excerpt=obligation.source_excerpt,
+                    consequence=obligation.consequence,
+                    recommended_action=obligation.recommended_action,
+                )
+            )
+        create_audit_log(
+            db,
+            action="legal_obligations.extracted",
+            target_type="document",
+            target_id=document.id,
+            actor_id=document.user_id,
+            payload={
+                "count": len(obligations),
+                "high_priority_count": sum(1 for item in obligations if item.severity in {"high", "critical"}),
+            },
+        )
 
         create_audit_log(
             db,
@@ -264,6 +303,7 @@ def review_document(db: Session, *, document_id: UUID) -> None:
         if owner is not None:
             try:
                 send_document_reviewed_webhook(db, document=document, owner=owner)
+                send_legal_obligations_webhook(db, document=document, owner=owner)
             except Exception:
                 db.rollback()
     except Exception as exc:

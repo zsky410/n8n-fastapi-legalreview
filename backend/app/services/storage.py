@@ -39,7 +39,7 @@ def store_upload(file: UploadFile, *, user_id: uuid.UUID) -> tuple[str, int, str
                 if size_bytes > settings.max_upload_size_bytes:
                     raise HTTPException(
                         status_code=status.HTTP_400_BAD_REQUEST,
-                        detail="Uploaded file exceeds the 10MB size limit",
+                        detail="Uploaded file exceeds the 20MB size limit",
                     )
                 digest.update(chunk)
                 output_file.write(chunk)

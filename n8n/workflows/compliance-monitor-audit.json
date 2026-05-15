@@ -147,7 +147,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "legalreview@example.com",
+        "fromEmail": "={{ $json.from_email || 'legalreview@example.com' }}",
         "toEmail": "={{ $json.to }}",
         "subject": "={{ $json.subject }}",
         "emailFormat": "text",
@@ -164,8 +164,8 @@
       ],
       "credentials": {
         "smtp": {
-          "id": "mailhog-smtp",
-          "name": "Mailhog SMTP"
+          "id": "gmail-smtp",
+          "name": "Gmail SMTP"
         }
       }
     },
@@ -291,7 +291,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const docs = $json.docs || [];\nconst lines = docs.map((doc, index) => `${index + 1}. ${doc.filename} | ${doc.classification || 'unknown'} | risk ${doc.risk_score} | ${doc.admin_url}`);\nreturn [{ json: { sample_count: docs.length, to: 'reviewer@example.com', subject: '[LegalReview] Weekly AI Auto-Approval Audit Sample', body: `Weekly AI auto-approval sample:\\n\\n${lines.join('\\n')}` } }];"
+        "jsCode": "const docs = $json.docs || [];\nconst lines = docs.map((doc, index) => `${index + 1}. ${doc.filename} | ${doc.classification || 'chưa rõ'} | điểm rủi ro ${doc.risk_score} | ${doc.reviewer_url || doc.admin_url}`);\nconst to = docs[0]?.ops_email || 'reviewer@example.com';\nconst from_email = docs[0]?.from_email || 'legalreview@example.com';\nreturn [{ json: { sample_count: docs.length, from_email, to, subject: '[LegalReview] Mẫu kiểm soát AI tự duyệt hằng tuần', body: `Mẫu tài liệu AI đã tự duyệt cần kiểm tra chất lượng:\n\n${lines.join('\n')}` } }];"
       },
       "id": "ac91ca26-d973-42fe-91be-8552f2e93b5d",
       "name": "Build Audit Digest",
@@ -304,7 +304,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "legalreview@example.com",
+        "fromEmail": "={{ $json.from_email || 'legalreview@example.com' }}",
         "toEmail": "={{ $json.to }}",
         "subject": "={{ $json.subject }}",
         "emailFormat": "text",
@@ -321,8 +321,8 @@
       ],
       "credentials": {
         "smtp": {
-          "id": "mailhog-smtp",
-          "name": "Mailhog SMTP"
+          "id": "gmail-smtp",
+          "name": "Gmail SMTP"
         }
       }
     },
@@ -386,7 +386,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const summary = $json;\nreturn [{ json: { ...summary, to: 'admin@example.com', subject: '[LegalReview] Weekly Summary', body: `Weekly LegalReview summary\\n\\nTotal documents: ${summary.total_documents}\\nAI approved: ${summary.ai_approved}\\nPending admin: ${summary.pending_admin}\\nAdmin approved: ${summary.admin_approved}\\nAdmin rejected: ${summary.admin_rejected}\\nFailed: ${summary.failed}\\nProcessing: ${summary.processing}\\nAgreement rate: ${summary.agreement_rate}%` } }];"
+        "jsCode": "const summary = $json;\nreturn [{ json: { ...summary, to: summary.manager_email || 'admin@example.com', subject: '[LegalReview] Tổng kết tuần', body: `Tổng kết LegalReview trong 7 ngày\n\nTổng tài liệu: ${summary.total_documents}\nAI tự duyệt: ${summary.ai_approved}\nCần người rà soát: ${summary.needs_reviewer}\nNgười rà soát đã duyệt: ${summary.reviewer_approved}\nNgười rà soát đã từ chối: ${summary.reviewer_rejected}\nThất bại: ${summary.failed}\nĐang xử lý: ${summary.processing}\nTỷ lệ duyệt: ${summary.agreement_rate}%` } }];"
       },
       "id": "73857a86-3638-465c-9536-6ea90a35c69a",
       "name": "Build Weekly Summary Email",
@@ -399,7 +399,7 @@
     },
     {
       "parameters": {
-        "fromEmail": "legalreview@example.com",
+        "fromEmail": "={{ $json.from_email || 'legalreview@example.com' }}",
         "toEmail": "={{ $json.to }}",
         "subject": "={{ $json.subject }}",
         "emailFormat": "text",
@@ -416,8 +416,8 @@
       ],
       "credentials": {
         "smtp": {
-          "id": "mailhog-smtp",
-          "name": "Mailhog SMTP"
+          "id": "gmail-smtp",
+          "name": "Gmail SMTP"
         }
       }
     },

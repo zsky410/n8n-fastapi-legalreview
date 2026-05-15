@@ -13,6 +13,30 @@ export type LoginResponse = {
   user: User;
 };
 
+export type UserProfile = {
+  id: string;
+  user_id: string;
+  full_name: string | null;
+  age_range: string | null;
+  occupation: string | null;
+  organization: string | null;
+  industry: string | null;
+  jurisdiction: string | null;
+  role_in_matters: string | null;
+  legal_priority: string | null;
+  risk_tolerance: string | null;
+  preferred_language: string | null;
+  preferred_tone: string | null;
+  contact_phone: string | null;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type UserProfileUpdate = Partial<
+  Omit<UserProfile, "id" | "user_id" | "created_at" | "updated_at">
+>;
+
 export type RiskFinding = {
   id: string;
   rule_code: string;
@@ -145,6 +169,43 @@ export type AdminStats = {
   top_flag_reason: string | null;
 };
 
+export type AdminWorkflowMetric = {
+  label: string;
+  count: number;
+};
+
+export type AdminWorkflowActivityPoint = {
+  label: string;
+  success: number;
+  failed: number;
+  other: number;
+};
+
+export type AdminWorkflowLog = {
+  id: string;
+  trace_id: string | null;
+  event_type: string;
+  direction: string;
+  status: string;
+  workflow: string | null;
+  payload: Record<string, unknown>;
+  created_at: string;
+};
+
+export type AdminWorkflowObservability = {
+  total_events: number;
+  success_events: number;
+  failed_events: number;
+  in_progress_events: number;
+  success_rate: number;
+  latest_event_at: string | null;
+  latest_status: string | null;
+  status_counts: AdminWorkflowMetric[];
+  workflow_counts: AdminWorkflowMetric[];
+  activity: AdminWorkflowActivityPoint[];
+  recent_events: AdminWorkflowLog[];
+};
+
 export function getStoredToken(): string | null {
   if (typeof window === "undefined") {
     return null;
@@ -200,6 +261,17 @@ export async function fetchMe(token: string): Promise<User> {
   }
 
   return response.json();
+}
+
+export function fetchUserProfile(): Promise<UserProfile> {
+  return apiFetch<UserProfile>("/api/v1/auth/me/profile");
+}
+
+export function updateUserProfile(payload: UserProfileUpdate): Promise<UserProfile> {
+  return apiFetch<UserProfile>("/api/v1/auth/me/profile", {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
 }
 
 export function fetchDocuments(status?: string): Promise<DocumentListItem[]> {
@@ -260,6 +332,20 @@ export function submitAdminDecision(
 
 export function fetchAdminStats(): Promise<AdminStats> {
   return apiFetch<AdminStats>("/api/v1/admin/stats");
+}
+
+export function fetchAdminWorkflowLogs(
+  params: { limit?: number; days?: number } = {},
+): Promise<AdminWorkflowObservability> {
+  const searchParams = new URLSearchParams();
+  if (params.limit) {
+    searchParams.set("limit", String(params.limit));
+  }
+  if (params.days) {
+    searchParams.set("days", String(params.days));
+  }
+  const query = searchParams.toString();
+  return apiFetch<AdminWorkflowObservability>(`/api/v1/admin/workflow-logs${query ? `?${query}` : ""}`);
 }
 
 export function fetchAuditLogs(): Promise<AuditLog[]> {

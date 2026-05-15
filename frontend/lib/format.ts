@@ -15,6 +15,11 @@ export function humanStatus(status: string): string {
     awaiting_ai_review: "Chờ AI rà soát",
     ai_reviewing: "AI đang rà soát",
     pending: "Đang chờ",
+    success: "Thành công",
+    sent: "Đã gửi",
+    ok: "Ổn định",
+    error: "Lỗi",
+    running: "Đang chạy",
     completed: "Hoàn tất",
     failed: "Thất bại",
     document_uploaded: "Đã tải tài liệu lên",
@@ -164,7 +169,7 @@ export function humanRiskSnippet(ruleCode: string, snippet: string | null): stri
     AUTO_RENEWAL: "Phát hiện nội dung tự động gia hạn.",
     LOW_EXTRACTION_QUALITY: "Văn bản trích xuất quá ngắn hoặc chất lượng thấp.",
     UNKNOWN_DOC_TYPE: "Không thể phân loại tài liệu một cách chắc chắn.",
-    JUDICIAL_DOCUMENT: "Tài liệu có dấu hiệu là bản án hoặc văn bản tố tụng; AI phân loại riêng vì ngữ cảnh pháp lý khác hợp đồng/chứng từ.",
+    JUDICIAL_DOCUMENT: "Tài liệu có dấu hiệu là bản án hoặc văn bản tố tụng; cần đọc theo mục đích pháp lý phù hợp, không xem như hợp đồng/chứng từ.",
     SENSITIVE_PERSONAL_DATA: "Tài liệu có thông tin cá nhân cần kiểm soát quyền truy cập.",
   };
 

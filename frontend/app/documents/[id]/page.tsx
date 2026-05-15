@@ -22,10 +22,10 @@ type DetailTab = (typeof tabs)[number];
 const tabLabels: Record<DetailTab, string> = {
   Overview: "Tổng quan",
   Risks: "Rủi ro",
-  Chat: "Hỏi AI",
+  Chat: "Hỏi trợ lý",
 };
 
-const workflowStepLabels = ["Tải lên", "Trích xuất", "AI rà soát", "Hoàn tất"] as const;
+const workflowStepLabels = ["Tải lên", "Trích xuất", "Rà soát", "Hoàn tất"] as const;
 
 export default function DocumentDetailPage() {
   const params = useParams<{ id: string }>();
@@ -125,7 +125,7 @@ export default function DocumentDetailPage() {
           <section className="detail-hero">
             <FieldValue label="Điểm rủi ro" value={<RiskBadge score={document.risk_score} />} />
             <FieldValue label="Phân loại" value={document.classification ? humanStatus(document.classification) : "Chưa phân loại"} />
-            <FieldValue label="Độ tin cậy AI" value={formatPercent(document.ai_confidence)} />
+            <FieldValue label="Độ tin cậy" value={formatPercent(document.ai_confidence)} />
             <FieldValue label="Quy trình" value={humanStatus(document.processing_status)} />
           </section>
 
@@ -221,7 +221,7 @@ function LiveProcessingLog({ document }: { document: DocumentDetail }) {
         <div>
           <strong>
             {document.processing_status === "ai_reviewing" || document.review_status === "processing"
-              ? "AI đang phân tích"
+              ? "Đang rà soát"
               : "Đang trích xuất văn bản"}
           </strong>
           <span>
@@ -238,7 +238,7 @@ function AIResultPanel({ document }: { document: DocumentDetail }) {
     <section className="ai-result-panel" aria-label="Kết quả phân tích AI">
       <div className="ai-result-header">
         <div>
-          <p className="eyebrow">Phân tích pháp lý (AI)</p>
+          <p className="eyebrow">Phân tích pháp lý</p>
           <h2>{resultTitle(document)}</h2>
           <p className="ai-result-meta-line">{aiResultMetaLine(document)}</p>
         </div>
@@ -298,7 +298,7 @@ function RiskExplanationPanel({ document }: { document: DocumentDetail }) {
                     <span>{humanStatus(finding.severity)}</span>
                   </div>
                   <dl>
-                    <dt>AI phát hiện gì</dt>
+                    <dt>Điểm được phát hiện</dt>
                     <dd>{humanRiskSnippet(finding.rule_code, finding.snippet)}</dd>
                     <dt>Mức ảnh hưởng</dt>
                     <dd>{riskImpactText(finding)}</dd>
@@ -355,38 +355,38 @@ function RiskScalePanel() {
 
 function workflowTitle(document: DocumentDetail): string {
   if (document.review_status === "awaiting_ai_review") {
-    return "Đã trích xuất văn bản, đang vào bước AI rà soát tự động";
+    return "Đã đọc xong nội dung, đang rà soát tự động";
   }
   if (document.processing_status === "pending_extraction" || document.processing_status === "extracting") {
     return "Đang trích xuất văn bản từ file";
   }
   if (document.processing_status === "ai_reviewing" || document.review_status === "processing") {
-    return "AI đang đánh giá và gắn cờ rủi ro";
+    return "Đang đánh giá và ghi nhận rủi ro";
   }
   if (document.processing_status === "failed") {
     return "Quy trình xử lý thất bại";
   }
   if (document.processing_status === "completed") {
-    return "AI đã rà soát xong";
+    return "Đã rà soát xong";
   }
   return humanStatus(document.processing_status);
 }
 
 function workflowDescription(document: DocumentDetail): string {
   if (document.review_status === "awaiting_ai_review") {
-    return "Hệ thống đã trích xuất xong và tự động chuyển sang AI rà soát, không cần thao tác tay thêm.";
+    return "Hệ thống đã đọc xong nội dung và tự động chuyển sang bước rà soát, bạn chưa cần thao tác thêm.";
   }
   if (document.processing_status === "pending_extraction" || document.processing_status === "extracting") {
     return "Hệ thống đang đọc file. Văn bản trích xuất sẽ hiển thị trong phần Tổng quan khi sẵn sàng.";
   }
   if (document.processing_status === "ai_reviewing" || document.review_status === "processing") {
-    return "AI đang đọc văn bản trích xuất, phân loại tài liệu, tính điểm rủi ro và ghi nhận các phát hiện cần lưu ý.";
+    return "Hệ thống đang đọc nội dung, phân loại tài liệu, tính điểm rủi ro và ghi nhận các điểm cần lưu ý.";
   }
   if (document.processing_status === "failed") {
     return "Quá trình xử lý chưa hoàn tất. Hãy thử tải lại file có văn bản rõ hơn hoặc dùng DOCX/PDF có lớp văn bản.";
   }
   if (document.processing_status === "completed") {
-    return "Kết quả AI, phân tích rủi ro và văn bản trích xuất đã sẵn sàng.";
+    return "Kết quả rà soát, phân tích rủi ro và nội dung trích xuất đã sẵn sàng.";
   }
   return "Hệ thống đang xử lý tài liệu.";
 }
@@ -423,7 +423,7 @@ function resultTitle(document: DocumentDetail): string {
     return "Cần người rà soát trước khi duyệt";
   }
   if (document.review_status === "ai_approved") {
-    return "AI chưa thấy rủi ro trọng yếu";
+    return "Chưa thấy rủi ro trọng yếu";
   }
   if (["reviewer_rejected", "admin_rejected"].includes(document.review_status)) {
     return "Người rà soát đã từ chối tài liệu";
@@ -445,7 +445,7 @@ function riskPanelTitle(document: DocumentDetail): string {
   if (isNeedsReviewer(document.review_status)) {
     return `Điểm rủi ro ${document.risk_score}: cần người rà soát kiểm tra`;
   }
-  return `Điểm rủi ro ${document.risk_score}: AI tự xử lý`;
+  return `Điểm rủi ro ${document.risk_score}: Tự động xử lý`;
 }
 
 function riskLevelLabel(score: number): string {
@@ -469,9 +469,9 @@ function riskLevelDescription(document: DocumentDetail): string {
     return "Có một số điều khoản hoặc dữ liệu cần chú ý, nhưng chưa đủ cao để chặn tự động.";
   }
   if (document.risk_score > 0) {
-    return "AI chỉ ghi nhận các tín hiệu cần lưu ý, chưa thấy rủi ro trọng yếu.";
+    return "Chỉ ghi nhận các điểm cần lưu ý, chưa thấy rủi ro trọng yếu.";
   }
-  return "AI chưa phát hiện tín hiệu rủi ro từ văn bản đã trích xuất.";
+  return "Chưa phát hiện tín hiệu rủi ro từ nội dung đã đọc.";
 }
 
 function automationExplanation(document: DocumentDetail): string {
@@ -486,7 +486,7 @@ function automationExplanation(document: DocumentDetail): string {
 
 function riskImpactText(finding: RiskFinding): string {
   const labels: Record<string, string> = {
-    JUDICIAL_DOCUMENT: "Đây là loại tài liệu pháp lý có ngữ cảnh chuyên biệt. AI ghi nhận để tránh dùng nhầm bản án/văn bản tố tụng như hợp đồng thông thường.",
+    JUDICIAL_DOCUMENT: "Đây là loại tài liệu pháp lý chuyên biệt. Cần tránh xem bản án hoặc văn bản tố tụng như hợp đồng thông thường.",
     SENSITIVE_PERSONAL_DATA: "Tài liệu có dữ liệu cá nhân. Rủi ro chính nằm ở việc chia sẻ hoặc lưu hành file ngoài đúng phạm vi.",
     MISSING_SIGNATURE: "Hợp đồng hoặc NDA thiếu dấu hiệu phần ký kết, nên hiệu lực hoặc khả năng thực thi có thể chưa rõ.",
     HIGH_VALUE: "Giá trị tài liệu lớn làm tăng tác động tài chính nếu điều khoản bị sai hoặc thiếu kiểm soát.",
@@ -495,11 +495,11 @@ function riskImpactText(finding: RiskFinding): string {
     NO_GOVERNING_LAW: "Thiếu luật điều chỉnh hoặc thẩm quyền xử lý tranh chấp làm tăng độ bất định khi phát sinh mâu thuẫn.",
     BROAD_INDEMNITY: "Điều khoản bồi thường rộng có thể khiến trách nhiệm vượt quá phạm vi mong muốn.",
     AUTO_RENEWAL: "Tự động gia hạn có thể làm cam kết tiếp tục hiệu lực nếu không theo dõi thời hạn thông báo.",
-    LOW_EXTRACTION_QUALITY: "Văn bản trích xuất yếu làm giảm độ tin cậy của kết quả AI.",
-    UNKNOWN_DOC_TYPE: "AI chưa nhận diện rõ loại tài liệu, nên kết luận phân loại có độ chắc chắn thấp.",
+    LOW_EXTRACTION_QUALITY: "Nội dung đọc được chưa rõ nên kết quả rà soát có thể kém tin cậy.",
+    UNKNOWN_DOC_TYPE: "Chưa nhận diện rõ loại tài liệu, nên kết luận phân loại có độ chắc chắn thấp.",
     CONFIDENCE_LOW: "Độ tin cậy phân loại thấp khiến kết quả cần được xem như tín hiệu tham khảo.",
   };
-  return labels[finding.rule_code] ?? `Mức độ ${humanStatus(finding.severity).toLowerCase()}, cần đọc cùng ngữ cảnh tài liệu.`;
+  return labels[finding.rule_code] ?? `Mức độ ${humanStatus(finding.severity).toLowerCase()}, cần đọc cùng nội dung tài liệu.`;
 }
 
 function riskAutomationText(document: DocumentDetail, finding: RiskFinding): string {
@@ -509,7 +509,7 @@ function riskAutomationText(document: DocumentDetail, finding: RiskFinding): str
   if (finding.severity === "critical") {
     return "Phát hiện có mức rất cao; hệ thống sẽ chuyển người rà soát nếu tổng điểm rủi ro hoặc quy tắc chặn vượt ngưỡng.";
   }
-  return "Phát hiện được ghi nhận để minh bạch, nhưng tổng điểm rủi ro vẫn dưới ngưỡng chuyển người rà soát nên AI tiếp tục duyệt tự động.";
+  return "Phát hiện được ghi nhận để minh bạch, nhưng tổng điểm rủi ro vẫn dưới ngưỡng chuyển người rà soát nên tài liệu tiếp tục được xử lý tự động.";
 }
 
 function userFacingSuggestion(document: DocumentDetail, finding: RiskFinding, suggestion: string): string {

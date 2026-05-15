@@ -3,11 +3,12 @@
 import {
   ClipboardList,
   FileText,
-  Gauge,
   History,
+  LayoutDashboard,
   LogOut,
   Scale,
-  UploadCloud,
+  UserCog,
+  Workflow,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -21,14 +22,16 @@ type AppShellProps = {
 };
 
 const clientNav = [
+  { href: "/documents/overview", label: "Tổng quan", icon: LayoutDashboard },
   { href: "/documents", label: "Tài liệu", icon: FileText },
-  { href: "/documents/upload", label: "Tải lên", icon: UploadCloud },
+  { href: "/documents/actions", label: "Cần xử lý", icon: ClipboardList },
+  { href: "/documents/profile", label: "Thông tin & trợ lý", icon: UserCog },
 ];
 const reviewerNav = [
   { href: "/admin/queue", label: "Hàng chờ ngoại lệ", icon: ClipboardList },
 ];
 const adminNav = [
-  { href: "/admin/dashboard", label: "Hệ thống", icon: Gauge },
+  { href: "/admin/dashboard", label: "Dashboard n8n", icon: Workflow },
   { href: "/admin/queue", label: "Hàng chờ rà soát", icon: ClipboardList },
   { href: "/admin/audit-logs", label: "Nhật ký kiểm soát", icon: History },
 ];
@@ -94,7 +97,7 @@ export function AppShell({ children, area }: AppShellProps) {
   return (
     <div className="app-frame">
       <aside className="sidebar">
-        <Link className="sidebar-brand" href={area === "admin" ? homeHref(user.role) : "/documents"} prefetch={false}>
+        <Link className="sidebar-brand" href={area === "admin" ? homeHref(user.role) : "/documents/overview"} prefetch={false}>
           <span className="brand-mark small" aria-hidden="true">
             <Scale size={18} />
           </span>
@@ -104,10 +107,7 @@ export function AppShell({ children, area }: AppShellProps) {
         <nav className="nav-list" aria-label={area === "admin" ? "Điều hướng nội bộ" : "Điều hướng khách hàng"}>
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive =
-              item.href === "/documents"
-                ? pathname === "/documents" || (pathname.startsWith("/documents/") && pathname !== "/documents/upload")
-                : pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const isActive = isActiveNavItem(pathname, item.href);
             return (
               <Link className={isActive ? "nav-item active" : "nav-item"} href={item.href} key={item.href} prefetch={false}>
                 <Icon size={18} aria-hidden="true" />
@@ -135,6 +135,29 @@ export function AppShell({ children, area }: AppShellProps) {
 
 function homeHref(role: string): string {
   return role === "admin" ? "/admin/dashboard" : "/admin/queue";
+}
+
+const clientSectionRoutes = new Set([
+  "overview",
+  "actions",
+  "obligations",
+  "risks",
+  "assistant",
+  "reports",
+  "notifications",
+  "profile",
+  "upload",
+]);
+
+function isActiveNavItem(pathname: string, href: string): boolean {
+  if (href === "/documents") {
+    if (pathname === "/documents") {
+      return true;
+    }
+    const child = pathname.match(/^\/documents\/([^/]+)$/)?.[1];
+    return Boolean(child && !clientSectionRoutes.has(child));
+  }
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 function roleLabel(role: string): string {

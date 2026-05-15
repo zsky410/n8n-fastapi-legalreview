@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from app.models.document import Document
     from app.models.document_chat import DocumentChatMessage
     from app.models.review import Review
+    from app.models.user_profile import UserProfile
 
 
 class User(Base):
@@ -32,3 +33,4 @@ class User(Base):
     reviews: Mapped[list["Review"]] = relationship(back_populates="reviewer")
     audit_logs: Mapped[list["AuditLog"]] = relationship(back_populates="actor")
     document_chat_messages: Mapped[list["DocumentChatMessage"]] = relationship(back_populates="user")
+    profile: Mapped["UserProfile | None"] = relationship(back_populates="user", uselist=False)

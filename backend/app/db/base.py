@@ -7,6 +7,7 @@ from app.models.n8n_event import N8nEvent
 from app.models.review import Review
 from app.models.risk_finding import RiskFinding
 from app.models.user import User
+from app.models.user_profile import UserProfile
 
 __all__ = [
     "AuditLog",
@@ -18,4 +19,5 @@ __all__ = [
     "Review",
     "RiskFinding",
     "User",
+    "UserProfile",
 ]

@@ -15,6 +15,7 @@ from app.models.document import Document
 from app.models.document_chat import DocumentChatMessage
 from app.models.legal_obligation import LegalObligation
 from app.models.user import User
+from app.models.user_profile import UserProfile
 from app.schemas.document import (
     DocumentAuditLogRead,
     DocumentChatMessageRead,
@@ -258,6 +259,7 @@ def create_document_chat_message(
         question=question,
         history=history,
         risk_findings=list(document.risk_findings),
+        user_profile=db.scalar(select(UserProfile).where(UserProfile.user_id == current_user.id)),
     )
     assistant_message = DocumentChatMessage(
         document_id=document.id,

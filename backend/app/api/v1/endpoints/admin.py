@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from datetime import UTC, datetime, time, timedelta
 from typing import Literal
 from uuid import UUID
 
@@ -12,6 +13,7 @@ from app.api.v1.dependencies import get_current_user
 from app.db.session import get_db
 from app.models.audit_log import AuditLog
 from app.models.document import Document
+from app.models.n8n_event import N8nEvent
 from app.models.review import Review
 from app.models.user import User
 from app.schemas.admin import (
@@ -22,6 +24,10 @@ from app.schemas.admin import (
     AdminDocumentListItem,
     AdminReviewRead,
     AdminStats,
+    AdminWorkflowActivityPoint,
+    AdminWorkflowLogRead,
+    AdminWorkflowMetric,
+    AdminWorkflowObservability,
 )
 from app.services.audit import create_audit_log
 from app.services.review_status import (
@@ -193,6 +199,59 @@ def list_audit_logs(
     return [_build_audit_log_read(audit_log) for audit_log in audit_logs]
 
 
+@router.get("/workflow-logs", response_model=AdminWorkflowObservability)
+def get_workflow_logs(
+    limit: int = Query(default=30, ge=1, le=200),
+    days: int = Query(default=7, ge=1, le=30),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+) -> AdminWorkflowObservability:
+    _assert_reviewer(current_user)
+    total_events = db.scalar(select(func.count()).select_from(N8nEvent)) or 0
+    status_rows = db.execute(select(N8nEvent.status, func.count()).group_by(N8nEvent.status)).all()
+    status_counts = {row_status: count for row_status, count in status_rows}
+    success_events = sum(count for row_status, count in status_counts.items() if _status_bucket(row_status) == "success")
+    failed_events = sum(count for row_status, count in status_counts.items() if _status_bucket(row_status) == "failed")
+    in_progress_events = max(total_events - success_events - failed_events, 0)
+    success_rate = round((success_events / total_events) * 100, 1) if total_events else 0.0
+
+    recent_events = db.scalars(
+        select(N8nEvent)
+        .order_by(N8nEvent.created_at.desc())
+        .limit(limit)
+    ).all()
+    latest_event = recent_events[0] if recent_events else None
+
+    now = datetime.now(UTC)
+    window_start = datetime.combine(now.date() - timedelta(days=days - 1), time.min, tzinfo=UTC)
+    window_events = db.scalars(
+        select(N8nEvent)
+        .where(N8nEvent.created_at >= window_start)
+        .order_by(N8nEvent.created_at.asc())
+    ).all()
+
+    workflow_counter: Counter[str] = Counter(_workflow_name(event) or "unknown" for event in window_events)
+    return AdminWorkflowObservability(
+        total_events=total_events,
+        success_events=success_events,
+        failed_events=failed_events,
+        in_progress_events=in_progress_events,
+        success_rate=success_rate,
+        latest_event_at=latest_event.created_at if latest_event else None,
+        latest_status=latest_event.status if latest_event else None,
+        status_counts=[
+            AdminWorkflowMetric(label=row_status, count=count)
+            for row_status, count in sorted(status_counts.items(), key=lambda item: item[1], reverse=True)
+        ],
+        workflow_counts=[
+            AdminWorkflowMetric(label=workflow, count=count)
+            for workflow, count in workflow_counter.most_common(6)
+        ],
+        activity=_build_workflow_activity(window_events, days=days, now=now),
+        recent_events=[_build_workflow_log_read(event) for event in recent_events],
+    )
+
+
 def _assert_reviewer(user: User) -> None:
     if user.role not in {"admin", "reviewer"}:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Reviewer access required")
@@ -273,3 +332,62 @@ def _top_flag_reason(flag_reasons: list[list[str]]) -> str | None:
     if not counter:
         return None
     return counter.most_common(1)[0][0]
+
+
+def _build_workflow_log_read(event: N8nEvent) -> AdminWorkflowLogRead:
+    return AdminWorkflowLogRead(
+        id=event.id,
+        trace_id=event.trace_id,
+        event_type=event.event_type,
+        direction=event.direction,
+        status=event.status,
+        workflow=_workflow_name(event),
+        payload=event.payload,
+        created_at=event.created_at,
+    )
+
+
+def _build_workflow_activity(
+    events: list[N8nEvent],
+    *,
+    days: int,
+    now: datetime,
+) -> list[AdminWorkflowActivityPoint]:
+    labels = [(now.date() - timedelta(days=offset)) for offset in range(days - 1, -1, -1)]
+    buckets = {day: {"success": 0, "failed": 0, "other": 0} for day in labels}
+    for event in events:
+        event_day = event.created_at.date()
+        if event_day not in buckets:
+            continue
+        bucket = _status_bucket(event.status)
+        buckets[event_day][bucket] += 1
+
+    return [
+        AdminWorkflowActivityPoint(
+            label=day.strftime("%d/%m"),
+            success=counts["success"],
+            failed=counts["failed"],
+            other=counts["other"],
+        )
+        for day, counts in buckets.items()
+    ]
+
+
+def _status_bucket(status_value: str) -> Literal["success", "failed", "other"]:
+    normalized_status = status_value.lower()
+    if "fail" in normalized_status or "error" in normalized_status:
+        return "failed"
+    if normalized_status in {"success", "completed", "sent", "ok"}:
+        return "success"
+    if "completed" in normalized_status or "sent" in normalized_status:
+        return "success"
+    return "other"
+
+
+def _workflow_name(event: N8nEvent) -> str | None:
+    workflow = event.payload.get("workflow") or event.payload.get("workflow_name") or event.payload.get("workflowId")
+    if isinstance(workflow, str) and workflow.strip():
+        return workflow.strip()
+    if event.event_type:
+        return event.event_type.split(".")[0]
+    return None

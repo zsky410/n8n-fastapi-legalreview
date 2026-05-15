@@ -48,7 +48,7 @@ export function DocumentChatPanel({ document }: { document: DocumentDetail }) {
       })
       .catch((caught) => {
         if (isMounted) {
-          setError(caught instanceof Error ? caught.message : "Không thể tải hội thoại AI");
+          setError(caught instanceof Error ? caught.message : "Không thể tải hội thoại trợ lý");
         }
       })
       .finally(() => {
@@ -84,7 +84,7 @@ export function DocumentChatPanel({ document }: { document: DocumentDetail }) {
       setMessages(response.messages);
     } catch (caught) {
       setDraft(message);
-      setError(caught instanceof Error ? caught.message : "Không thể gửi câu hỏi cho AI");
+      setError(caught instanceof Error ? caught.message : "Không thể gửi câu hỏi cho trợ lý");
     } finally {
       setIsSending(false);
     }
@@ -110,12 +110,12 @@ export function DocumentChatPanel({ document }: { document: DocumentDetail }) {
             <MessageSquareText size={20} aria-hidden="true" />
           </div>
           <div>
-            <h2>Hỏi AI theo tài liệu</h2>
-            <p>Phần hỏi AI sẽ mở khi tài liệu đã trích xuất văn bản và hoàn tất bước AI rà soát.</p>
+            <h2>Hỏi trợ lý theo tài liệu</h2>
+            <p>Phần hỏi trợ lý sẽ mở khi tài liệu đã đọc xong nội dung và hoàn tất rà soát.</p>
           </div>
         </div>
         <div className="chat-empty">
-          Hệ thống vẫn đang xử lý hoặc chưa có văn bản trích xuất đủ để AI trả lời theo nội dung file.
+          Hệ thống vẫn đang xử lý hoặc chưa có đủ nội dung để trợ lý trả lời theo file.
         </div>
       </div>
     );
@@ -128,10 +128,10 @@ export function DocumentChatPanel({ document }: { document: DocumentDetail }) {
           <MessageSquareText size={20} aria-hidden="true" />
         </div>
         <div className="chat-intro-copy">
-          <h2>Hỏi AI theo tài liệu</h2>
+          <h2>Hỏi trợ lý theo tài liệu</h2>
           <p>
-            Hỏi tiếp về rủi ro, điều khoản cần sửa, tài liệu cần bổ sung hoặc cách đàm phán. AI sẽ bám vào
-            văn bản trích xuất và kết quả rà soát hiện tại.
+            Hỏi tiếp về rủi ro, điều khoản cần sửa, tài liệu cần bổ sung hoặc cách đàm phán. Trợ lý sẽ bám vào
+            nội dung tài liệu và kết quả rà soát hiện tại.
           </p>
         </div>
       </div>
@@ -172,7 +172,7 @@ export function DocumentChatPanel({ document }: { document: DocumentDetail }) {
               <Bot size={16} aria-hidden="true" />
             </div>
             <div className="chat-bubble">
-              <div className="chat-message-meta">AI đang đọc lại ngữ cảnh tài liệu</div>
+              <div className="chat-message-meta">Đang đọc lại nội dung tài liệu</div>
               <div className="chat-message-content loading-answer">
                 <Loader2 className="spin-icon" size={16} aria-hidden="true" />
                 Đang trả lời theo nội dung file...
@@ -188,12 +188,12 @@ export function DocumentChatPanel({ document }: { document: DocumentDetail }) {
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
           onKeyDown={handleComposerKeyDown}
-          placeholder="Hỏi AI về điều khoản, rủi ro, điểm cần sửa hoặc tài liệu cần bổ sung..."
+          placeholder="Hỏi về điều khoản, rủi ro, điểm cần sửa hoặc tài liệu cần bổ sung..."
           maxLength={4000}
           rows={3}
         />
         <div className="chat-send-row">
-          <span className="chat-disclaimer">AI chỉ trả lời theo tài liệu đã upload. Nhấn Ctrl/⌘ + Enter để gửi.</span>
+          <span className="chat-disclaimer">Trợ lý chỉ trả lời theo tài liệu đã tải lên. Nhấn Ctrl/⌘ + Enter để gửi.</span>
           <button className="primary-button compact" type="submit" disabled={!draft.trim() || isSending}>
             {isSending ? <Loader2 className="spin-icon" size={16} aria-hidden="true" /> : <Send size={16} aria-hidden="true" />}
             <span>{isSending ? "Đang gửi" : "Gửi câu hỏi"}</span>
@@ -213,7 +213,7 @@ function ChatMessageBubble({ message }: { message: DocumentChatMessage }) {
       </div>
       <div className={message.provider === "unavailable" ? "chat-bubble unavailable" : "chat-bubble"}>
         <div className="chat-message-meta">
-          <span>{isUser ? "Bạn" : "AI pháp lý"}</span>
+          <span>{isUser ? "Bạn" : "Trợ lý pháp lý"}</span>
           <span>{formatDateTime(message.created_at)}</span>
         </div>
         <ChatMessageContent content={message.content} />

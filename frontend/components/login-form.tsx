@@ -48,7 +48,7 @@ export function LoginForm() {
         return;
       }
 
-      router.replace("/documents");
+      router.replace("/documents/overview");
     } catch (caught) {
       setError(caught instanceof Error ? caught.message : "Đăng nhập thất bại");
     } finally {

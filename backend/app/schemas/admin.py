@@ -80,3 +80,40 @@ class AdminStats(BaseModel):
     failed: int
     agreement_rate: float
     top_flag_reason: str | None
+
+
+class AdminWorkflowMetric(BaseModel):
+    label: str
+    count: int
+
+
+class AdminWorkflowActivityPoint(BaseModel):
+    label: str
+    success: int
+    failed: int
+    other: int
+
+
+class AdminWorkflowLogRead(BaseModel):
+    id: UUID
+    trace_id: str | None
+    event_type: str
+    direction: str
+    status: str
+    workflow: str | None
+    payload: dict[str, Any]
+    created_at: datetime
+
+
+class AdminWorkflowObservability(BaseModel):
+    total_events: int
+    success_events: int
+    failed_events: int
+    in_progress_events: int
+    success_rate: float
+    latest_event_at: datetime | None
+    latest_status: str | None
+    status_counts: list[AdminWorkflowMetric]
+    workflow_counts: list[AdminWorkflowMetric]
+    activity: list[AdminWorkflowActivityPoint]
+    recent_events: list[AdminWorkflowLogRead]

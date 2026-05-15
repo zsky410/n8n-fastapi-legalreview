@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.models.document import Document
 from app.models.document_chat import DocumentChatMessage
 from app.models.risk_finding import RiskFinding
+from app.models.user_profile import UserProfile
 from app.services.ai_review import _build_review_excerpt
 
 logger = logging.getLogger(__name__)
@@ -28,6 +29,7 @@ def answer_document_chat(
     question: str,
     history: list[DocumentChatMessage],
     risk_findings: list[RiskFinding],
+    user_profile: UserProfile | None = None,
 ) -> DocumentChatResult:
     """Answer a follow-up question using only the reviewed document context."""
 
@@ -48,6 +50,7 @@ def answer_document_chat(
         question=question,
         history=history,
         risk_findings=risk_findings,
+        user_profile=user_profile,
         excerpt=excerpt,
         excerpt_note=excerpt_note,
     )
@@ -83,6 +86,7 @@ def _build_chat_messages(
     question: str,
     history: list[DocumentChatMessage],
     risk_findings: list[RiskFinding],
+    user_profile: UserProfile | None,
     excerpt: str,
     excerpt_note: str,
 ) -> list[dict[str, str]]:
@@ -106,6 +110,8 @@ def _build_chat_messages(
         f"{_clip(document.summary or 'Chưa có tóm tắt rà soát.', 12000)}\n\n"
         "CÁC PHÁT HIỆN RỦI RO TỪ BỘ QUY TẮC\n"
         f"{json.dumps(risk_payload, ensure_ascii=False)}\n\n"
+        "NGỮ CẢNH NGƯỜI DÙNG / HỒ SƠ KHÁCH HÀNG\n"
+        f"{_format_user_profile_context(user_profile)}\n\n"
         "VĂN BẢN TRÍCH XUẤT LÀ NGUỒN SỰ THẬT CHÍNH\n"
         f"{excerpt}{excerpt_note}"
     )
@@ -131,6 +137,7 @@ def _system_prompt() -> str:
         "các phát hiện rủi ro, kết quả rà soát trước đó và lịch sử trao đổi được cung cấp.\n\n"
         "Quy tắc bắt buộc:\n"
         "- Ưu tiên trả lời trực tiếp câu hỏi của người dùng, không tóm tắt lại toàn bộ tài liệu nếu người dùng không hỏi.\n"
+        "- Dùng ngữ cảnh người dùng để điều chỉnh mức chi tiết, ưu tiên rủi ro, phương án xử lý và cách diễn đạt; không tự suy đoán thông tin cá nhân ngoài hồ sơ.\n"
         "- Khi nêu rủi ro/điều khoản, trích 1-3 đoạn ngắn nguyên văn trong dấu “...” nếu ngữ cảnh có bằng chứng.\n"
         "- Nếu không thấy điều khoản hoặc thiếu file nền/phụ lục, nói rõ 'chưa đủ dữ kiện' và nêu cần kiểm tra gì.\n"
         "- Không bịa số điều khoản, luật áp dụng, cam kết, bên tham gia, ngày tháng hoặc kết luận pháp lý không có trong ngữ cảnh.\n"
@@ -209,3 +216,25 @@ def _clip(value: str, max_chars: int) -> str:
     if len(text) <= max_chars:
         return text
     return f"{text[:max_chars].rstrip()}\n...[đã rút gọn]"
+
+
+def _format_user_profile_context(profile: UserProfile | None) -> str:
+    if profile is None:
+        return "Chưa có hồ sơ người dùng. Trả lời theo ngữ cảnh tài liệu và tránh cá nhân hóa quá mức."
+
+    rows = [
+        ("Họ tên", profile.full_name),
+        ("Nhóm tuổi", profile.age_range),
+        ("Nghề nghiệp", profile.occupation),
+        ("Tổ chức/công ty", profile.organization),
+        ("Lĩnh vực", profile.industry),
+        ("Khu vực pháp lý thường gặp", profile.jurisdiction),
+        ("Vai trò trong vụ việc", profile.role_in_matters),
+        ("Ưu tiên pháp lý", profile.legal_priority),
+        ("Khẩu vị rủi ro", profile.risk_tolerance),
+        ("Ngôn ngữ ưu tiên", profile.preferred_language),
+        ("Giọng tư vấn", profile.preferred_tone),
+        ("Ghi chú thêm", profile.notes),
+    ]
+    lines = [f"- {label}: {value}" for label, value in rows if value]
+    return "\n".join(lines) if lines else "Hồ sơ người dùng đã tạo nhưng chưa có thông tin đáng kể."

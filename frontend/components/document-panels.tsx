@@ -66,7 +66,7 @@ export function ExtractedTextPanel({ text, processingStatus, reviewStatus }: Ext
         <div className="extraction-pending" aria-live="polite">
           <Loader2 className="spin-icon" size={24} aria-hidden="true" />
           <div>
-            <strong>{processingStatus === "ai_reviewing" || reviewStatus === "processing" ? "AI đang phân tích văn bản" : "Đang trích xuất văn bản"}</strong>
+            <strong>{processingStatus === "ai_reviewing" || reviewStatus === "processing" ? "Đang rà soát văn bản" : "Đang trích xuất văn bản"}</strong>
             <p>Hệ thống vẫn đang đọc file và tự động cập nhật nội dung khi bước này hoàn tất.</p>
           </div>
         </div>
@@ -80,7 +80,7 @@ export function ExtractedTextPanel({ text, processingStatus, reviewStatus }: Ext
           <strong>Chưa trích xuất được văn bản từ file này</strong>
           <p>
             File có thể là PDF scan/ảnh hoặc nội dung không có lớp văn bản. Hãy thử bản PDF có lớp văn bản, DOCX,
-            hoặc chạy OCR rồi tải lại để AI có dữ liệu phân tích đầy đủ hơn.
+            hoặc chạy OCR rồi tải lại để kết quả rà soát đầy đủ hơn.
           </p>
         </div>
       </div>
@@ -107,7 +107,7 @@ export function ExtractedTextPanel({ text, processingStatus, reviewStatus }: Ext
 export function LegalObligationsPanel({
   obligations,
   title = "Cam kết & mốc cần theo dõi",
-  emptyCopy = "AI chưa phát hiện cam kết, hạn chót hoặc mốc theo dõi rõ ràng trong tài liệu này.",
+  emptyCopy = "Chưa phát hiện cam kết, hạn chót hoặc mốc theo dõi rõ ràng trong tài liệu này.",
 }: LegalObligationsPanelProps) {
   const sortedObligations = [...obligations].sort((left, right) => {
     const leftDate = left.due_date ? new Date(left.due_date).getTime() : Number.POSITIVE_INFINITY;
@@ -120,10 +120,10 @@ export function LegalObligationsPanel({
     <section className="obligation-panel" aria-label={title}>
       <div className="obligation-heading">
         <div>
-          <p className="eyebrow">Workflow 3</p>
+          <p className="eyebrow">Theo dõi cam kết</p>
           <h2>{title}</h2>
           <span>
-            AI bóc các cam kết, hạn chót và việc cần xử lý sau review để n8n gửi cảnh báo hoặc chuyển người rà soát khi rủi ro cao.
+            Các cam kết, hạn chót và việc cần xử lý sẽ được ghi lại để bạn dễ theo dõi.
           </span>
         </div>
         <div className="obligation-counter">
